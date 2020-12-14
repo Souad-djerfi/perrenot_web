@@ -1,0 +1,264 @@
+{% extends 'layouts/default.html' %}
+{% block body%}
+    {% include 'layouts/shared/_menu-admin.html'%}
+    <!--<link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='css/style.css')}}">-->
+    {% if return_msg and return_msg['msg'] %}
+    <div class="alert alert-{{ return_msg['type'] }}" role="alert">
+      {{ return_msg['msg'] }}
+    </div>
+    {% endif %}
+    <div class="app">
+      <header>
+        
+      </header>
+      <!-- place form-->
+        <div class="lists">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-2">
+                
+                  <div class="list" >
+                  
+                        {% for mag in mag_code: %}
+
+                            <div class="list-item" draggable="true">
+                                <ul id="code_mag_ul">
+                                  <li>   
+                                    <div class="input-group">
+                                        <input type="text"  value= "{{  mag[5]  }}" name="mag_id" class="form-control" hidden>
+                                        <input type="text"  value= "{{  mag[0]  }}" name="code_mag" class="form-control">
+                                        <input type="text"  value= "{{  mag[4]  }}" name="heur_liv_mag" class="form-control">
+                                        <input type="text"  value= "{{  mag[1]  }}" id="vlm_rolls" name="vlm_rolls" class="form-control">   
+                                        <input type="text"  value= "{{  mag[2]  }}" id="vlm_pal" name="vlm_pal" class="form-control">
+                                        <input type="text"  value= "{{  mag[3]  }}" id="vlm_box" name="vlm_box" class="form-control"> 
+                                    </div>
+                                    <div class="input-group">
+                                        <input type="text"  value= "{{  mag[1]  }}" id="vlm_rolls" name="vlm_rolls" class="form-control">   
+                                        <input type="text"  value= "{{  mag[2]  }}" id="vlm_pal" name="vlm_pal" class="form-control">
+                                        <input type="text"  value= "{{  mag[3]  }}" id="vlm_box" name="vlm_box" class="form-control"> 
+                                    </div>
+                                  </li>
+                                </ul>
+                            </div>  
+                                          
+                        {% endfor %}
+                  </div>
+              </div> 
+              <div class="col-10 ">
+                <div class="row justify-content-around">
+                  {% for cam in liste_camion: %}
+                    <div class="col-md-5 mb-3">
+                      <div class="row">
+                        <div class="card">
+                          <form method="POST" ACTION="{{ url_for('enregistrer_tournee') }}" id="cam_num_{{loop.index0}}" >
+                            <div class="card-header">
+                              <div class="row">
+                                <select name="nom_chauf">
+                                  {% for chauf in chauffeur: %}
+                                    <option value="{{chauf[2]}} "> {{chauf[0]}}--{{chauf[1]}} </option>
+                                  {% endfor %}
+                                </select>
+                                  <div class="col-md-6">
+                                  &nbsp;&nbsp;Immatriculation: {{ cam[0] }} 
+                                </div>
+                                <div class="col-md-6">
+                                  &nbsp;&nbsp;Capacité: {{ cam[1] }}
+                                </div>
+                              </div>
+                            </div>
+                          <div class="card-body">
+                            <input  name="camion" value="{{ cam[2] }}" type="text" hidden>  
+                            <input id="capMax_{{loop.index0}}" value="{{ cam[1] }}" type="text" hidden>
+                            <input id="nbre_mag_cam_{{loop.index0}}" name="Tnbre_mag_cam" type="text" hidden>
+                            <div class="list"></div>
+                          </div>
+                          <div class="card-footer text-muted">
+                              <div class="input-group">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text">Total</span>
+                                </div>
+                                  <input type="text" id="nbr_tot_rol_{{loop.index0}}" class="form-control" value="0" placeholder="Rolls">
+                                  <input type="text" id="nbr_tot_pal_{{loop.index0}}" class="form-control" value="0" placeholder="Palette">
+                                  <input type="text" id="nbr_tot_box_{{loop.index0}}" class="form-control" value="0" placeholder="Box">
+                                  <input type="text" id="pourcRempl_{{loop.index0}}" class="form-control" placeholder="%remplissage">
+                              </div>
+                          </div>
+                        </form>
+                        </div>
+                      </div>
+                    </div>
+                    
+                  {%endfor%}
+                </div> 
+              </div>
+                <!--<div class="row row-cols-3">
+                  <div class="container border border_secondary rounded-lg"> 
+                    <form method="POST" ACTION="{{ url_for('enregistrer_tournee') }}" >
+                      <h5> Effectuer les tournées pour la date: {{date_tour}}<input  name="date_tour" value="{{date_tour}}" type="text" hidden></h5>
+                      {% for cam in liste_camion: %}
+                      
+                        <div class="form-group col-md-3">  
+                          
+                            <table id="cam_num_{{loop.index0}}" class="table table-hover">
+                              <thead>
+                                <tr class="d-flex">
+                                  <th scope="col" class="w-25"><input  name="camion" value="{{ cam[2] }}" type="text" hidden>{{ cam[0] }} :</th> 
+                                  <th scope="col" style="width:18%;"> capacite :</th>
+                                  <th scope="col" style="width:21%;">  </th>
+                                  <th scope="col"   style="width:16%;" ><input id="capMax_{{loop.index0}}" value="{{ cam[1] }}" type="text" hidden>{{ cam[1] }} :</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr class="d-flex">
+                                  <td>
+                                    <select name="nom_chauf">
+                                      {% for chauf in chauffeur: %}
+                                        <option value="{{chauf[2]}} "> {{chauf[0]}} </option>
+                                      {% endfor %}
+                                    </select>
+                                  </td>    
+                                  <td class="col-sm-1">    Rolls </td>
+                                  <td class="col-sm-1">    Palette </td>
+                                  <td class="col-sm-1">    Box </td>
+                                </tr>
+                                <tr class="d-flex">
+                                  <td> <div class="list"></div> </td>
+                                </tr>
+                                <tr class="d-flex">
+                                  <td class="col-sm-1" id="mag_cam">    Total</td>
+                                  <td class="col-sm-1"><input id="nbr_tot_rol_{{loop.index0}}" type="text" value="0"></td>
+                                  <td class="col-sm-1"><input id="nbr_tot_pal_{{loop.index0}}" type="text" value="0"></td>
+                                  <td class="col-sm-1"><input id="nbr_tot_box_{{loop.index0}}" type="text" value="0"></td> 
+                                  <td class="col-sm-1"><input type="text" id="pourcRempl_{{loop.index0}}" placeholder="pourcentage de remplissage"></td>  
+                                  <td class="col-sm-1" hidden><input id="nbre_mag_cam_{{loop.index0}}" name="Tnbre_mag_cam" type="text"></td>
+                                </tr>
+                              </tbody>
+                            </table>
+                        </div>  
+                      {% endfor %}
+                      <button type="submit" class="btn btn-info btn-block">Valider les tournées</button>
+                    </form>
+                  </div>    
+                </div>
+              </div>  
+            </div>  
+          </div>  
+        </div>
+    </div>-->
+
+
+   
+
+    <script>
+      const list_items = document.querySelectorAll('.list-item');
+      const lists = document.querySelectorAll('.list');
+
+      function TotRol(){
+        $('form[id^="cam_num_"]').each(function(i,e) {
+          var camActifID = e.id.split('_').pop()
+          var sum=0;
+          $("#cam_num_"+camActifID+" #vlm_rolls").each(function(){
+            if(!isNaN(parseFloat(this.value))){
+              sum=sum+(parseFloat(this.value,10));
+            }
+          });
+        $('#nbr_tot_rol_'+camActifID).val(sum)
+        });
+      }
+      function TotPal(){
+        $('form[id^="cam_num_"]').each(function(i,e) {
+          var camActifID = e.id.split('_').pop()
+          var sum=0;
+          $("#cam_num_"+camActifID+" #vlm_pal").each(function(){
+            if(!isNaN(parseFloat(this.value))){
+              sum=sum+(parseFloat(this.value,10));
+            }
+          });
+        $('#nbr_tot_pal_'+camActifID).val(sum)
+        });
+      }
+      function TotBox(){
+        $('form[id^="cam_num_"]').each(function(i,e) {
+          var camActifID = e.id.split('_').pop()
+          var sum=0;
+          $("#cam_num_"+camActifID+" #vlm_box").each(function(){
+            if(!isNaN(parseFloat(this.value))){
+              sum=sum+(parseFloat(this.value,10));
+            }
+          });
+        $('#nbr_tot_box_'+camActifID).val(sum)
+        });
+      }
+
+      function pourcentage(){
+        $('form[id^="cam_num_"]').each(function(i,e) {
+          var camActifID = e.id.split('_').pop()
+          var cap_cam=parseFloat($('#capMax_'+camActifID).val(),10)
+          var nbr_rol=parseFloat($('#nbr_tot_rol_'+camActifID).val(), 10)
+          var nbr_pal=parseFloat($('#nbr_tot_pal_'+camActifID).val(), 10)
+          var nbr_box=parseFloat($('#nbr_tot_box_'+camActifID).val(), 10)
+          var totalPourc=((nbr_pal+nbr_rol*1.6+2*nbr_box)*100)/cap_cam
+          console.log("total: "+totalPourc)
+          $('#pourcRempl_'+camActifID).val(totalPourc+"%")
+    
+        });
+      }
+
+      function compterEnseignesCamion(){
+        $('form[id^="cam_num_"]').each(function(i,e) {
+          var camActifID = e.id.split('_').pop()
+          var NbMag = $("#cam_num_"+camActifID+" #code_mag_ul").length
+          $('#nbre_mag_cam_'+camActifID).val(NbMag)
+        });
+      }
+
+      let draggedItem = null;
+
+      for (let i = 0; i < list_items.length; i++) {
+        const item = list_items[i];
+
+        item.addEventListener('dragstart', function () {
+          draggedItem = item;
+          setTimeout(function () {
+            item.style.display = 'none';
+          }, 0)
+        });
+
+        item.addEventListener('dragend', function () {
+          setTimeout(function () {
+            draggedItem.style.display = 'block';
+            draggedItem = null;
+          }, 0);
+        })
+
+        for (let j = 0; j < lists.length; j ++) {
+          const list = lists[j];
+
+          list.addEventListener('dragover', function (e) {
+            e.preventDefault();
+          });
+          
+          list.addEventListener('dragenter', function (e) {
+            e.preventDefault();
+            this.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
+          });
+
+          list.addEventListener('dragleave', function (e) {
+            this.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+          });
+
+          list.addEventListener('drop', function (e) {
+            compterEnseignesCamion();
+            TotRol();
+            TotPal()
+            TotBox()
+            pourcentage();
+            console.log('drop');
+            this.append(draggedItem);
+            this.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+          });
+        }
+      }
+    </script>
+{% endblock %}    

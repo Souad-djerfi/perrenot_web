@@ -1,0 +1,168 @@
+{% extends 'layouts/default.html' %}
+{% block body%}
+{% include 'layouts/shared/_menu-admin.html'%}
+<!-----<link ref="//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+ Include the above in your HEAD tag ---------->
+  
+        
+<div class="container-fluid">
+    <div class="row">
+      <div class="col-md-2">  
+        {% include 'layouts/shared/_menu-chauf.html'%}
+      </div>
+      <div class="col-md-10">
+        <div id="loginbox" class="mainbox col-md-10 col-md-offset-3 col-sm-6 col-sm-offset-3"> 
+          <div class="card">
+            <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+            <h5 class="card-header card text-center">  Modification/Suppression Chauffeur:</h5>
+              <div class="card-body">
+                <div class="border border_secondary rounded-sm"> 
+                  <form id="form" method="POST" class="container form-horizontal " enctype="multipart/form-data" ACTION="{{ url_for('modifier_chauffeur') }}">
+                    <div class="input-group mb-3">
+                      <div class="input-group-prepend">
+                        <button class="btn btn-info" type="submit" id="button-addon1">Rechercher</button>
+                      </div>
+                      <input type="text" class="form-control" name="rech_chauf" placeholder="Nom du chauffeur" aria-label="Example text with button addon" aria-describedby="button-addon1">
+                      <div class="input-group-append">
+                        <!-- Button trigger modal -->
+                        <button  type="button"   class="btn btn-info" data-toggle="modal" data-target="#modifier_chauf" data-whatever="@getbootstrap" >Modifier Chauffeur</button>
+                        <button type="button"  class="btn btn-outline-secondary" data-toggle="modal" data-target="#supprimer_chauf" value="Submit form"> Supprimer </button>
+                      </div>
+                    </div>
+                    <table id ='list_chauff' class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th scope="col">#</th>
+                          <th scope="col" style="width:18%;">Nom</th>
+                          <th scope="col" style="width:20%;">Prénom</th>
+                          <th scope="col" style="width:15%;">Cout horaire</th>
+                          <th scope="col" style="width:15%;">Panier matin</th>
+                          <th scope="col" style="width:15%;">Panier midi</th>
+                          <th scope="col" style="width:15%;">Panier soir</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for chauf in liste_chauf %}  
+                          <tr>
+                            <th scope="row">
+                              <div class="form-check">
+                                <input class="form-check-input position-static" type="radio" checked="checked" name="chauf_select" id="R_chauf" value="{{chauf[9]}}" aria-label="...">
+                              </div>  
+                            </th>
+                            <td id="table_chauf_id" hidden>{{chauf[6]}}</td>
+                            <td id="table_nom">{{chauf[0]}}</td>
+                            <td id="table_prenom">{{chauf[1]}}</td>
+                            <td id="table_horaire">{{chauf[2]}}</td>
+                            <td id="table_panier_matin">{{chauf[3]}}</td>
+                            <td id="table_panier_midi">{{chauf[4]}}</td>
+                            <td id="table_panier_soir">{{chauf[5]}}</td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </form>                          
+                </div>
+              </div>
+          </div>    
+        </div> 
+      </div>     
+    </div>
+</div>
+
+ <!-- Modal Supprimer-->
+ <div class="modal fade" id="supprimer_chauf" tabindex="-1" aria-labelledby="supprimer_chaufLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="supprimer_chaufLabel">Confirmation...</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form action="{{ url_for('chauffeur_supprime') }}" method="post">
+        <div class="modal-body">
+          <p> Veuillez confirmer la suppression du chauffeur coché</p>
+          <div class="form-group">
+            <input type="text" name="chauf_id" id="sup_chauf" hidden/>
+            <label for="date_debut" class="col-form-label">En selectionnant la date fin de son contrat:</label>
+            <input type="date" class="form-control" id="edit_date_fin" name= "contra_date_fin">
+          </div>  
+        </div>
+        <div class="modal-footer"> 
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+          <button type="submit" class="btn btn-primary"  >Supprimer</button>
+        </div>  
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- fenetre modale modification chauffeur-->
+<div class="modal fade" id="modifier_chauf" tabindex="-1" aria-labelledby="modifier_chauf" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modifier_chauf">Modifier Chauffeur:</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form  method="POST" id= "form2" ACTION="{{ url_for('chauffeur_modifie') }}">
+        <div class="modal-body">
+          <div class="form-group">
+            <input type="text" class="form-control" id="edit_chauf_id" name="chauf_id" hidden>
+            <label for="nom" class="col-form-label">Nom:</label>
+            <input type="text" class="form-control" id="edit_nom" name="nom" >
+            <label for="prenom" class="col-form-label">Prenom:</label>
+            <input type="text" class="form-control" id="edit_prenom" name="prenom">
+            <label for="horaire" class="col-form-label">Coût Horaire:</label>
+            <input type="text" class="form-control" id="edit_horaire" name="horaire">
+            <label for="horaire" class="col-form-label">Panier Matin:</label>
+            <input type="number" class="form-control" id="edit_panier1" name="panier1">
+            <label for="horaire" class="col-form-label">Panier Midi:</label>
+            <input type="number" class="form-control" id="edit_panier2" name= "panier2">
+            <label for="panier3" class="col-form-label">Panier Soir:</label>
+            <input type="number" class="form-control" id="edit_panier3" name= "panier3">
+          </div> 
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+          <input type="submit"  class="btn btn-primary" value='Confirmer modification' >
+        </div>
+      </form>
+    </div>
+  </div>  
+</div>
+
+ <script>
+
+  $('#modifier_chauf').on('shown.bs.modal', function (e) {
+    //debut
+    var row_selected = $("input:radio:checked", "#list_chauff").closest('tr');
+    
+    //var nom= row_selected.children("#table_nom").text();
+    $('#edit_chauf_id').val(row_selected.children("#table_chauf_id").text())
+    $('#edit_nom').val(row_selected.children("#table_nom").text())
+    $('#edit_prenom').val(row_selected.children("#table_prenom").text())
+    $('#edit_horaire').val(row_selected.children("#table_horaire").text())
+    $('#edit_panier1').val(row_selected.children("#table_panier_matin").text())
+    $('#edit_panier2').val(row_selected.children("#table_panier_midi").text())
+    $('#edit_panier3').val(row_selected.children("#table_panier_soir").text())
+
+    //fin
+  })
+
+  $('#supprimer_chauf').on('shown.bs.modal', function (e) {
+    //debut
+    var row_selected = $("input:radio:checked", "#list_chauff").closest('tr');
+    
+    //var nom= row_selected.children("#table_nom").text();
+    $('#sup_chauf').val(row_selected.children("#table_chauf_id").text())
+    
+    //fin
+  })
+</script>      
+
+{% endblock%} 

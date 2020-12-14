@@ -1,0 +1,29 @@
+{% extends 'layouts/default.html' %}
+{% block body%}
+{% include 'layouts/shared/_menu-admin.html'%}
+
+<div align="middle">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+
+    <div class="chart" id="pie1">
+        <script>
+        var graphs = {{plot1 | safe}};
+        Plotly.plot('pie1',graphs,{});
+        </script>
+    </div>	
+    
+    <div class="chart" id="pie2">
+        <script>
+        var graphs2 = {{plot2 | safe}};
+        Plotly.plot('pie2',graphs2,{});
+        </script>
+    </div>
+    <div class="chart" id="pie3">
+        <script>
+        var graphs2 = {{plot3 | safe}};
+        Plotly.plot('pie3',graphs2,{});
+        </script>
+    </div>
+</div>
+{% endblock%} 

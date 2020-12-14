@@ -1,0 +1,174 @@
+{% extends 'layouts/default.html' %}
+{% block body%}
+{% include 'layouts/shared/_menu-admin.html'%}
+<!-----<link ref="//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+ Include the above in your HEAD tag ---------->
+  
+        
+<div class="container-fluid">
+    <div class="row">
+      <div class="col-md-2">  
+        {% include 'layouts/shared/_menu_magasin.html'%}
+      </div>
+      <div class="col-md-10">
+        <div id="loginbox" class="mainbox col-md-10 col-md-offset-3 col-sm-6 col-sm-offset-3"> 
+          <div class="card">
+            <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+            <h5 class="card-header card text-center">  Modification/Suppression Magasin:</h5>
+              <div class="card-body">
+                <div class="border border_secondary rounded-sm"> 
+                  <form id="form" method="POST" class="container form-horizontal " enctype="multipart/form-data" ACTION="{{ url_for('editer_magasin') }}">
+                    <div class="input-group mb-3">
+                      <div class="input-group-prepend">
+                        <button class="btn btn-info" type="submit" id="button-addon1">Rechercher</button>
+                      </div>
+                      <input type="text" class="form-control" name="rech_mag" placeholder="Code du Magasin" aria-label="Example text with button addon" aria-describedby="button-addon1">
+                      <div class="input-group-append">
+                        <!-- Button trigger modal -->
+                        <button  type="button"   class="btn btn-info" data-toggle="modal" data-target="#modifier_mag" data-whatever="@getbootstrap" >Modifier Magasin</button>
+                        <button type="button"  class="btn btn-outline-secondary" data-toggle="modal" data-target="#supprimer_mag" value="Submit form"> Supprimer </button>
+                      </div>
+                    </div>
+                    <table id ='list_mag' class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th scope="col">#</th>
+                          <th scope="col" style="width:18%;">Enseigne</th>
+                          <th scope="col" style="width:13%;">Code</th>
+                          <th scope="col" style="width:50%;">Adresse</th>
+                          <th scope="col" style="width:15%;">Heure_livraison</th>
+                          <th scope="col" style="width:15%;">Tarif_rolls</th>
+                          <th scope="col" style="width:15%;">Tarif_palette</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for mag in liste_magasin %}  
+                          <tr>
+                            <th scope="row">
+                              <div class="form-check">
+                                <input class="form-check-input position-static" type="radio" checked="checked" name="mag_select" id="R_chauf" value="{{mag[0]}}" aria-label="...">
+                              </div>  
+                            </th>
+                            <td id="table_mag_id" hidden>{{mag[0]}}</td>
+                            <td id="table_enseigne_id" hidden>{{mag[7]}}</td>
+                            <td id="table_enseigne">{{mag[6]}}</td>
+                            <td id="table_code">{{mag[1]}}</td>
+                            <td id="table_adresse">{{mag[2]}}</td>
+                            <td id="table_heure_livr">{{mag[3]}}</td>
+                            <td id="table_tarif_rolls">{{mag[4]}}</td>
+                            <td id="table_tarif_pal">{{mag[5]}}</td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </form>                          
+                </div>
+              </div>
+          </div>    
+        </div> 
+      </div>     
+    </div>
+</div>
+
+ <!-- Modal Supprimer-->
+  <div class="modal fade" id="supprimer_mag" tabindex="-1" aria-labelledby="supprimer_chaufLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="supprimer_chaufLabel">Confirmation...</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p> Veuillez confirmer la suppression du magasin coché</p>
+        </div>
+        <div class="modal-footer">
+          <form action="{{ url_for('magasin_supprime') }}" method="post">
+            <input type="text" name="mag_id" id="modal_sup_mag" hidden/>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+            <button type="submit" class="btn btn-primary"  >Supprimer</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<!-- fenetre modale modification chauffeur-->
+<div class="modal fade" id="modifier_mag" tabindex="-1" aria-labelledby="modifier_mag" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modifier_chauf">Modifier Magasin:</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form  method="POST" id= "form2" ACTION="{{ url_for('magasin_modifie') }}">
+        <div class="modal-body">
+          <div class="form-group">
+            <select name="modal_ensNv" class="custom-select" id="edit_enseigne" required>
+              <option value="" disabled> <B> Selectionner Enseigne</B></option>
+                {% for ens in liste_enseigne %}
+                    <option id="edit_ens" value="{{ ens[0] }}" >  {{ ens[1] }} </option>
+                {% endfor %}
+            </select>
+            <input type="text" class="form-control" id="edit_enseigne_id" name="enseigne_id" hidden>
+            <input type="text" class="form-control" id="edit_anc_mag_code" name="anc_code_mag" hidden>
+            <!--<input type="text" class="form-control" id="edit_enseigne" name="enseigne" value="{{mag_info[0]}}">-->
+            <label for="prenom" class="col-form-label">Code:</label>
+            <input type="text" class="form-control" id="edit_code" name="code">
+            <label for="horaire" class="col-form-label">Adresse:</label>
+            <input type="text" class="form-control" id="edit_adresse" name="adresse">
+            <label for="horaire" class="col-form-label">Heure_livraison:</label>
+            <input type="time" class="form-control" id="edit_heure_livr" name="heure_livr">
+            <label for="horaire" class="col-form-label">Tarif rolls:</label>
+            <input type="number" class="form-control" id="edit_tarif_rolls" name= "tarif_rolls">
+            <label for="panier3" class="col-form-label">Tarif palette:</label>
+            <input type="number" class="form-control" id="edit_tarif_pal" name= "tarif_pal">
+          </div>  
+        </div>  
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+          <input type="submit"  class="btn btn-primary" value='Confirmer modification' >
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+ <script>
+
+  $('#modifier_mag').on('shown.bs.modal', function (e) {
+    //debut
+    var row_selected = $("input:radio:checked", "#list_mag").closest('tr');
+    
+    //var nom= row_selected.children("#table_nom").text();
+    $('#edit_enseigne_id').val(row_selected.children("#table_enseigne_id").text())
+    $('#edit_anc_mag_code').val(row_selected.children("#table_code").text())
+
+    //$('#edit_enseigne').row_selected(row_selected.children("#table_enseigne").show())
+    $('#edit_code').val(row_selected.children("#table_code").text())
+    $('#edit_adresse').val(row_selected.children("#table_adresse").text())
+    $('#edit_heure_livr').val(row_selected.children("#table_heure_livr").text())
+    $('#edit_tarif_rolls').val(row_selected.children("#table_tarif_rolls").text())
+    $('#edit_tarif_pal').val(row_selected.children("#table_tarif_pal").text())
+
+    //fin
+  })
+
+  $('#supprimer_mag').on('shown.bs.modal', function (e) {
+    //debut
+    var row_selected = $("input:radio:checked", "#list_mag").closest('tr');
+    
+    //var nom= row_selected.children("#table_nom").text();
+    $('#modal_sup_mag').val(row_selected.children("#table_mag_id").text())
+    
+    //fin
+  })
+</script>      
+
+{% endblock%} 

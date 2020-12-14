@@ -1,0 +1,182 @@
+{% extends 'layouts/default.html' %}
+{% block body%}
+{% include 'layouts/shared/_menu-admin.html'%}
+<!------<link href="//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+ Include the above in your HEAD tag ---------->
+  
+        
+<div class="container-fluid">
+    <div class="row">
+      <div class="col-md-2">  
+        {% include 'layouts/shared/_menu-chauf.html'%}
+      </div>
+      <div class="col-md-10"> 
+        <div id="loginbox" class="mainbox col-md-10 col-md-offset-3 col-sm-6 col-sm-offset-3"> 
+          <div class="card">
+            <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+            <h5 class="card-header card text-center">  Modification/Suppression Statut Chauffeur:</h5>
+              <div class="card-body">
+                <div class="border border_secondary rounded-sm"> 
+                  <form id="form" method="POST" class="container form-horizontal " enctype="multipart/form-data" ACTION="{{ url_for('edit_staut_chauf') }}">
+                    <div class="input-group mb-3">
+                      <div class="input-group-prepend">
+                        <button class="btn btn-info" type="submit" id="button-addon1">Rechercher</button>
+                      </div>
+                      <input type="text" class="form-control" name="rech_chauf" placeholder="Nom/prenom du chauffeur" aria-label="Example text with button addon" aria-describedby="button-addon1">
+                      <div class="input-group-append">
+                                                  <!-- Button trigger modal -->
+                        <button  type="button"   class="btn btn-info" data-toggle="modal" data-target="#modifier_chauf" data-whatever="@getbootstrap" >Modifier Statut</button>
+                        <button type="button"  class="btn btn-outline-secondary" data-toggle="modal" data-target="#supprimer_chauf" value="Submit form"> Supprimer </button>
+                      </div>
+                    </div>
+                    <table id ='list_chauff' class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th scope="col">#</th>
+                          <th scope="col" style="width:18%;">Nom</th>
+                          <th scope="col" style="width:18%;">Prénom</th>
+                          <th scope="col" style="width:18%;">Statut</th>
+                          <th scope="col" style="width:20%;">Date début</th>
+                          <th scope="col" style="width:20%;">Date fin</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for chauf in liste_chauf %}  
+                          <tr>
+                            <th scope="row">
+                              <div class="form-check">
+                                <input class="form-check-input position-static" type="radio" checked="checked" name="chauf_select" id="R_chauf" value="{{chauf[9]}}" aria-label="...">
+                              </div>  
+                            </th>
+                            <td id="table_nom">{{chauf[0]}}</td>
+                            <td id="table_prenom">{{chauf[1]}}</td>
+                            <td id="table_statut">{{chauf[2]}}</td>
+                            <td id="table_date_deb">{{chauf[3]}}</td>
+                            <td id="table_date_fin">{{chauf[4]}}</td>
+                            <td id="table_chauf_id" hidden>{{chauf[5]}}</td>
+                            <td id="table_statut_id" hidden>{{chauf[6]}}</td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </form>              
+                </div>
+              </div>    
+                    
+            </div>    
+          </div>  
+        </div>    
+      </div>
+    </div>  
+</div>
+
+ <!-- Modal Supprimer-->
+  <div class="modal fade" id="supprimer_chauf" tabindex="-1" aria-labelledby="supprimer_chauf" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="supprimer_chauf">Confirmation...</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p> Veuillez confirmer la suppression du statut du chauffeur coché</p>
+        </div>
+        <div class="modal-footer">
+          <form action="{{ url_for('chauffeur_supprime') }}" method="post">
+            <input type="text" name="chauf_id"  id="sup_chauf_id" hidden/>
+            <input type="text" name="statut_id"  id="sup_statut_id" hidden/>
+            <input type="date" name="date_deb"  id="sup_date_deb"hidden />
+            <input type="date" name="date_fin"  id="sup_date_fin" hidden/>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+            <button type="submit" class="btn btn-primary"  >Supprimer</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<!-- fenetre modale modification statut chauffeur-->
+  <div class="modal fade" id="modifier_chauf" tabindex="-1" aria-labelledby="modifier_chauf" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modifier_chauf">Modifier Statut Chauffeur</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form  method="POST" id= "form2" ACTION="{{ url_for('chauffeur_statut_modifie') }}">
+          <div class="modal-body">
+            <div class="form-group">
+              <input type="text" name="modal_chauf_id" value="" id="edit_chauf_id" hidden/><!-- pour récupérer le id du chauf selectionné-->
+              <label for="nom" class="col-form-label">Nom:</label>
+              <input type="text" class="form-control" id="edit_nom"  name="modal_nom" disabled>
+              <label for="prenom" class="col-form-label">Prenom:</label>
+              <input type="text" class="form-control" disabled="disabled" id="edit_prenom" name="modal_prenom">
+              <label for="statut" class="col-form-label">Statut:</label>
+              <!--<input type="text" class="form-control" id="edit_statut" name= "statut">-->
+              <select name="modal_liste_statut" class="custom-select" required>
+                <option value="" disabled selected> <B> Choisissez un Statut</B></option>
+                  {% for stat in liste_statut %}
+                      <option id="edit_statut" value="{{ stat[0] }}" >  {{ stat[1] }} </option>
+                  {% endfor %}
+              </select>
+              <input type="text" name="modal_anc_stat_id" id="edit_anc_statut_id" hidden/>
+              <input type="text" name="modal_anc_date_deb"  id="edit_anc_date_deb" hidden/>
+              <input type="text" name="modal_anc_date_fin"  id="edit_anc_date_fin" hidden/>
+              <label for="date_debut" class="col-form-label">Date Debut:</label>
+              <input type="date" class="form-control" id="edit_date_debut" name= "modal_date_debut">
+              <label for="date_fin" class="col-form-label">Date Fin:</label>
+              <input type="date" class="form-control" id="edit_date_fin" name= "modal_date_fin">
+            </div> 
+          </div>  
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+            <input type="submit"  class="btn btn-primary" value='Confirmer modification' >
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+ <script>
+
+  $('#modifier_chauf').on('shown.bs.modal', function (e) {
+    //debut
+    var row_selected = $("input:radio:checked", "#list_chauff").closest('tr');
+    
+    //var nom= row_selected.children("#table_nom").text();
+    $('#edit_nom').val(row_selected.children("#table_nom").text())
+    $('#edit_prenom').val(row_selected.children("#table_prenom").text())
+    $('select[name="modal_liste_statut"]').val(row_selected.children("#table_statut_id").text()).attr("selected", "selected")
+    //$('#edit_statut').val(row_selected.children("#table_statut").text())
+    $('#edit_date_debut').val(row_selected.children("#table_date_deb").text())
+    $('#edit_date_fin').val(row_selected.children("#table_date_fin").text())
+    $('#edit_anc_statut_id').val(row_selected.children("#table_statut_id").text())
+    $('#edit_chauf_id').val(row_selected.children("#table_chauf_id").text())
+    $('#edit_anc_date_deb').val(row_selected.children("#table_date_deb").text())
+    $('#edit_anc_date_fin').val(row_selected.children("#table_date_fin").text())
+    
+    //fin
+  })
+
+  $('#supprimer_chauf').on('shown.bs.modal', function (e) {
+    //debut
+    var row_selected = $("input:radio:checked", "#list_chauff").closest('tr');
+    
+    //var nom= row_selected.children("#table_nom").text();
+    $('#sup_chauf_id').val(row_selected.children("#table_chauf_id").text())
+    $('#sup_statut_id').val(row_selected.children("#table_statut_id").text())
+    $('#sup_date_deb').val(row_selected.children("#table_date_deb").text())
+    $('#sup_date_fin').val(row_selected.children("#table_date_fin").text())
+
+    //fin
+  })
+</script>      
+
+{% endblock%} 
