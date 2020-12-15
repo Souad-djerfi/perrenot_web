@@ -27,15 +27,15 @@ con=engine.connect()
 
 @app.route('/', methods=['GET','post'])
 def home():
-     
-    return render_template('pages/index1.html')
+    
+    return render_template('pages/index.html')
 
 #*********************************************************************************************************************AJOUTER CAMION***************************************************************************
 @app.route('/Ajouter_Camion', methods=['GET','post'])
 def ajout_camion():
     if not session.get('connexion'):
         flash("Veuillez vous connecter pour accéder à cette page!",'danger')
-        return redirect(url_for('edit_camion'))
+        return redirect(url_for('home'))
     if request.method=='POST':
         Immatriculation=request.form['immatriculation']
         capacite=request.form['capacite']
@@ -859,7 +859,7 @@ def identification():
         
         if role is None: 
             flash(' pseudo et mot de passe ne correspondent pas, Veuillez vérifier votre saisie','danger')
-            return render_template('pages/index1.html',**data)
+            return render_template('pages/index.html',**data)
             
         elif role[0]==1:
             session['login']=pseudo
@@ -920,11 +920,13 @@ def chang_info_user():
                 flash("Le nouveau pseudo que vous venez de taper existe déjà! Veuillez le changer",'danger')  
             elif request.form['nvMDP']=="":
                 con.execute(text("update utilisateur set utilisateur_nom=:nvNom, utilisateur_prenom=:nvPrenom, utilisateur_pseudo=:nvPseudo where utilisateur_id=:user_id"),{'nvNom':nvNom,'nvPrenom':nvPrenom,'nvPseudo':nvPseudo, 'user_id':user_id})
+                flash("Les modifications ont bien été prises en charges",'success')
                 session['login']=request.form['pseudo']
             else:
                 nvMDP=request.form['nvMDP']
                 nvMDP=hashlib.sha1(str.encode(nvMDP)).hexdigest()
                 con.execute(text("update utilisateur set utilisateur_nom=:nvNom, utilisateur_prenom=:nvPrenom, utilisateur_pseudo=:nvPseudo, utilisateur_MDP=:nvMDP where utilisateur_id=:user_id"),{'nvNom':nvNom,'nvPrenom':nvPrenom,'nvPseudo':nvPseudo,'nvMDP':nvMDP, 'user_id':user_id})
+                flash("Les modifications ont bien été prises en charges",'success')
                 session['login']=request.form['pseudo']
                 flash("Les modifications ont bien été prises en charges",'success')
         data['nom']=request.form['nom']
