@@ -19,8 +19,25 @@
             <a class="dropdown-item" href="{{ url_for('selection_magasins') }}">Nouvelles Tournées</a>
             <a class="dropdown-item" href="#">Modifier Tournées</a>
             <a class="dropdown-item" href="#">Reprendre Tournées Brouillon</a>
-            <a class="dropdown-item" href="#">Imprimer Les Feuilles de Route</a>
-            <a class="dropdown-item" href="#">Imprimer Les Facturations</a>
+            
+          </div>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Feuilles de Route
+          </a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+            <a class="dropdown-item" href="{{ url_for('form_facturation') }}">Imprimer Feuilles de route</a>
+          </div>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Facturations
+          </a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#facturation">Formulaire Facturation</a>
+            
+            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#impression_facturation">Imprimer Facturation</a>
           </div>
         </li>
         <li class="nav-item dropdown">
@@ -31,7 +48,7 @@
             <a class="dropdown-item" href="{{ url_for('espace_chauf') }}">Espace Chauffeur</a>
             <a class="dropdown-item" href="{{ url_for('ajouter_chauf') }}">Ajouter Chauffeur</a>
             <a class="dropdown-item" href="{{ url_for('ajouter_statut_chauf') }}">Ajouter Statut Chauffeur</a>
-            <a class="dropdown-item" href=" {{ url_for('modifier_chauffeur') }}">Modifier Chauffeur</a>            
+            <a class="dropdown-item" href=" {{ url_for('modifier_chauffeur') }}">Editer Chauffeur</a>            
             <a class="dropdown-item" href=" {{ url_for('edit_staut_chauf') }}">Editer Statut Chauffeur</a>
             <a class="dropdown-item" href="{{ url_for('modifier_chauffeur') }}">Supprimer Chauffeur</a>
             <a class="dropdown-item" href="#">Liste Chauffeur</a>
@@ -69,11 +86,11 @@
         </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Visualisation des données
+            Dashboards
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
             <a class="dropdown-item" href="{{ url_for('diagramme_aprs_tournees') }}">Diagrammes</a>
-            <a class="dropdown-item" href="#">Rentabilité Tournées</a>
+            <a class="dropdown-item" href="{{ url_for('form_dataviz') }}">Rentabilité Tournées</a>
           </div>
         </li>
         <li class="nav-item dropdown">
@@ -82,7 +99,7 @@
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
             <a class="dropdown-item" href="{{ url_for('ajouter_user') }}">Ajouter Compte</a>
-            <a class="dropdown-item" href="#">Supprimer Compte</a>
+            <a class="dropdown-item" href="">Supprimer Compte</a>
           </div>
         </li>
         <li class="nav-item">
@@ -90,10 +107,7 @@
             A propos de...
           </a>
         </li>
-        <form class="form-inline my-2 my-lg-0">
-          <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-          
-        </form>
+        
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#"role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="menu-icon fas fa-user-circle fa-2x" data-toggle="tooltip" data-placement="top" title="Mon compte"></i></a>   
           <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
@@ -112,7 +126,7 @@
     
   </nav>
   
-  <!-- Modal -->
+  <!-- Modal Apropos de-->
   <div class="modal fade" id="apropos" tabindex="-1" aria-labelledby="apropos" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -131,6 +145,62 @@
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Ok</button>
           
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal facturation-->
+  <div class="modal fade" id="facturation" tabindex="-1" aria-labelledby="facturation" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="apropos">Selectionner date de Facturation</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form  method="POST" id= "form2" ACTION="{{ url_for('form_facturation') }}">
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="date" class="col-form-label" >Date Facturation:</label>
+              <input type="date" class="form-control" id="date" name= "date" required>  
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+            <button type="submit" class="btn btn-primary">Visualiser Formulaire</button>
+          </div>
+        </form>  
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal impression facturation-->
+  <div class="modal fade" id="impression_facturation" tabindex="-1" aria-labelledby="impression_facturation" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="apropos">Selectionner la période de Facturation</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form  method="POST" id= "form2" ACTION="{{ url_for('form_facturation') }}">
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="date" class="col-form-label" >Du:</label>
+              <input type="date" class="form-control" id="date" name= "date_debut" required>  
+            </div>
+            <div class="form-group">
+              <label for="date" class="col-form-label" >Au:</label>
+              <input type="date" class="form-control" id="date" name= "date_fin" required>  
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+            <button type="submit" class="btn btn-primary">Imprimer facturation</button>
+          </div>
+        </form>  
       </div>
     </div>
   </div>

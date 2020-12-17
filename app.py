@@ -25,16 +25,18 @@ app.config.update(SECRET_KEY  = 'ma cle secrete')
 engine = create_engine('mysql+pymysql://simplon:Simplon2020@localhost:3306/perrenot')
 con=engine.connect()
 
+
 @app.route('/', methods=['GET','post'])
 def home():
     
     return render_template('pages/index.html')
 
+
 #*********************************************************************************************************************AJOUTER CAMION***************************************************************************
 @app.route('/Ajouter_Camion', methods=['GET','post'])
 def ajout_camion():
     if not session.get('connexion'):
-        flash("Veuillez vous connecter pour accéder à cette page!",'danger')
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
         return redirect(url_for('home'))
     if request.method=='POST':
         Immatriculation=request.form['immatriculation']
@@ -60,10 +62,102 @@ def ajout_camion():
         return render_template('pages/ajouter_camion.html')
 
     return render_template('pages/ajouter_camion.html')
+    #*************************************************************************************************************************FORMULAIRE DATAVIZ*****************************************
+
+@app.route('/Visualisation_données', methods=['GET','post'])
+def form_dataviz():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
+    
+    return render_template('pages/dataviz.html')
+    #*************************************************************************************************************************IMPRESSION FACTURATION*****************************************
+
+@app.route('/impression_facturation', methods=['GET','post'])
+def imprimer_facturation():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
+    if request.method=='POST':
+        vl_cam_id=request.form.getlist('vl_mat')
+        vl_km=request.form.getlist('vl_km')
+        vl_heure=request.form.getlist('vl_heure')
+        vl_heure_nuit=request.form.getlist('vl_heure_nuit')
+        trc_km=request.form.getlist('trc_km')
+        csn_nvt_type=request.form.getlist('csn_nvt_type')
+        csn_nvt_nbre=request.form.getlist('csn_nvt_nbre')
+        ens_nvt=request.form.getlist('ens_nvt')
+        ens_nvt_nbre=request.form.getlist('ens_nvt_nbre')
+        cm_id=request.form.getlist('cm_id')
+        cm_km=request.form.getlist('cm_km')
+        date=request.form.getlist('date')
+        print('facturatioooooooooooon',vl_cam_id, vl_km, vl_heure, vl_heure_nuit,trc_km,csn_nvt_type, ens_nvt, csn_nvt_nbre, ens_nvt_nbre )
+        casino_id=con.execute(text("select enseigne_id from enseigne where enseigne_intitulé='CASINO'")).fetchone()
+        L_enseigne=con.execute(text("select enseigne_id from enseigne where enseigne_intitulé<>'CASINO' and enseigne_actif=1")).fetchall()
+        trinome_km=con.execute(text("select info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='km' ")).fetchone()
+        trinome_heure= con.execute(text("select info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='heure' ")).fetchone()
+        trinome_heure_nuit= con.execute(text("select info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='maj heure nuit' ")).fetchone()
+        trinome_traction= con.execute(text("select info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='traction' ")).fetchone()
+        tk_km=con.execute(text("select info_tarification_id from info_tarification where type_tarif='TK' and intitule_tarif='km' ")).fetchone()
+        L_nvt_casino=con.execute(text("select info_tarification_id from info_tarification where type_tarif='navette_casino' ")).fetchall()
+        semi_navette=con.execute(text("select camion_id from camion where camion_type ='SEMI_NAVETTE'")).fetchone()
+        for cpt in range(len(vl_cam_id)):
+            con.execute(text("insert into tarification (info_tarification_id, enseigne_id, camion_id,date,valeur) values(:trinome_km, :casino_id, :vl_cam_id, :date, :valeur )"),  {'trinome_km': trinome_km[0],'casino_id':casino_id[0], 'vl_cam_id': vl_cam_id[cpt],'date':date, 'valeur':vl_km[cpt] })
+            con.execute(text("insert into tarification (info_tarification_id, enseigne_id, camion_id,date,valeur) values(:trinome_heure, :casino_id, :vl_cam_id, :date, :valeur )"),  {'trinome_heure': trinome_heure[0],'casino_id':casino_id[0], 'vl_cam_id': vl_cam_id[cpt],'date':date, 'valeur':vl_heure[cpt] })
+            con.execute(text("insert into tarification (info_tarification_id, enseigne_id, camion_id,date,valeur) values(:trinome_heure_nuit, :casino_id, :vl_cam_id, :date, :valeur )"),  {'trinome_heure_nuit': trinome_heure_nuit[0],'casino_id':casino_id[0], 'vl_cam_id': vl_cam_id[cpt],'date':date, 'valeur':vl_heure_nuit[cpt] })
+        for cpt in range(len(cm_id)):
+            con.execute(text("insert into tarification (info_tarification_id, enseigne_id, camion_id,date,valeur) values(:tk_km, :casino_id, :cm_id, :date, :valeur )"),  {'tk_km': tk_km[0],'casino_id':casino_id[0], 'cm_id': cm_id[cpt],'date':date, 'valeur':cm_km[cpt] })
+        for cpt in range(len(csn_nvt_type)):
+            if int(csn_nvt_nbre[cpt]) !=0:
+                con.execute(text("insert into tarification (info_tarification_id, enseigne_id,camion_id, date,valeur) values(:csn_nvt_type,:casino_id, :semi_navette,  :date, :valeur )"),  {'csn_nvt_type': csn_nvt_type[cpt],'semi_navette':semi_navette[0], 'casino_id':casino_id[0], 'date':date, 'valeur':csn_nvt_nbre[cpt] })
+       
+      
+        data={'vl_cam_id':vl_cam_id,
+              'vl_km':vl_km,
+              'vl_heure':vl_heure,
+              'vl_heure_nuit':vl_heure_nuit,
+              'trc_km':trc_km,
+              'csn_nvt_type':csn_nvt_type,
+              'csn_nvt_nbre':csn_nvt_nbre,
+              'ens_nvt':ens_nvt,
+              'ens_nvt_nbre':ens_nvt_nbre}
+
+        #return render_template('pages/facturation copy.html', **data)
+        return "ça marche bien"
+#*************************************************************************************************************************FORMULAIRE FACTURATION*****************************************
+
+@app.route('/facturation', methods=['GET','post'])
+def form_facturation():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
+    if request.method=='POST':
+        date=request.form['date']
+        L_enseigne=con.execute(text("select enseigne_id, enseigne_intitulé from enseigne where enseigne_intitulé<>'CASINO' and enseigne_actif=1")).fetchall()
+        L_VL=con.execute(text("select distinct camion_mat, camion.camion_id from camion_magasin join camion on camion.camion_id=camion_magasin.camion_id where camion_magasin.date=:date and camion.camion_type='VL' and camion.camion_actif=1"), {'date':date}).fetchall()
+        nbre_cm=con.execute(text("select count(camion_id) from camion where camion_actif=1 and camion_type='CAISSE_MOBILE'")).fetchone()
+        L_CM=con.execute(text("select distinct camion_mat ,camion.camion_id from camion_magasin join camion on camion.camion_id=camion_magasin.camion_id where camion_magasin.date=:date and camion.camion_type='CAISSE_MOBILE' and camion.camion_actif=1"), {'date':date}).fetchall()
+        L_navette=con.execute(text("select intitule_tarif, info_tarification_id from info_tarification where type_tarif ='navette_casino'" )).fetchall()
+        L_camion=con.execute(text("select camion_id, camion_mat,  camion_type from camion where camion_actif=1")).fetchall()
+        nbre_ens=len(L_enseigne)
+        nbre_vl=len(L_VL)
+        data={'L_enseigne':L_enseigne,
+                'nbre_ens': nbre_ens,
+                'L_VL':L_VL,
+                'L_CM':L_CM,
+                'nbre_vl':nbre_vl,
+                'nbre_cm':nbre_cm[0],
+                'L_navette': L_navette,
+                'L_camion':L_camion,
+                'date':date}
+        return render_template('pages/facturation.html', **data)
 
     #************************************************************************************************************************EDITER CAMION********************************************************************
 @app.route('/modification_camion', methods=['GET','post'])
 def edit_camion():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     rech_cam=''
     cam_select=''
     cam_info=[ '' for i in range(9)]
@@ -96,6 +190,9 @@ def edit_camion():
 
 @app.route('/camion_supprimé', methods=['GET','post'])
 def camion_supprime():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     camion_id=request.form['camion_id']
     con.execute(text("update camion set camion_actif=0 where camion_id=:camion_id"),{'camion_id':camion_id})
     flash('Le camion coché a été bien supprimé', 'success')   
@@ -106,6 +203,9 @@ def camion_supprime():
 
 @app.route('/camion_modifié', methods=['GET','post'])
 def camion_modifie():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     mat_anc=request.form['mat_anc']
     cam_id=request.form['cam_id']
     mat=request.form['mat']
@@ -132,11 +232,17 @@ def camion_modifie():
 
 @app.route('/chauffeur', methods=['GET','post'])
 def espace_chauf():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
      
     return render_template('pages/espace_chauf.html')
 #***************************************************************************************************************************DIAGRAMMES********************************************************************************
 @app.route('/Diagrammes', methods=['GET','post'])
 def diagramme_aprs_tournees():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     requeteLivraison = pd.read_sql_query('SELECT e.enseigne_intitulé AS enseigne, m.magasin_id, magasin_tarif_rolls, magasin_tarif_palette, magasin_tarif_boxe FROM camion_magasin cm join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where date between "2020-01-10" and "2021-01-01"', engine)
 
     dataLivraison = pd.DataFrame(requeteLivraison)
@@ -167,6 +273,9 @@ def diagramme_aprs_tournees():
 #
 @app.route('/ajouter_chauf', methods=['GET','post'])
 def ajouter_chauf():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     liste_contrat=con.execute(text("select contrat_id, contrat_intitule from contrat")).fetchall()
     data={ 'liste_contrat':liste_contrat}
     if request.method=='POST':
@@ -182,6 +291,9 @@ def ajouter_chauf():
     #***************************************************************************************************************************Ajouter Contrat à un chauffeur**********************************************************
 @app.route('/ajout_contrat', methods=['GET','post'])
 def ajouter_contrat_chauf():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     
     #liste chauffeurs
     requete_chauf="select chauf_id, chauf_nom, chauf_prenom, concat(chauf_nom,'---' ,chauf_prenom) as NP from chauffeur where chauf_actif=1"
@@ -218,6 +330,9 @@ def ajouter_contrat_chauf():
   #********************************************************************************************************************VALIDER MODIFICATION CONTRAT CHAUFFEUR**************************************************************
 @app.route('/chaufeur_contrat_modifié', methods=['GET','post']) # post de edit_contrat_chauf
 def chauffeur_contrat_modifie():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     chauf_id=request.form['modal_chauf_id'] 
     anc_contrat_id=request.form['modal_anc_contrat_id']
     nv_contrat_id=request.form['modal_liste_contrat']
@@ -238,6 +353,9 @@ def chauffeur_contrat_modifie():
     #**************************************************************************************************************VALIDER SUPPRESSION CONTRAT CHAUFFEUR**********************************************************************
 @app.route('/chaufeur_contrat_supprime', methods=['GET','post'])
 def chauffeur_contrat_supprime():#++++++++++++++++++++++++++++++++++++UPDATE ne marche pas 
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     chauf_id=request.form['chauf_id']
     contrat_id=request.form['contrat_id']
     date_debut=request.form['date_deb']
@@ -249,6 +367,9 @@ def chauffeur_contrat_supprime():#++++++++++++++++++++++++++++++++++++UPDATE ne 
 #************************************************************************************************************************EDITER CONTRAT CHAUFFEUR********************************************************************************************************************************************
 @app.route('/modification_contrat_chauffeur', methods=['GET','post'])
 def edit_contrat_chauf():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     rech_chauf=''
     chauf_select=''
     chauf_info=[ '' for i in range(9)]
@@ -285,6 +406,9 @@ def edit_contrat_chauf():
 #**************************************************************************************************************VALIDER SUPPRESSION CHAUFFEUR**********************************************************************
 @app.route('/chaufeur_supprime', methods=['GET','post'])
 def chauffeur_supprime():#++++++++++++++++++++++++++++++++++++UPDATE ne marche pas 
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     chauf_id=request.form['chauf_id']
     contra_date_fin=request.form['contra_date_fin']
     contrat_encours=con.execute(text("select date_debut from chauffeur_contrat where chauf_id=:chauf_id and date_fin>:contra_date_fin "),{'chauf_id':chauf_id,'contra_date_fin':contra_date_fin}).fetchall()
@@ -314,6 +438,9 @@ def chauffeur_supprime():#++++++++++++++++++++++++++++++++++++UPDATE ne marche p
  #*************************************************************************************************************VALIDER MODIFICATION STATUT CHAUFFEUR**************************************************************
 @app.route('/chaufeur_statut_modifié', methods=['GET','post']) # post de edit_statut_chauf
 def chauffeur_statut_modifie():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     chauf_id=request.form['modal_chauf_id'] 
     anc_statut_id=request.form['modal_anc_stat_id']
     nv_statut_id=request.form['modal_liste_statut']
@@ -344,6 +471,9 @@ def chauffeur_statut_modifie():
 #***********************************************************************************EDITER STATUT CHAUFFEUR********************************************************************************************************************************************
 @app.route('/modification_statut_chauffeur', methods=['GET','post'])
 def edit_staut_chauf():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     rech_chauf=''
     chauf_select=''
     chauf_info=[ '' for i in range(9)]
@@ -379,7 +509,9 @@ def edit_staut_chauf():
 #*************************************************************************************************************************************Ajouter statut à un chauffeur**********************************************************
 @app.route('/ajout_statut', methods=['GET','post'])
 def ajouter_statut_chauf():
-    
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     #liste chauffeurs
     requete_chauf="select chauf_id, chauf_nom, chauf_prenom, concat(chauf_nom,'---' ,chauf_prenom) as NP from chauffeur where chauf_actif=1"
     liste_chauf=con.execute(text(requete_chauf)).fetchall()
@@ -414,6 +546,9 @@ def ajouter_statut_chauf():
 #**********************************************************************************************************************Editer un Chauffeur********************************************************************
 @app.route('/modification_chauffeur', methods=['GET','post'])
 def modifier_chauffeur():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     rech_chauf=''
     chauf_select=''
     chauf_info=[ '' for i in range(9)]
@@ -448,6 +583,9 @@ def modifier_chauffeur():
 
 @app.route('/chaufeur_modifié', methods=['GET','post'])
 def chauffeur_modifie():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     chauf_id=request.form['chauf_id']
     nom=request.form['nom'] 
     prenom=request.form['prenom']
@@ -458,6 +596,9 @@ def chauffeur_modifie():
 
 @app.route('/ajout_utilisateur', methods=['GET','post'])
 def ajouter_user():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     Fpseudo=''
     Frole,Fmdp,FCmdp,Fnom,Fprenom='','','','',''
     requete_role="select role_id, role_intitule from role"
@@ -525,6 +666,9 @@ def ajouter_user():
 #*******************************************************************************************Ajouter un MAGASN**************************************************************************
 @app.route('/ajout_magasin', methods=['GET','post'])
 def ajouter_magasin():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     Fcode, Fadresse, Fheure='', '', ''
     Frolls=0
     Fpal=0
@@ -588,6 +732,9 @@ def ajouter_magasin():
 #*************************************************************************************************MAGASIN_SUPPRIME*********************************************************
 @app.route('/suppression_enregistrée', methods=['GET','post']) # post de edit_statut_chauf
 def magasin_supprime():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     mag_id=request.form['mag_id'] 
     con.execute(text("update magasin set magasin_actif=0 where magasin_id=:mag_id"),{'mag_id':mag_id})
     flash('Le magasin coché a été bien supprimé', 'success')
@@ -596,6 +743,9 @@ def magasin_supprime():
 #*************************************************************************************************MAGASIN_MODIFE*************************************************************
 @app.route('/modification_enregistrée', methods=['GET','post']) # post de edit_statut_chauf
 def magasin_modifie():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     anc_ens_id=request.form['enseigne_id'] 
     mag_code=request.form['code']
     adresse=request.form['adresse']
@@ -616,6 +766,9 @@ def magasin_modifie():
 #***********************************************************************************************Editer un Magasin********************************************************************
 @app.route('/modification_magasin', methods=['GET','post'])
 def editer_magasin():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     rech_mag=''
     mag_select=''
     mag_info=[ '' for i in range(9)]
@@ -654,6 +807,9 @@ def editer_magasin():
 #*******************************************************************************************************************************ENREGISTRER TOURNEES***********************************************************
 @app.route('/enregistrement_tournée', methods=['get','post']) #post de valider_tournée.html
 def enregistrer_tournee():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     if request.method=='POST':
         nom_chauf=request.form.getlist('nom_chauf')
         vlm_rolls=request.form.getlist('vlm_rolls')
@@ -699,7 +855,9 @@ def enregistrer_tournee():
 #**************************************************************************************************************************************************SELECTION MAGASINS***********************************************************
 @app.route('/selection_magasin', methods=['get','post'])
 def selection_magasins():
-
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     requete_nbre_ens='select count(*) from enseigne where enseigne_actif=1'
     nbre_ens=con.execute(text(requete_nbre_ens)).fetchone()[0]
     requete_ens='select enseigne_id,enseigne_intitulé from enseigne where enseigne_actif=1'
@@ -725,6 +883,9 @@ def selection_magasins():
  #**********************************************************************************************************************VALIDER les MAGASINS CHOISIS**********************************************************       
 @app.route('/valider_magasins', methods=['get','post'])
 def valider_magasins():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     #camion_coche=request.form.getlist('liste_camion')
     list_camion_mat=con.execute(text("call liste_camion()")).fetchall()
     mag_coche=request.form.getlist('mag')
@@ -776,7 +937,6 @@ def valider_magasins():
     requete_mag_jour_code='select magasin_code from magasin where magasin_id=:magasin_id'     
        
     for j in range(len(nbre_rolls)):
-        print("rolls",nbre_rolls[j],"palette",nbre_pal[j], "magasins", mag_coche[j])
         mag_code=con.execute(text(requete_mag_jour_code),{'magasin_id': mag_coche[j]}).fetchone()
         con.execute(text("insert into magasin_journalier (mag_id, nbre_rolls, nbre_pal, magasin_code, date) values(:mag_id, :nbre_rolls, :nbre_pal,  :magasin_code, :date) on duplicate key update nbre_rolls=:nbre_rolls and nbre_pal=:nbre_pal "), {'mag_id':mag_coche[j], 'nbre_rolls': nbre_rolls[j], 'nbre_pal': nbre_pal[j], 'magasin_code':mag_code[0], 'date':date,'nbre_rolls': nbre_rolls[j], 'nbre_pal': nbre_pal[j]})
         
@@ -832,6 +992,7 @@ def valider_magasins():
 #*************************************************************************************************Identification***************************************************************        
 @app.route('/Accueil', methods=['post', 'get'])
 def identification():
+    
     pseudo=''
     nom=''
     prenom=''
@@ -874,12 +1035,7 @@ def identification():
             
           
     return render_template('pages/accueil_admin.html',**data)    
-#**********************************************************************************Accès non autorisé********************************************************************************      
-
-@app.route('/Accès-non_autorisé', methods=['post','get'])
-def accès_nom_autorisé(): 
-    session.clear()   
-    return redirect(url_for('home'))              
+             
  #**********************************************************************************SE DECONNECTER********************************************************************************      
 
 @app.route('/deconnection', methods=['post','get'])
@@ -892,6 +1048,9 @@ def se_deconnecter():
 
 @app.route('/mes_informations', methods=['post','get'])
 def chang_info_user():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
     pseudo=session['login']
     info_user=con.execute(text("select utilisateur_nom, utilisateur_prenom, utilisateur_MDP, utilisateur_id from utilisateur where utilisateur_pseudo=:pseudo"),{'pseudo':pseudo }).fetchone()
     print('INFOOOOOOOOOOOO USEEEEEEER',info_user[0], info_user[1])

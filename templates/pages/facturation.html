@@ -1,0 +1,184 @@
+{% extends 'layouts/default.html' %}
+{% block body%}
+{% include 'layouts/shared/_menu-admin.html'%}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+<!-- JavaScript Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW" crossorigin="anonymous"></script>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-2">
+            <div class="list-group" id="list-tab" role="tablist">
+                <a class="list-group-item list-group-item-action active" id="CASINO" data-toggle="list" href="#form_CASINO" role="tab" aria-controls="Casino">CASINO</a>
+                    {% for ens in L_enseigne: %}
+                        <a class="list-group-item list-group-item-action " id="list-{{ ens[0] }}-list" data-toggle="list" href="#list-{{ ens[0] }}" role="tab" aria-controls="{{ ens[1] }}">{{ ens[1] }}</a>
+                    {% endfor %}
+            </div>
+        </div> 
+
+        <div class="col-10">
+            <form method="POST" ACTION="{{ url_for('imprimer_facturation') }}">
+              <input type="text" class="form-control" id="inputEmail3"  value="{{date}}" name="date" hidden>
+                <div class="row">
+                   
+                </div>
+                <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active " id="form_CASINO" role="tabpanel" >
+                        <div class="accordion" id="accordionExample">
+                            <div class="accordion-item">
+                              <h2 class="accordion-header" id="headingOne">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                  <strong><em>Formulaire de Facturation CASINO pour {{date }}: TRINOME -VL-</em> </strong>
+                                </button>
+                              </h2>
+                              <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                                <div class="accordion-body">
+                                  <div class="row">
+                                    {%for vl in L_VL%}
+                                      <div class="col-sm-6">
+                                        <div class="card">
+                                          <div class="card-body">
+                                              <div class="form-group row">
+                                                  <label for="inputEmail3" class="col-sm-3 col-form-label">Immatriculation:</label>
+                                                  <div class="col-sm-9">
+                                                    <input type="text" class="form-control" id="inputEmail3" placeholder="{{vl[0]}}"  name="vl_mat" aria-hidden="" disabled>
+                                                    <input type="text" class="form-control" id="inputEmail3" placeholder="{{vl[0]}}" value="{{vl[1]}}" name="vl_mat" hidden>
+                                                  </div>
+                                              </div>
+                                              <div class="form-group row">
+                                                  <label for="inputEmail3" class="col-sm-3 col-form-label">KM:</label>
+                                                  <div class="col-sm-9">
+                                                    <input type="text" class="form-control" id="inputEmail3" placeholder="Nombre de KM parcouru" value="" name="vl_km" required >
+                                                  </div>
+                                              </div>
+                                              <div class="form-group row">
+                                                  <label for="inputEmail3" class="col-sm-3 col-form-label">Heure:</label>
+                                                  <div class="col-sm-9">
+                                                    <input type="text" class="form-control" id="inputEmail3" placeholder="Nombre d'heures " value="" name="vl_heure" required>
+                                                  </div>
+                                              </div>
+                                              <div class="form-group row">
+                                                  <label for="inputEmail3" class="col-sm-3 col-form-label">Heure Nuit:</label>
+                                                  <div class="col-sm-9">
+                                                    <input type="text" class="form-control" id="inputEmail3" placeholder="Nombre d'heures de nuit" name="vl_heure_nuit" required>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    {% endfor %}
+                                  </div> 
+                                </div>
+                              </div>
+                            </div>
+                            <div class="accordion-item">
+                              <h2 class="accordion-header" id="headingTwo">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                  <strong> <em> Formulaire de Facturation CASINO pour {{date }}: Terme Kilometrique -Caisse Mobile- </em></strong>
+                                </button>
+                              </h2>
+                              <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+                                <div class="accordion-body">
+                                  <div class="row">
+                                    {%for cm in L_CM%}
+                                      <div class="col-sm-6">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <div class="form-group row">
+                                                    <label for="inputEmail3" class="col-sm-3 col-form-label">Immatriculation:</label>
+                                                    <div class="col-sm-9">
+                                                      <input type="text" class="form-control" id="inputEmail3" placeholder="{{cm[0]}}"  disabled>
+                                                      <input type="text" class="form-control"   value="{{cm[1]}}" name="cm_id" hidden>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group row">
+                                                    <label for="inputEmail3" class="col-sm-3 col-form-label">KM:</label>
+                                                    <div class="col-sm-9">
+                                                      <input type="text" class="form-control" id="inputEmail3" placeholder="Nombre de KM parcouru" value="" name="cm_km" required >
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                      </div>
+                                    {% endfor %}
+                                    {% for tr in range(nbre_cm//2) %}
+                                      <div class="col-sm-6">
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <div class="form-group row">
+                                                    <label for="inputEmail3" class="col-sm-3 col-form-label">Traction -{{tr+1}}-:</label>
+                                                    <div class="col-sm-9">
+                                                      <input type="text" class="form-control" id="inputEmail3" placeholder="Nombre de KM parcouru" value="" name="trc_km" >
+                                                    </div>
+                                                </div>
+                                                
+                                            </div>
+                                        </div>
+                                      </div>
+                                    {% endfor %}
+                                  </div>
+                               </div>
+                              </div>
+                            </div>
+                            <div class="accordion-item">
+                              <h2 class="accordion-header" id="headingThree">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                  <strong> <em>Formulaire de Facturation CASINO pour {{date }}: Navettes -Entrepot- </em></strong>
+                                </button>
+                              </h2>
+                                <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+                                    <div class="accordion-body"> 
+                                        <div class="row">
+                                            {% for nvt in L_navette %}
+                                                <div class="col-sm-6">
+                                                    <div class="card">
+                                                        <div class="card-body">
+                                                            <div class="form-group row">
+                                                                <label for="inputEmail3" class="col-sm-3 col-form-label"><strong> {{nvt[0]}}: </strong></label>
+                                                                <div class="col-sm-9">
+                                                                  <input type="text" class="form-control" id="inputEmail3"  name="csn_nvt_type" value="{{nvt[1]}}" hidden >
+                                                                  <input type="number" class="form-control" id="inputEmail3" placeholder="Nombre de fois" name="csn_nvt_nbre"  >
+                                                                    
+                                                                </div>
+                                                            </div>
+                                                            
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% for ens in L_enseigne: %}
+                        <div class="tab-pane fade " id="list-{{ ens[0] }}" role="tabpanel">
+                            <div class="card text-center">
+                                <h5 class="card-header"> <em>Formulaire de Facturation de {{ ens[1] }} pour {{date}}:</em></h5>
+                                <div class="card-body">
+                                    <div class="form-group row">
+                                        <label for="inputEmail3" class="col-sm-3 col-form-label"><strong> Entrepôt: </strong></label>
+                                        <div class="col-sm-9">
+                                          <input type="text" class="form-control" id="inputEmail3" name="ens_nvt" value="{{ ens[0] }}" hidden >
+                                          <input type="number" class="form-control" id="inputEmail3" placeholder="Nombre de fois"  name="ens_nvt_nbre" value="0">
+                                        </div>
+                                    </div>
+                                </div>
+                                <!--<div class="card-footer text-muted">
+                                    2 days ago
+                                </div>-->
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Enregitrer tous les formulaires</button>
+            </form>
+        </div>
+    </div>  
+
+</div>
+    
+        
+{% endblock %}         
