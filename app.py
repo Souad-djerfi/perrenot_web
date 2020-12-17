@@ -73,8 +73,8 @@ def form_dataviz():
     return render_template('pages/dataviz.html')
     #*************************************************************************************************************************IMPRESSION FACTURATION*****************************************
 
-@app.route('/impression_facturation', methods=['GET','post'])
-def imprimer_facturation():
+@app.route('/enregistrement_facturation', methods=['GET','post'])
+def enregistrer_facturation():
     if not session.get('connexion'):
         flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
         return redirect(url_for('home'))
@@ -84,6 +84,7 @@ def imprimer_facturation():
         vl_heure=request.form.getlist('vl_heure')
         vl_heure_nuit=request.form.getlist('vl_heure_nuit')
         trc_km=request.form.getlist('trc_km')
+        traction_mat=request.form.getlist('traction_mat')
         csn_nvt_type=request.form.getlist('csn_nvt_type')
         csn_nvt_nbre=request.form.getlist('csn_nvt_nbre')
         ens_nvt=request.form.getlist('ens_nvt')
@@ -93,7 +94,7 @@ def imprimer_facturation():
         date=request.form.getlist('date')
         print('facturatioooooooooooon',vl_cam_id, vl_km, vl_heure, vl_heure_nuit,trc_km,csn_nvt_type, ens_nvt, csn_nvt_nbre, ens_nvt_nbre )
         casino_id=con.execute(text("select enseigne_id from enseigne where enseigne_intitulé='CASINO'")).fetchone()
-        L_enseigne=con.execute(text("select enseigne_id from enseigne where enseigne_intitulé<>'CASINO' and enseigne_actif=1")).fetchall()
+        #L_enseigne=con.execute(text("select enseigne_id from enseigne where enseigne_intitulé<>'CASINO' and enseigne_actif=1")).fetchall()
         trinome_km=con.execute(text("select info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='km' ")).fetchone()
         trinome_heure= con.execute(text("select info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='heure' ")).fetchone()
         trinome_heure_nuit= con.execute(text("select info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='maj heure nuit' ")).fetchone()
@@ -107,6 +108,9 @@ def imprimer_facturation():
             con.execute(text("insert into tarification (info_tarification_id, enseigne_id, camion_id,date,valeur) values(:trinome_heure_nuit, :casino_id, :vl_cam_id, :date, :valeur )"),  {'trinome_heure_nuit': trinome_heure_nuit[0],'casino_id':casino_id[0], 'vl_cam_id': vl_cam_id[cpt],'date':date, 'valeur':vl_heure_nuit[cpt] })
         for cpt in range(len(cm_id)):
             con.execute(text("insert into tarification (info_tarification_id, enseigne_id, camion_id,date,valeur) values(:tk_km, :casino_id, :cm_id, :date, :valeur )"),  {'tk_km': tk_km[0],'casino_id':casino_id[0], 'cm_id': cm_id[cpt],'date':date, 'valeur':cm_km[cpt] })
+        for cpt in range(len(traction_mat)):
+            if int(trc_km[cpt]) !=0:
+                con.execute(text("insert into tarification (info_tarification_id, enseigne_id, camion_id,date,valeur) values(:trinome_traction, :casino_id, :cm_id, :date, :valeur )"),  {'trinome_traction': trinome_traction[0],'casino_id':casino_id[0], 'cm_id': traction_mat[cpt],'date':date, 'valeur':trc_km[cpt] })
         for cpt in range(len(csn_nvt_type)):
             if int(csn_nvt_nbre[cpt]) !=0:
                 con.execute(text("insert into tarification (info_tarification_id, enseigne_id,camion_id, date,valeur) values(:csn_nvt_type,:casino_id, :semi_navette,  :date, :valeur )"),  {'csn_nvt_type': csn_nvt_type[cpt],'semi_navette':semi_navette[0], 'casino_id':casino_id[0], 'date':date, 'valeur':csn_nvt_nbre[cpt] })
@@ -121,9 +125,9 @@ def imprimer_facturation():
               'csn_nvt_nbre':csn_nvt_nbre,
               'ens_nvt':ens_nvt,
               'ens_nvt_nbre':ens_nvt_nbre}
-
+        flash("le formualaire de la facturation a été bien enregistré",'success')
         #return render_template('pages/facturation copy.html', **data)
-        return "ça marche bien"
+        
 #*************************************************************************************************************************FORMULAIRE FACTURATION*****************************************
 
 @app.route('/facturation', methods=['GET','post'])
@@ -137,6 +141,7 @@ def form_facturation():
         L_VL=con.execute(text("select distinct camion_mat, camion.camion_id from camion_magasin join camion on camion.camion_id=camion_magasin.camion_id where camion_magasin.date=:date and camion.camion_type='VL' and camion.camion_actif=1"), {'date':date}).fetchall()
         nbre_cm=con.execute(text("select count(camion_id) from camion where camion_actif=1 and camion_type='CAISSE_MOBILE'")).fetchone()
         L_CM=con.execute(text("select distinct camion_mat ,camion.camion_id from camion_magasin join camion on camion.camion_id=camion_magasin.camion_id where camion_magasin.date=:date and camion.camion_type='CAISSE_MOBILE' and camion.camion_actif=1"), {'date':date}).fetchall()
+        L_CM_complete=con.execute(text("select camion_mat ,camion_id from camion where camion_type='CAISSE_MOBILE' and camion_actif=1")).fetchall()
         L_navette=con.execute(text("select intitule_tarif, info_tarification_id from info_tarification where type_tarif ='navette_casino'" )).fetchall()
         L_camion=con.execute(text("select camion_id, camion_mat,  camion_type from camion where camion_actif=1")).fetchall()
         nbre_ens=len(L_enseigne)
@@ -145,6 +150,7 @@ def form_facturation():
                 'nbre_ens': nbre_ens,
                 'L_VL':L_VL,
                 'L_CM':L_CM,
+                'L_CM_complete':L_CM_complete,
                 'nbre_vl':nbre_vl,
                 'nbre_cm':nbre_cm[0],
                 'L_navette': L_navette,

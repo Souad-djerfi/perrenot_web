@@ -17,7 +17,7 @@
         </div> 
 
         <div class="col-10">
-            <form method="POST" ACTION="{{ url_for('imprimer_facturation') }}">
+            <form method="POST" ACTION="{{ url_for('enregistrer_facturation') }}">
               <input type="text" class="form-control" id="inputEmail3"  value="{{date}}" name="date" hidden>
                 <div class="row">
                    
@@ -105,13 +105,23 @@
                                       <div class="col-sm-6">
                                         <div class="card">
                                             <div class="card-body">
-                                                <div class="form-group row">
-                                                    <label for="inputEmail3" class="col-sm-3 col-form-label">Traction -{{tr+1}}-:</label>
-                                                    <div class="col-sm-9">
-                                                      <input type="text" class="form-control" id="inputEmail3" placeholder="Nombre de KM parcouru" value="" name="trc_km" >
-                                                    </div>
+                                              <div class="form-group row">
+                                                <label for="inputEmail3" class="col-sm-3 col-form-label">Traction -{{tr+1}}-:</label>
+                                                <div class="col-sm-9">
+                                                  <input type="text" class="form-control" id="inputEmail3" placeholder="Nombre de KM parcouru" value="" name="trc_km" required>
                                                 </div>
-                                                
+                                              </div>
+                                              <div class="form-group row">
+                                                <label for="inputEmail3" class="col-sm-3 col-form-label">Immatriculation:</label>
+                                                <div class="col-sm-9">
+                                                  <select name="traction_mat" class="custom-select" required>
+                                                    <option value="" disabled selected> <B> Choisissez immat du tracteur</B></option>
+                                                    {% for cm in L_CM_complete %}
+                                                        <option  value="{{ cm[1] }}" >  {{ cm[0] }} </option>
+                                                    {% endfor %}
+                                                  </select>
+                                                </div>
+                                              </div>
                                             </div>
                                         </div>
                                       </div>
