@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Facture Casino</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Facturation casino période entre </h1>
+        <h2 class="text-center">{{date_debut}} et {{date_fin}}:</h2>
+        <h3 class="text-left">1. NAVETTES:</h3>
+        <div class="row">
+            {% set ns = namespace(found=false) %}
+            <table class="table">
+                <thead class="thead-light">
+                    <tr>
+                        <th rowspan=2> Date </th>
+                        {% for nvt in  L_tot_navette_csn%}
+                            <th> {{nvt[1]}}</th>
+                        {% endfor %}
+                        <th rowspan=2>COUT</th>
+                    </tr>
+                    <tr>
+                        {% for nvt in  L_tot_navette_csn%}
+                            <th> {{nvt[3]}}</th>
+                        {% endfor %}
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for date in L_date_facturation %}
+                        {% set ns.cout=0 %}
+                        <tr>
+                            <td> {{date[0]}} </td>
+                            {% for nvt in L_tot_navette_csn %}
+                                {% set ns.test=1 %}
+                                {% for nvt_csn in L_navette_csn %}  
+                                    {% if nvt_csn[0] ==nvt[0] and nvt_csn[2]==date[0] %}
+                                        {% set ns.test=0 %}
+                                        {% set ns.cout =ns.cout+ nvt_csn[3]*nvt[3] %}
+                                        <td> {{ nvt_csn[3]}}</td>
+                                    {% endif %}
+                                {% endfor %} 
+                                {% if ns.test == 1%}
+                                    <td> 0</td>
+                                {% endif %}
+                            {% endfor %}
+                            <td> {{ns.cout}}€</td>
+                        </tr>
+                    {% endfor %}
+                    <tr>
+                        <td>Total</td>
+                            {%set ns.cout_total=0%}
+                            {% for nvt in L_tot_navette_csn %}
+                                {%set ns.total=0%}
+                                {% for date in L_date_facturation %}
+                                    {% for nvt_csn in L_navette_csn %}  
+                                        {% if nvt_csn[0] ==nvt[0] and nvt_csn[2]==date[0] %}
+                                            {% set ns.total=ns.total+nvt_csn[3] %}
+                                        {% endif %}
+                                    {% endfor %} 
+                                {% endfor %}
+                                <td> {{ns.total}}</td>
+                                {% set ns.cout_total=ns.cout_total+ns.total*nvt[3] %}
+                            {% endfor %}
+                        <td> {{ns.cout_total}}€</td>
+                    </tr>
+                </tbody>
+            </table> 
+            <h3 class="text-left">2. DISTRIBUTION:</h3> 
+              
+            <table class="table">
+                <thead class="thead-light">
+                    <tr>
+                        <th rowspan=2> Date </th>
+                        {% for rolls in  L_tot_rolls if rolls[0]|int !=-1%}
+                            
+                            <th> ROLLS A</th>
+                        {% endfor %}
+                        <th >Zone Trinome</th>
+                        {% for pal in  L_tot_pal%}
+                            <th> PALETTE A</th>
+                        {% endfor %}
+                        <th rowspan=2>Total hors VL</th>
+                        <th rowspan=2>Total</th>
+                        <th rowspan=2>Cout Distribution</th>
+                        <th>Cout PàQ</th>
+                    </tr>
+                    <tr>
+                        {% for rolls in  L_tot_rolls if rolls[0]|int !=-1%}
+                            <th> {{rolls[0]}}</th>
+                        {% endfor %}
+                        <th> LOC</th>
+                        {% for pal in  L_tot_pal%}
+                            <th>{{pal[0]}}</th>
+                        {% endfor %}
+                        <th>{{cout_PàQ}}</th>
+                    </tr>
+
+                </thead>
+                <tbody>
+                    {% for date in L_date_distribution %}
+                        {% set ns.tot_hors_vl=0 %}
+                        {% set ns.VL=0 %}
+                        {% set ns.test_VL=0 %}
+                        {% set ns.cout_distr=0 %}
+                        {% set ns.cout_PàQ=0 %}
+                        <tr>
+                            <td> {{date[0]}} </td>
+                            {% for trf_rolls in L_tot_rolls if trf_rolls[0]|int !=-1 %}
+                                {% set ns.test=1 %}
+                                
+                                {% for rolls_sect in nbre_rolls_secteur %}  
+                                    {% if rolls_sect[0] ==trf_rolls[0] and rolls_sect[1]==date[0] and  rolls_sect[0]|int !=-1 %}
+                                        {% set ns.test=0 %}
+                                        <td> {{ rolls_sect[2] }}</td>
+                                        {%set ns.tot_hors_vl= ns.tot_hors_vl+ rolls_sect[2]%} 
+                                        {%set ns.cout_distr=ns.cout_distr+(rolls_sect[2]*trf_rolls[0])%}
+                                    {% elif rolls_sect[0]|int ==-1 and  rolls_sect[1]==date[0] and ns.test_VL==0 %}   
+                                        {%set ns.VL =ns.VL+rolls_sect[2]%} 
+                                        {% set ns.test_VL=1 %}
+                                    {% endif %}                                    
+                                {% endfor %} 
+                                {% if ns.test == 1%}
+                                        <td> 0</td>
+                                {% endif %}
+                            {% endfor %}
+                            <td>{{ns.VL}}</td>
+                            {% for trf_pal in L_tot_pal %}
+                                {% set ns.test=1 %}
+                                {% for pal_sect in nbre_pal_secteur %}  
+                                    {% if pal_sect[0] ==trf_pal[0] and pal_sect[1]==date[0] %}
+                                        {% set ns.test=0 %}
+                                        <td> {{ pal_sect[2]}}</td>
+                                        {%set ns.tot_hors_vl= ns.tot_hors_vl+ pal_sect[2]%}
+                                        {%set ns.cout_distr=ns.cout_distr+(pal_sect[2]*trf_pal[0])%}
+                                    {% endif %}
+                                {% endfor %} 
+                                {% if ns.test == 1%}
+                                    <td> 0</td>
+                                {% endif %}
+                            {% endfor %}
+                            <td>{{ns.tot_hors_vl}}</td>
+                            <td>{{(ns.tot_hors_vl+ns.VL) | round(2)}}</td>
+                            <td>{{ns.cout_distr | round(2)}}</td>
+                            <td>{{(ns.tot_hors_vl+ns.VL)*cout_PàQ | round(2)}}</td>
+                        </tr>
+                    {% endfor %}
+                    
+                    <tr>
+                        <td>Total</td>
+                            {%set ns.cout_total_distri=0%}
+                            {%set ns.total_hors_vl=0%}
+                            {%set ns.total_vl=0%}
+
+                            {% for trf_rolls in L_tot_rolls if trf_rolls[0]|int !=-1 %}
+                                {% set ns.test=1 %}
+                                {%set ns.total_rolls=0%}
+                                {% for rolls_sect in nbre_rolls_secteur if  rolls_sect[0] ==trf_rolls[0] and rolls_sect[0]|int !=-1 %}  
+                                    {% set ns.total_rolls=ns.total_rolls+rolls_sect[2] %}
+                                    {% set ns.total_hors_vl=ns.total_hors_vl+rolls_sect[2] %}
+                                    
+                                {% endfor %}         
+                                <td> {{ns.total_rolls}}</td>
+                                {% set ns.cout_total_distri=ns.cout_total_distri+(ns.total_rolls* trf_rolls[0]) %}
+                            {% endfor %}
+                            {% for rolls_sect in nbre_rolls_secteur if rolls_sect[0]|int ==-1 %}  
+                                    {% set ns.total_vl=ns.total_vl+rolls_sect[2] %}
+                            {% endfor %}
+                            <td> {{ns.total_vl}}</td>
+                            {% for trf_pal in L_tot_pal  %}
+                                {%set ns.total_pal=0%}
+                                {% for pal_sect in nbre_pal_secteur if  pal_sect[0] ==trf_pal[0]  %}  
+                                    {% set ns.total_pal=ns.total_pal+pal_sect[2] %}
+                                    {% set ns.total_hors_vl=ns.total_hors_vl+pal_sect[2] %}
+                                {% endfor %}         
+                                <td> {{ns.total_pal}}</td>
+                                {% set ns.cout_total_distri=ns.cout_total_distri+(ns.total_pal* trf_pal[0]) %}
+                            {% endfor %}
+                            <td> {{ns.total_hors_vl}}</td>
+                            <td> {{ns.total_hors_vl + ns.total_vl}}</td>
+                            <td>{{ns.cout_total_distri}}</td>
+                            <td>{{(ns.total_hors_vl + ns.total_vl)*cout_PàQ}}</td>
+                    </tr>
+                </tbody>
+            </table> 
+            <!--TRINOME-->
+            
+        </div>
+        <footer> 
+            
+        </footer> 
+    </div>
+<body>

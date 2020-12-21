@@ -5,13 +5,16 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import text
 from sqlalchemy import create_engine
 from jinja2 import Environment, FileSystemLoader 
+from jinja2.ext import Extension
 import hashlib
+import pdfkit
 from datetime import datetime
 import plotly.figure_factory as ff
 import plotly.graph_objects as go
 import plotly.express as px
 import plotly, json
 from flask import * 
+import os
 
 app = Flask(__name__)
 
@@ -71,7 +74,56 @@ def form_dataviz():
         return redirect(url_for('home'))
     
     return render_template('pages/dataviz.html')
-    #*************************************************************************************************************************IMPRESSION FACTURATION*****************************************
+#*************************************************************************************************************************FORMULAIRE FACTURATION*****************************************
+
+@app.route('/impresion_facturation', methods=['GET','post'])
+def impression_facturation():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
+    if request.method=='POST':
+        date_deb=request.form.getlist('date_debut')
+        date_fin=request.form.getlist('date_fin')
+        #facturation navette
+        L_tot_navette_csn=con.execute(text("SELECT info_tarification_id, intitule_tarif, type_tarif, tarif FROM info_tarification join enseigne on enseigne.enseigne_id = info_tarification.enseigne_id where type_tarif ='navette' and enseigne.enseigne_intitulé = 'CASINO'")).fetchall()
+        L_date_facturation=con.execute(text("select distinct date(date) from tarification where date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+        L_navette_csn=con.execute(text("select tarification.info_tarification_id, intitule_tarif, date(date), valeur from info_tarification join tarification on tarification.info_tarification_id=info_tarification.info_tarification_id join enseigne on enseigne.enseigne_id=info_tarification.enseigne_id  where date between :date_deb and :date_fin and type_tarif='navette' and enseigne.enseigne_intitulé = 'CASINO'"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+        casino_ens_id=con.execute(text("select enseigne_id from enseigne where enseigne_intitulé='CASINO'")).fetchone()
+        #facturation distribution
+        L_tot_rolls=con.execute(text("select distinct magasin_tarif_rolls from magasin where enseigne_id=:casino_ens_id and magasin_tarif_rolls<>0"),{'casino_ens_id':casino_ens_id[0]}).fetchall()
+        L_tot_pal=con.execute(text("select distinct magasin_tarif_palette from magasin where enseigne_id=:casino_ens_id and magasin_tarif_palette<>0"),{'casino_ens_id':casino_ens_id[0]}).fetchall()
+        L_tot_vl=con.execute(text("select camion_id, camion_mat, camion_loyer from camion where camion_type='VL'")).fetchall()
+        L_date_distribution=con.execute(text("select distinct date from camion_magasin where date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+        nbre_rolls_secteur=con.execute(text("select  magasin.magasin_tarif_rolls, camion_magasin.date, sum(nbre_rolls) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_intitulé='CASINO' group by magasin.magasin_tarif_rolls, date having date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+        nbre_pal_secteur=con.execute(text("select  magasin.magasin_tarif_palette, camion_magasin.date, sum(nbre_palette) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_intitulé='CASINO' group by magasin.magasin_tarif_palette, date having date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+        #cout passage à quai
+        cout_PàQ=con.execute(text("select tarif from info_tarification where type_tarif='passage_a_quai'")).fetchone()
+        data={'L_tot_navette_csn':L_tot_navette_csn,
+        'L_date_facturation':L_date_facturation,
+        'L_navette_csn':L_navette_csn,
+        'date_debut': date_deb[0],
+        'date_fin':date_fin[0],
+        'L_tot_rolls':L_tot_rolls, 
+        'L_tot_pal':L_tot_pal,
+        'nbre_rolls_secteur':nbre_rolls_secteur,
+        'nbre_pal_secteur':nbre_pal_secteur,
+        'L_date_distribution':L_date_distribution,
+        'cout_PàQ':cout_PàQ[0],
+        'L_tot_vl':L_tot_vl
+        }
+        #crréation pdf
+        path_wkhtmltopdf = r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe'
+        config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+        pdfkit.from_url("http://google.com", "out.pdf", configuration=config)
+        rendered=render_template('pages/fact_navette_casino.html',**data)
+        rendered=rendered
+        pdf =pdfkit.from_string(rendered, False, configuration=config)
+        response=make_response(pdf)
+        response.headers['Content-Type']='application/pdf'
+        response.headers['Content-Disposition']='attachment; filename=navette_casino.pdf'
+        return response
+    
+    #*************************************************************************************************************************ENREGISTRER FORMULAIRE FACTURATION*****************************************
 
 @app.route('/enregistrement_facturation', methods=['GET','post'])
 def enregistrer_facturation():
@@ -92,28 +144,26 @@ def enregistrer_facturation():
         cm_id=request.form.getlist('cm_id')
         cm_km=request.form.getlist('cm_km')
         date=request.form.getlist('date')
-        print('facturatioooooooooooon',vl_cam_id, vl_km, vl_heure, vl_heure_nuit,trc_km,csn_nvt_type, ens_nvt, csn_nvt_nbre, ens_nvt_nbre )
         casino_id=con.execute(text("select enseigne_id from enseigne where enseigne_intitulé='CASINO'")).fetchone()
-        #L_enseigne=con.execute(text("select enseigne_id from enseigne where enseigne_intitulé<>'CASINO' and enseigne_actif=1")).fetchall()
-        trinome_km=con.execute(text("select info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='km' ")).fetchone()
-        trinome_heure= con.execute(text("select info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='heure' ")).fetchone()
-        trinome_heure_nuit= con.execute(text("select info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='maj heure nuit' ")).fetchone()
-        trinome_traction= con.execute(text("select info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='traction' ")).fetchone()
-        tk_km=con.execute(text("select info_tarification_id from info_tarification where type_tarif='TK' and intitule_tarif='km' ")).fetchone()
-        L_nvt_casino=con.execute(text("select info_tarification_id from info_tarification where type_tarif='navette_casino' ")).fetchall()
+        trinome_km=con.execute(text("select info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='km' and enseigne_id =:casino_id"),{'casino_id':casino_id[0]}).fetchone()
+        trinome_heure= con.execute(text("select info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='heure' and enseigne_id =:casino_id"),{'casino_id':casino_id[0]}).fetchone()
+        trinome_heure_nuit= con.execute(text("select info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='maj heure nuit' and enseigne_id =:casino_id "),{'casino_id':casino_id[0]}).fetchone()
+        tk_traction= con.execute(text("select info_tarification_id from info_tarification where type_tarif='TK' and intitule_tarif='traction' and enseigne_id =:casino_id "),{'casino_id':casino_id[0]}).fetchone()
+        tk_km=con.execute(text("select info_tarification_id from info_tarification where type_tarif='TK' and intitule_tarif='km' and enseigne_id =:casino_id "),{'casino_id':casino_id[0]}).fetchone()
+        L_nvt_casino=con.execute(text("select info_tarification_id from info_tarification where type_tarif='navette' and enseigne_id =:casino_id "),{'casino_id':casino_id[0]}).fetchall()
         semi_navette=con.execute(text("select camion_id from camion where camion_type ='SEMI_NAVETTE'")).fetchone()
         for cpt in range(len(vl_cam_id)):
-            con.execute(text("insert into tarification (info_tarification_id, enseigne_id, camion_id,date,valeur) values(:trinome_km, :casino_id, :vl_cam_id, :date, :valeur )"),  {'trinome_km': trinome_km[0],'casino_id':casino_id[0], 'vl_cam_id': vl_cam_id[cpt],'date':date, 'valeur':vl_km[cpt] })
-            con.execute(text("insert into tarification (info_tarification_id, enseigne_id, camion_id,date,valeur) values(:trinome_heure, :casino_id, :vl_cam_id, :date, :valeur )"),  {'trinome_heure': trinome_heure[0],'casino_id':casino_id[0], 'vl_cam_id': vl_cam_id[cpt],'date':date, 'valeur':vl_heure[cpt] })
-            con.execute(text("insert into tarification (info_tarification_id, enseigne_id, camion_id,date,valeur) values(:trinome_heure_nuit, :casino_id, :vl_cam_id, :date, :valeur )"),  {'trinome_heure_nuit': trinome_heure_nuit[0],'casino_id':casino_id[0], 'vl_cam_id': vl_cam_id[cpt],'date':date, 'valeur':vl_heure_nuit[cpt] })
+            con.execute(text("insert into tarification (info_tarification_id, camion_id,date,valeur) values(:trinome_km, :vl_cam_id, :date, :valeur )"),  {'trinome_km': trinome_km[0], 'vl_cam_id': vl_cam_id[cpt],'date':date, 'valeur':vl_km[cpt] })
+            con.execute(text("insert into tarification (info_tarification_id, camion_id,date,valeur) values(:trinome_heure, :vl_cam_id, :date, :valeur )"),  {'trinome_heure': trinome_heure[0], 'vl_cam_id': vl_cam_id[cpt],'date':date, 'valeur':vl_heure[cpt] })
+            con.execute(text("insert into tarification (info_tarification_id, camion_id,date,valeur) values(:trinome_heure_nuit, :vl_cam_id, :date, :valeur )"),  {'trinome_heure_nuit': trinome_heure_nuit[0], 'vl_cam_id': vl_cam_id[cpt],'date':date, 'valeur':vl_heure_nuit[cpt] })
         for cpt in range(len(cm_id)):
-            con.execute(text("insert into tarification (info_tarification_id, enseigne_id, camion_id,date,valeur) values(:tk_km, :casino_id, :cm_id, :date, :valeur )"),  {'tk_km': tk_km[0],'casino_id':casino_id[0], 'cm_id': cm_id[cpt],'date':date, 'valeur':cm_km[cpt] })
+            con.execute(text("insert into tarification (info_tarification_id, camion_id,date,valeur) values(:tk_km, :cm_id, :date, :valeur )"),  {'tk_km': tk_km[0], 'cm_id': cm_id[cpt],'date':date, 'valeur':cm_km[cpt] })
         for cpt in range(len(traction_mat)):
             if int(trc_km[cpt]) !=0:
-                con.execute(text("insert into tarification (info_tarification_id, enseigne_id, camion_id,date,valeur) values(:trinome_traction, :casino_id, :cm_id, :date, :valeur )"),  {'trinome_traction': trinome_traction[0],'casino_id':casino_id[0], 'cm_id': traction_mat[cpt],'date':date, 'valeur':trc_km[cpt] })
+                con.execute(text("insert into tarification (info_tarification_id, camion_id,date,valeur) values(:tk_traction, :cm_id, :date, :valeur )"),  {'tk_traction': tk_traction[0], 'cm_id': traction_mat[cpt],'date':date, 'valeur':trc_km[cpt] })
         for cpt in range(len(csn_nvt_type)):
             if int(csn_nvt_nbre[cpt]) !=0:
-                con.execute(text("insert into tarification (info_tarification_id, enseigne_id,camion_id, date,valeur) values(:csn_nvt_type,:casino_id, :semi_navette,  :date, :valeur )"),  {'csn_nvt_type': csn_nvt_type[cpt],'semi_navette':semi_navette[0], 'casino_id':casino_id[0], 'date':date, 'valeur':csn_nvt_nbre[cpt] })
+                con.execute(text("insert into tarification (info_tarification_id, camion_id, date,valeur) values(:csn_nvt_type, :semi_navette,  :date, :valeur )"),  {'csn_nvt_type': csn_nvt_type[cpt],'semi_navette':semi_navette[0], 'date':date, 'valeur':csn_nvt_nbre[cpt] })
        
       
         data={'vl_cam_id':vl_cam_id,
@@ -124,9 +174,10 @@ def enregistrer_facturation():
               'csn_nvt_type':csn_nvt_type,
               'csn_nvt_nbre':csn_nvt_nbre,
               'ens_nvt':ens_nvt,
-              'ens_nvt_nbre':ens_nvt_nbre}
+              'ens_nvt_nbre':ens_nvt_nbre
+              }
         flash("le formualaire de la facturation a été bien enregistré",'success')
-        #return render_template('pages/facturation copy.html', **data)
+        return render_template('pages/accueil_admin.html', **data)
         
 #*************************************************************************************************************************FORMULAIRE FACTURATION*****************************************
 
@@ -137,13 +188,15 @@ def form_facturation():
         return redirect(url_for('home'))
     if request.method=='POST':
         date=request.form['date']
+        casino_id=con.execute(text("select enseigne_id from enseigne where enseigne_intitulé='CASINO'")).fetchone()
         L_enseigne=con.execute(text("select enseigne_id, enseigne_intitulé from enseigne where enseigne_intitulé<>'CASINO' and enseigne_actif=1")).fetchall()
         L_VL=con.execute(text("select distinct camion_mat, camion.camion_id from camion_magasin join camion on camion.camion_id=camion_magasin.camion_id where camion_magasin.date=:date and camion.camion_type='VL' and camion.camion_actif=1"), {'date':date}).fetchall()
-        nbre_cm=con.execute(text("select count(camion_id) from camion where camion_actif=1 and camion_type='CAISSE_MOBILE'")).fetchone()
+        #nbre_cm=con.execute(text("select count(camion_id) from camion where camion_actif=1 and camion_type='CAISSE_MOBILE'")).fetchone()
         L_CM=con.execute(text("select distinct camion_mat ,camion.camion_id from camion_magasin join camion on camion.camion_id=camion_magasin.camion_id where camion_magasin.date=:date and camion.camion_type='CAISSE_MOBILE' and camion.camion_actif=1"), {'date':date}).fetchall()
         L_CM_complete=con.execute(text("select camion_mat ,camion_id from camion where camion_type='CAISSE_MOBILE' and camion_actif=1")).fetchall()
-        L_navette=con.execute(text("select intitule_tarif, info_tarification_id from info_tarification where type_tarif ='navette_casino'" )).fetchall()
-        L_camion=con.execute(text("select camion_id, camion_mat,  camion_type from camion where camion_actif=1")).fetchall()
+        L_camion=con.execute(text("select camion_mat ,camion_id, camion_type from camion where (camion_type='CAISSE_MOBILE' or camion_type='SEMI-REMORQUE' ) and camion_etat=1 and camion_actif=1")).fetchall()
+        L_navette=con.execute(text("select intitule_tarif, info_tarification_id from info_tarification where type_tarif ='navette' and enseigne_id =:casino_id" ),{'casino_id':casino_id[0]}).fetchall()
+        #L_camion=con.execute(text("select camion_id, camion_mat,  camion_type from camion where camion_actif=1")).fetchall()
         nbre_ens=len(L_enseigne)
         nbre_vl=len(L_VL)
         data={'L_enseigne':L_enseigne,
@@ -152,7 +205,7 @@ def form_facturation():
                 'L_CM':L_CM,
                 'L_CM_complete':L_CM_complete,
                 'nbre_vl':nbre_vl,
-                'nbre_cm':nbre_cm[0],
+                'nbre_cm':len(L_CM_complete),
                 'L_navette': L_navette,
                 'L_camion':L_camion,
                 'date':date}
@@ -791,11 +844,12 @@ def editer_magasin():
         # Si l utilisateur a tapé un nom dans la bare de recherche:
         if request.form['rech_mag']:
             rech_mag=request.form['rech_mag']
-            liste_mag_rech=con.execute(text("select magasin_id, magasin_code, magasin_adresse, magasin_heure_livr, magasin_tarif_rolls, magasin_tarif_palette, enseigne_intitulé, magasin.enseigne_id from magasin join enseigne on enseigne.enseigne_id=magasin.enseigne_id  where magasin_actif=1 and  (magasin_code LIKE :magC )  and magasin_actif=1 "), {'magC': rech_mag +'%'}).fetchall()
+            liste_mag_rech=con.execute(text("select magasin_id, magasin_code, magasin_adresse, magasin_heure_livr, magasin_tarif_rolls, magasin_tarif_palette, enseigne_intitulé, magasin.enseigne_id from magasin join enseigne on enseigne.enseigne_id=magasin.enseigne_id  where magasin_actif=1 and  (magasin_code LIKE :magC or enseigne.enseigne_intitulé LIKE :magC )  and magasin_actif=1 "), {'magC': rech_mag +'%'}).fetchall()
             if liste_mag_rech:
                 data['liste_magasin']=liste_mag_rech
             else:
                 flash(' Ce code magasin n exsiste pas','danger')
+                data['rech_mag']=rech_mag
             return render_template('pages/edit_magasin.html', **data)   
         # si l utilisateur a coché un nom:
             
@@ -1039,7 +1093,9 @@ def identification():
             return render_template('pages/accueil_agent.html',**data)
 
             
-          
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))      
     return render_template('pages/accueil_admin.html',**data)    
              
  #**********************************************************************************SE DECONNECTER********************************************************************************      
@@ -1059,7 +1115,6 @@ def chang_info_user():
         return redirect(url_for('home'))
     pseudo=session['login']
     info_user=con.execute(text("select utilisateur_nom, utilisateur_prenom, utilisateur_MDP, utilisateur_id from utilisateur where utilisateur_pseudo=:pseudo"),{'pseudo':pseudo }).fetchone()
-    print('INFOOOOOOOOOOOO USEEEEEEER',info_user[0], info_user[1])
     nom= info_user[0] 
     prenom =info_user[1]
     user_id=info_user[3]

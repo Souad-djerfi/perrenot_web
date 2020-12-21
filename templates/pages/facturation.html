@@ -80,7 +80,7 @@
                               <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
                                 <div class="accordion-body">
                                   <div class="row">
-                                    {%for cm in L_CM%}
+                                    {%for cm in L_CM_complete%}
                                       <div class="col-sm-6">
                                         <div class="card">
                                             <div class="card-body">
@@ -116,8 +116,8 @@
                                                 <div class="col-sm-9">
                                                   <select name="traction_mat" class="custom-select" required>
                                                     <option value="" disabled selected> <B> Choisissez immat du tracteur</B></option>
-                                                    {% for cm in L_CM_complete %}
-                                                        <option  value="{{ cm[1] }}" >  {{ cm[0] }} </option>
+                                                    {% for cm in L_camion %}
+                                                        <option  value="{{ cm[1] }}" >  {{ cm[0] }}  --  {{ cm[2] }} </option>
                                                     {% endfor %}
                                                   </select>
                                                 </div>
