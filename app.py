@@ -92,12 +92,33 @@ def impression_facturation():
         #facturation distribution
         L_tot_rolls=con.execute(text("select distinct magasin_tarif_rolls from magasin where enseigne_id=:casino_ens_id and magasin_tarif_rolls<>0"),{'casino_ens_id':casino_ens_id[0]}).fetchall()
         L_tot_pal=con.execute(text("select distinct magasin_tarif_palette from magasin where enseigne_id=:casino_ens_id and magasin_tarif_palette<>0"),{'casino_ens_id':casino_ens_id[0]}).fetchall()
-        L_tot_vl=con.execute(text("select camion_id, camion_mat, camion_loyer from camion where camion_type='VL'")).fetchall()
         L_date_distribution=con.execute(text("select distinct date from camion_magasin where date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
         nbre_rolls_secteur=con.execute(text("select  magasin.magasin_tarif_rolls, camion_magasin.date, sum(nbre_rolls) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_intitulé='CASINO' group by magasin.magasin_tarif_rolls, date having date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
         nbre_pal_secteur=con.execute(text("select  magasin.magasin_tarif_palette, camion_magasin.date, sum(nbre_palette) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_intitulé='CASINO' group by magasin.magasin_tarif_palette, date having date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
         #cout passage à quai
         cout_PàQ=con.execute(text("select tarif from info_tarification where type_tarif='passage_a_quai'")).fetchone()
+        # cout trinome
+        L_date_trinome=con.execute(text("select distinct date,day(last_day(date)) from tarification join camion on camion.camion_id = tarification.camion_id and camion.camion_type='VL'where date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+        L_tot_vl=con.execute(text("select distinct tarification.camion_id, camion_mat, camion.camion_loyer from tarification join camion on camion.camion_id=tarification.camion_id and camion.camion_type='VL' where date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+        km_trinome=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='km' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
+        heure_trinome=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='heure' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
+        maj_heure_nuit_trinome=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='maj_heure_nuit' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
+        nbre_km_trinome=con.execute(text("select tarification.camion_id, date, sum(valeur) from tarification join camion on camion.camion_id=tarification.camion_id and camion_type='VL' where tarification.info_tarification_id=:km_trinome and date between :date_deb and :date_fin group by tarification.camion_id, date"),{'date_deb':date_deb[0], 'date_fin':date_fin[0], 'km_trinome':km_trinome[1] }).fetchall()
+        nbre_heure_trinome=con.execute(text("select tarification.camion_id, date, sum(valeur) from tarification join camion on camion.camion_id=tarification.camion_id and camion_type='VL' where tarification.info_tarification_id=:heure_trinome and date between :date_deb and :date_fin group by tarification.camion_id, date"),{'date_deb':date_deb[0], 'date_fin':date_fin[0], 'heure_trinome':heure_trinome[1] }).fetchall()
+        nbre_maj_hN_trinome=con.execute(text("select tarification.camion_id, date, sum(valeur) from tarification join camion on camion.camion_id=tarification.camion_id and camion_type='VL' where tarification.info_tarification_id=:maj_heure_nuit_trinome and date between :date_deb and :date_fin group by tarification.camion_id, date"),{'date_deb':date_deb[0], 'date_fin':date_fin[0], 'maj_heure_nuit_trinome':maj_heure_nuit_trinome[1] }).fetchall()
+        # TK
+        traction_id=con.execute(text("select info_tarification_id from info_tarification where enseigne_id=:casino_ens_id and intitule_tarif='traction' and type_tarif='TK'"),{'casino_ens_id':casino_ens_id[0]}).fetchone()
+        L_date_TK= con.execute(text("select distinct date from tarification join camion on camion.camion_id = tarification.camion_id and camion.camion_type='CAISSE_MOBILE'where date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+        km_TK=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='TK' and intitule_tarif='km' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
+        km_trc_TK=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='TK' and intitule_tarif='traction' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
+        
+        traction_TK=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='TK' and intitule_tarif='traction' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
+        L_tot_CM=con.execute(text("select distinct tarification.camion_id, camion_mat, camion.camion_loyer from tarification join camion on camion.camion_id=tarification.camion_id and camion.camion_type='CAISSE_MOBILE' where date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+        L_tot_CM_trc=con.execute(text("select distinct tarification.camion_id, camion_mat from tarification join camion on camion.camion_id=tarification.camion_id and camion.camion_type='CAISSE_MOBILE' join info_tarification on info_tarification.info_tarification_id=tarification.info_tarification_id and info_tarification.info_tarification_id=:traction_id where date between :date_deb and :date_fin"), {'traction_id':traction_id[0], 'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+       
+        nbre_km_TK= con.execute(text("select tarification.camion_id, date, sum(valeur) from tarification join camion on camion.camion_id=tarification.camion_id and camion_type='CAISSE_MOBILE' where tarification.info_tarification_id=:km_TK and date between :date_deb and :date_fin group by tarification.camion_id, date"),{'date_deb':date_deb[0], 'date_fin':date_fin[0], 'km_TK':km_TK[1] }).fetchall()
+        nbre_kmTrc_TK=con.execute(text("select tarification.camion_id, date, sum(valeur) from tarification join camion on camion.camion_id=tarification.camion_id and camion_type='CAISSE_MOBILE' where tarification.info_tarification_id=:km_trc_TK and date between :date_deb and :date_fin group by tarification.camion_id, date"),{'date_deb':date_deb[0], 'date_fin':date_fin[0], 'km_trc_TK':km_trc_TK[1] }).fetchall()
+      
         data={'L_tot_navette_csn':L_tot_navette_csn,
         'L_date_facturation':L_date_facturation,
         'L_navette_csn':L_navette_csn,
@@ -109,12 +130,28 @@ def impression_facturation():
         'nbre_pal_secteur':nbre_pal_secteur,
         'L_date_distribution':L_date_distribution,
         'cout_PàQ':cout_PàQ[0],
-        'L_tot_vl':L_tot_vl
+        'L_tot_vl':L_tot_vl, 
+        'km_trinome':km_trinome,
+        'heure_trinome':heure_trinome,
+        'maj_hN_trinome':maj_heure_nuit_trinome,
+        'L_date_trinome': L_date_trinome,
+        'nbre_km_trinome':nbre_km_trinome,
+        'nbre_heure_trinome':nbre_heure_trinome,
+        'nbre_maj_hN_trinome':nbre_maj_hN_trinome,
+        'L_date_TK':L_date_TK,
+        'km_TK':km_TK,
+        'traction_TK':traction_TK,
+        'L_tot_CM':L_tot_CM,
+        'nbre_km_TK':nbre_km_TK,
+        'nbre_kmTrc_TK':nbre_kmTrc_TK,
+        'nbre_tot_CM':len(L_tot_CM),
+        'L_tot_CM_trc':L_tot_CM_trc,
+        'km_trc_TK':km_trc_TK
         }
         #crréation pdf
         path_wkhtmltopdf = r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe'
         config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
-        pdfkit.from_url("http://google.com", "out.pdf", configuration=config)
+        #pdfkit.from_url("http://google.com", "out.pdf", configuration=config)
         rendered=render_template('pages/fact_navette_casino.html',**data)
         rendered=rendered
         pdf =pdfkit.from_string(rendered, False, configuration=config)
@@ -580,10 +617,9 @@ def ajouter_statut_chauf():
     liste_statut=con.execute(text(requete_statu)).fetchall()
 
     data={
-                'liste_chauf':liste_chauf,
-                'liste_statut':liste_statut,
-                
-         }
+            'liste_chauf':liste_chauf,
+            'liste_statut':liste_statut,
+        }
     if request.method== 'POST':
         chauf_id=request.form['liste_chauf']  
         statut_id=request.form['liste_statut']
@@ -1146,9 +1182,8 @@ def chang_info_user():
                 nvMDP=request.form['nvMDP']
                 nvMDP=hashlib.sha1(str.encode(nvMDP)).hexdigest()
                 con.execute(text("update utilisateur set utilisateur_nom=:nvNom, utilisateur_prenom=:nvPrenom, utilisateur_pseudo=:nvPseudo, utilisateur_MDP=:nvMDP where utilisateur_id=:user_id"),{'nvNom':nvNom,'nvPrenom':nvPrenom,'nvPseudo':nvPseudo,'nvMDP':nvMDP, 'user_id':user_id})
-                flash("Les modifications ont bien été prises en charges",'success')
                 session['login']=request.form['pseudo']
-                flash("Les modifications ont bien été prises en charges",'success')
+                flash("Les modifications ont bien été prises en compte",'success')
         data['nom']=request.form['nom']
         data['prenom']=request.form['prenom']
         data['pseudo']=request.form['pseudo']        

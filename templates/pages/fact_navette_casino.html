@@ -151,25 +151,23 @@
                     
                     <tr>
                         <td>Total</td>
-                            {%set ns.cout_total_distri=0%}
-                            {%set ns.total_hors_vl=0%}
-                            {%set ns.total_vl=0%}
-
-                            {% for trf_rolls in L_tot_rolls if trf_rolls[0]|int !=-1 %}
-                                {% set ns.test=1 %}
-                                {%set ns.total_rolls=0%}
-                                {% for rolls_sect in nbre_rolls_secteur if  rolls_sect[0] ==trf_rolls[0] and rolls_sect[0]|int !=-1 %}  
-                                    {% set ns.total_rolls=ns.total_rolls+rolls_sect[2] %}
-                                    {% set ns.total_hors_vl=ns.total_hors_vl+rolls_sect[2] %}
-                                    
-                                {% endfor %}         
-                                <td> {{ns.total_rolls}}</td>
-                                {% set ns.cout_total_distri=ns.cout_total_distri+(ns.total_rolls* trf_rolls[0]) %}
-                            {% endfor %}
-                            {% for rolls_sect in nbre_rolls_secteur if rolls_sect[0]|int ==-1 %}  
-                                    {% set ns.total_vl=ns.total_vl+rolls_sect[2] %}
-                            {% endfor %}
-                            <td> {{ns.total_vl}}</td>
+                        {%set ns.cout_total_distri=0%}
+                        {%set ns.total_hors_vl=0%}
+                        {%set ns.total_vl=0%}
+                        {% for trf_rolls in L_tot_rolls if trf_rolls[0]|int !=-1 %}
+                            {% set ns.test=1 %}
+                            {%set ns.total_rolls=0%}
+                            {% for rolls_sect in nbre_rolls_secteur if  rolls_sect[0] ==trf_rolls[0] and rolls_sect[0]|int !=-1 %}  
+                                {% set ns.total_rolls=ns.total_rolls+rolls_sect[2] %}
+                                {% set ns.total_hors_vl=ns.total_hors_vl+rolls_sect[2] %}
+                            {% endfor %}         
+                            <td> {{ns.total_rolls}}</td>
+                            {% set ns.cout_total_distri=ns.cout_total_distri+(ns.total_rolls* trf_rolls[0]) %}
+                        {% endfor %}
+                        {% for rolls_sect in nbre_rolls_secteur if rolls_sect[0]|int ==-1 %}  
+                            {% set ns.total_vl=ns.total_vl+rolls_sect[2] %}
+                        {% endfor %}
+                        <td> {{ns.total_vl}}</td>
                             {% for trf_pal in L_tot_pal  %}
                                 {%set ns.total_pal=0%}
                                 {% for pal_sect in nbre_pal_secteur if  pal_sect[0] ==trf_pal[0]  %}  
@@ -181,13 +179,189 @@
                             {% endfor %}
                             <td> {{ns.total_hors_vl}}</td>
                             <td> {{ns.total_hors_vl + ns.total_vl}}</td>
-                            <td>{{ns.cout_total_distri}}</td>
-                            <td>{{(ns.total_hors_vl + ns.total_vl)*cout_PàQ}}</td>
+                            <td>{{ns.cout_total_distri}}€</td>
+                            <td>{{((ns.total_hors_vl + ns.total_vl)*cout_PàQ) | round(2)}}€</td>
                     </tr>
                 </tbody>
             </table> 
             <!--TRINOME-->
+            <h3 class="text-left">3. TRINOME:</h3> 
+            <table class="table">
+                <thead class="thead-light">
+                    <tr>
+                        <th rowspan=2> Date </th>
+                        {% for VL in  L_tot_vl%}
+                            <th colspan="4"> {{VL[1]}}</th>
+                        {% endfor %}
+                        <th rowspan=2>COUT</th>
+                    </tr>
+                    <tr>
+                        {% for info_vl in  L_tot_vl%}
+                            <th> {{info_vl[2]}}€ /mois</th>
+                            <th> {{km_trinome[0]}}€ /KM</th>
+                            <th> {{heure_trinome[0]}}€ /Heure</th>
+                            <th> {{maj_hN_trinome[0]}}€ /Maj H.Nuit</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {%set ns.cout_total_trinom=0%}
+                    {% for date in L_date_trinome %}
+                        <tr>
+                            <td> {{date[0]}} </td>
+                            {% set ns.cout_total_date=0 %}
+                            {% set ns.total_km=0 %}
+                            {% set ns.total_heure=0 %}
+                            {% set ns.total_hN=0 %}
+                            {% for vl in  L_tot_vl %}
+                                {% set ns.test_km=0 %}
+                                {% set ns.test_heure=0 %}
+                                {% set ns.test_hN=0 %}
+                                <td> {{ (vl[2]/date[1]) | round(2)}}</td>
+                                {% set ns.cout_total_date=ns.cout_total_date+ (vl[2]/date[1]) | round(2) %}
+                                {% for km in  nbre_km_trinome if km[0]==vl[0] and km[1]==date[0] %}
+                                    {% set ns.test_km=1 %}
+                                    {% set ns.cout_total_date=ns.cout_total_date+ km[2]*km_trinome[0] %}
+                                    <td> {{km[2]}}</td> 
+                                {% endfor %}    
+                                {% if ns.test_km==0 %} 
+                                    <td> 0</td>
+                                {% endif %}
+
+                                {% for heure in  nbre_heure_trinome if heure[0]==vl[0] and heure[1]==date[0] %}
+                                    {% set ns.test_heure=1 %}
+                                    {% set ns.cout_total_date=ns.cout_total_date+ heure[2]*heure_trinome[0] %}
+                                    <td> {{heure[2]}}</td> 
+                                {% endfor %}    
+                                {% if ns.test_heure==0 %} 
+                                    <td> 0</td>
+                                {% endif %}
+
+                                {% for hN in  nbre_maj_hN_trinome if hN[0]==vl[0] and hN[1]==date[0] %}
+                                    {% set ns.test_hN=1 %}
+                                    {% set ns.cout_total_date=ns.cout_total_date+ hN[2]*maj_hN_trinome[0] %}
+                                    <td> {{hN [2]}}</td> 
+                                {% endfor %}    
+                                {% if ns.test_hN==0 %} 
+                                    <td> 0</td>
+                                {% endif %}
+                                
+                            {% endfor %}
+                            <td>{{ ns.cout_total_date}}€</td>
+                            {%set ns.cout_total_trinom=ns.cout_total_trinom+ns.cout_total_date%}
+                        </tr>
+                    {% endfor %}
+                    <tr>
+
+                        <td>Total</td>
+                            {% for vl in L_tot_vl %}
+                                {% set ns.total_km_vl=0 %}
+                                {% set ns.total_loyer_vl=0 %}
+                                {% set ns.total_heure_vl=0 %}
+                                {% set ns.total_hN_vl=0 %}
+                                {% for date in L_date_trinome %}
+                                    {% set ns.total_loyer_vl=ns.total_loyer_vl+vl[2]/date[1]%}
+                                {% endfor %}
+                                <td> {{ns.total_loyer_vl | round(2)}}</td>
+                                {% for km in nbre_km_trinome  if km[0]==vl[0]  %}
+                                    {% set ns.total_km_vl=ns.total_km_vl+km[2] %}   
+                                {% endfor %}
+                                <td> {{ns.total_km_vl}}</td>
+                                {% for heure in nbre_heure_trinome  if heure[0]==vl[0]  %}
+                                    {% set ns.total_heure_vl=ns.total_heure_vl+heure[2] %}   
+                                {% endfor %}
+                                <td> {{ns.total_heure_vl}}</td>
+                                {% for hN in nbre_maj_hN_trinome  if hN[0]==vl[0]  %}
+                                    {% set ns.total_hN_vl=ns.total_hN_vl+ hN[2] %}   
+                                {% endfor %}
+                                <td> {{ns.total_hN_vl}}</td>
+                                        
+                            {% endfor %}
+                        <td> {{ns.cout_total_trinom}}€</td>
+                    </tr>
+                </tbody>
+            </table> 
+
+            <!-- TK -->
             
+            <h3 class="text-left">4. THERME KILOMETRIQUE:</h3> 
+            <table class="table">
+                <thead class="thead-light">
+                    <tr>
+                        <th rowspan=2> Date </th>
+                        {% for CM in  L_tot_CM%}
+                            <th> {{CM[1]}}</th>
+                        {% endfor %}
+
+                        {% for trc in  range((nbre_tot_CM)//2)  %}
+                            <th> Tration {{trc+1}}</th>
+                        {% endfor  %}
+                        <th rowspan=2>COUT</th>
+                    </tr>
+                    <tr>
+                        {% for info_CM in  L_tot_CM%}
+                            <th> {{km_TK[0]}}€ /KM</th>
+                        {% endfor %}
+                        {% for trc in  range((nbre_tot_CM)//2)  %}
+                            <th> {{traction_TK[0]}}€ /KM</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {%set ns.cout_total_TK=0%}
+                    {% for date in L_date_TK %}
+                        <tr>
+                            <td> {{date[0]}} </td>
+                            {% set ns.cout_total_date=0 %}
+                            {% set ns.total_km=0 %}
+                            {% for CM in  L_tot_CM %}
+                                {% set ns.test_km=0 %}
+                                {% set ns.test_trc=0 %}
+                                {% for km in  nbre_km_TK if km[0]==CM[0] and km[1]==date[0] %}
+                                    {% set ns.test_km=1 %}
+                                    {% set ns.cout_total_date=ns.cout_total_date+ km[2]*km_TK[0] %}
+                                    <td> {{km[2]}}</td> 
+                                {% endfor %}    
+                                {% if ns.test_km==0 %} 
+                                    <td> 0</td>
+                                {% endif %}
+                            {% endfor %}
+                            {% for trc in  L_tot_CM_trc %}
+                                {% for km_trc in  nbre_kmTrc_TK if km_trc[0]==trc[0] and km_trc[1]==date[0] %}
+                                    {% set ns.test_trc=1 %}
+                                    {% set ns.cout_total_date=ns.cout_total_date+ km_trc[2]*km_trc_TK[0] %}
+                                    <td> {{km_trc[2]}}</td> 
+                                {% endfor %}    
+                                {% if ns.test_trc==0 %} 
+                                    <td> 0</td>
+                                {% endif %}
+                            {% endfor %}
+                            <td>{{ ns.cout_total_date |round(2)}}€</td>
+                            {%set ns.cout_total_TK=ns.cout_total_TK+ns.cout_total_date%}
+                        </tr>
+                    {% endfor %}
+                    <tr>
+                        <td>Total</td>
+                            {% for CM in L_tot_CM %}
+                                {% set ns.total_km_CM=0 %}
+                                {% for km in nbre_km_TK  if km[0]==CM[0]  %}
+                                    {% set ns.total_km_CM=ns.total_km_CM+km[2] %}   
+                                {% endfor %}
+                                <td> {{ns.total_km_CM |round(2)}}</td>
+                            {% endfor %}    
+                            {% for trc in  L_tot_CM_trc  %}
+                                {% set ns.total_trc_km_CM=0%}
+                                {% for km in nbre_kmTrc_TK  if km[0]==trc[0]  %}
+                                    {% set ns.total_trc_km_CM=ns.total_trc_km_CM+km[2] %}   
+                                {% endfor %}
+                                <td> {{ns.total_trc_km_CM |round(2)}}</td>
+                            {% endfor %}
+
+                        <td> {{ns.cout_total_TK |round(2)}}€</td>
+                        
+                    </tr>
+                </tbody>
+            </table> 
         </div>
         <footer> 
             
