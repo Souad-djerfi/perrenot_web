@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css')}}">
   <link rel="stylesheet" href="{{url_for('static', filename='css/style.css')}}">
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="#">
+    <a class="navbar-brand" href="{{ url_for('identification') }}">
       <img src="{{url_for('static', filename='images/JP1.jpg')}}" width="100" height="45" class="d-inline-block align-top" alt="" loading="lazy">
       PERRENOT
     </a>
@@ -15,76 +15,81 @@
             Tournée
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-            <a class="dropdown-item" href="{{ url_for('selection_magasins') }}">Nouvelles tournées</a>
+            <a class="dropdown-item" href="{{ url_for('selection_magasins') }}">Nouvelles Tournées</a>
             <a class="dropdown-item" href="#">Modifier Tournées</a>
-            <a class="dropdown-item" href="#">Reprendre tournée brouillon</a>
-            <a class="dropdown-item" href="#">Impression Feuille de route</a>
-          </div>
-        </li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="{{ url_for('espace_chauf') }}" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Chauffeur
-          </a>
-          <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-            <a class="dropdown-item" href="{{ url_for('espace_chauf') }}">Espace Chauffeur</a>
-            <a class="dropdown-item" href="{{ url_for('ajouter_chauf') }}">Ajouter Chauffeur</a>
-            <a class="dropdown-item" href="{{ url_for('ajouter_statut_chauf') }}">Ajouter Statut Chauffeur</a>
-            <a class="dropdown-item" href=" {{ url_for('modifier_chauffeur') }}">Modifier Chauffeur</a>            
-            <a class="dropdown-item" href=" {{ url_for('edit_staut_chauf') }}">Editer Statut Chauffeur</a>
-            <a class="dropdown-item" href="{{ url_for('modifier_chauffeur') }}">Supprimer Chauffeur</a>
-            <a class="dropdown-item" href="#">Liste Chauffeur</a>
+            <a class="dropdown-item" href="#">Reprendre Tournées Brouillon</a>
+            
           </div>
         </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Camion
+            Feuilles de Route
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-            <a class="dropdown-item" href="#">ajouter Camion</a>
-            <a class="dropdown-item" href="#">Modifier Camion</a>
-            <a class="dropdown-item" href="#">Supprimer camion</a>
+            <a class="dropdown-item" href="{{ url_for('form_facturation') }}">Imprimer Feuilles de route</a>
           </div>
         </li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Enseigne
-          </a>
-          <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-            <a class="dropdown-item" href="#">Ajouter Enseigne</a>
-            <a class="dropdown-item" href="#">Modifier Enseigne</a>
-            <a class="dropdown-item" href="#">Supprimer Enseigne</a>
-          </div>
-        </li>
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Magasin   
-          </a>
-          <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-            <a class="dropdown-item" href="#">Ajouter Magasin</a>
-            <a class="dropdown-item" href="#">Modifier Magasin</a>
-            <a class="dropdown-item" href="#">Supprimer Magasin</a>
-          </div>
-        </li>
-        
-        
-        <li class="nav-item dropdown">
-          
-          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Compte
-          </a>
-          <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-            <a class="dropdown-item" href="#">Mon compte</a>
-            <a class="dropdown-item" href="{{ url_for('home') }}">se deconnecter</a>
-          </div>
-        </li>
-
+       
         <li class="nav-item">
-          <a class="nav-link" href="#">A propos</a>
+          <a class="nav-link" href="#" data-toggle="modal" data-target="#apropos">
+            A propos de...
+          </a>
+        </li>
+        
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#"role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="menu-icon fas fa-user-circle fa-2x" data-toggle="tooltip" data-placement="top" title="Mon compte"></i></a>   
+          <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+            <a class="dropdown-item" href="{{ url_for('chang_info_user') }}">{{session['login']}}</a>
+            <a class="dropdown-item" href="{{ url_for('se_deconnecter') }}">Se Deconnecter</a>
+          </div>
         </li>
       </ul>
-      <form class="form-inline my-2 my-lg-0">
+      <!--<form class="form-inline my-2 my-lg-0">
         <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
         <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Recherche</button>
-      </form>
+      </form>-->
+      
+      
     </div>
+    
   </nav>
+  
+  <!-- Modal Apropos de-->
+  <div class="modal fade" id="apropos" tabindex="-1" aria-labelledby="apropos" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="apropos">A Propos De...</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+
+          <p> Perrenot-web </p>
+          <p> version 1.0 </p>...
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Ok</button>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+
+  
+  
+
+  <br>
+  
+    {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+              {% for category, message in messages %}
+                  <div class="alert alert-{{ category }}" role="alert">
+                      {{ message }}
+                  </div>
+              {% endfor %}
+          {% endif %}
+    {% endwith %}

@@ -16,23 +16,71 @@ import plotly, json
 from flask import * 
 import os
 
+#Définition de la variable d'Application Flask
 app = Flask(__name__)
 
-#app.config.from_object(Config)
-#app.config['SECRET_KEY']='Ma super secret key'
-"""app.config.from_object(config)
-print(config.CONFIGG['SECRET_KEY'])
-capp = app.config['CONFIGG']"""
-
+#variable de configuration
 app.config.update(SECRET_KEY  = 'ma cle secrete')
+
+#Connexion à la Base de Données
 engine = create_engine('mysql+pymysql://simplon:Simplon2020@localhost:3306/perrenot')
 con=engine.connect()
 
-
+#URL pour la page d'accueil
 @app.route('/', methods=['GET','post'])
 def home():
     
     return render_template('pages/index.html')
+
+#*************************************************************************************************IDENTIFICATION***************************************************************        
+@app.route('/Accueil', methods=['post', 'get'])
+def identification():
+    
+    pseudo,nom,prenom='', '', ''
+    data={
+            'nom': nom ,
+            'prenom': prenom,
+            'pseudo':pseudo
+        }
+    if request.method== 'POST':
+        
+        mot_de_pass=request.form['mdp']
+        mot_de_pass=hashlib.sha1(str.encode(mot_de_pass)).hexdigest() # crypter le mot de passe tapé et le comparer avec celui qui est enregitré dans la BDD
+        pseudo=request.form['pseudo']
+        
+        requete_role="select role_id as id from utilisateur where utilisateur_pseudo=:pseudo and utilisateur_MDP=:pass"
+        requete_nom="select utilisateur_nom as nom from utilisateur where utilisateur_pseudo=:pseudo and utilisateur_MDP=:pass"
+        requete_prenom= "select utilisateur_prenom as prenom from utilisateur where utilisateur_pseudo=:pseudo and utilisateur_MDP=:pass" 
+              
+        role=con.execute(text(requete_role),{'pass':mot_de_pass, 'pseudo':pseudo}).fetchone()
+        nom=con.execute(text(requete_nom),{'pass':mot_de_pass, 'pseudo':pseudo}).fetchone()
+        prenom=con.execute(text(requete_prenom),{'pass':mot_de_pass, 'pseudo':pseudo}).fetchone()
+        data['pseudo']=pseudo
+        data['nom']=nom
+        data['prenom']=prenom
+        
+        if role is None: 
+            flash(' pseudo et mot de passe ne correspondent pas, Veuillez vérifier votre saisie','danger')
+            return render_template('pages/index.html',**data)
+            
+        elif role[0]==1:
+            session['login']=pseudo
+            session['role']=1
+            session['connexion'] = True
+            return render_template('pages/accueil_admin.html',**data)
+        
+        elif role[0]==2:
+            session['login']=pseudo
+            session['role']=2
+            session['connexion'] = True
+            return render_template('pages/accueil_agent.html',**data)
+
+            
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))      
+    return render_template('pages/accueil_admin.html',**data)    
+        
 
 
 #*********************************************************************************************************************AJOUTER CAMION***************************************************************************
@@ -1057,8 +1105,8 @@ def valider_magasins():
     liste_camion=con.execute(text(requete_camion),{'camion':camion}).fetchall()
     #nbre_camion=len([row[0] for row in liste_camion])
     #récupérer la liste des chauffeurs dispo
-    requete_chauffeur='call liste_chauffeur()'#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++test sur la date de livraison pas date d aujourdhui+++++++++++
-    chauffeur=con.execute(text(requete_chauffeur)).fetchall()
+    #requete_chauffeur='call liste_chauffeur()'#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++test sur la date de livraison pas date d aujourdhui+++++++++++
+    chauffeur=con.execute(text('call liste_chauffeur()')).fetchall()
     #liste_chauffeur = [row[0] for row in chauffeur]
     
     # données à envoyer a la page valider_tournée
@@ -1085,55 +1133,7 @@ def valider_magasins():
     
    
     
-#*************************************************************************************************Identification***************************************************************        
-@app.route('/Accueil', methods=['post', 'get'])
-def identification():
-    
-    pseudo=''
-    nom=''
-    prenom=''
-    data={
-            'nom': nom ,
-            'prenom': prenom,
-            'pseudo':pseudo
-        }
-    if request.method== 'POST':
-        
-        mot_de_pass=request.form['mdp']
-        mot_de_pass=hashlib.sha1(str.encode(mot_de_pass)).hexdigest() # crypter le mot de passe tapé et le comparer avec celui qui est enregitré dans la BDD
-        pseudo=request.form['pseudo']
-        
-        requete_role="select role_id as id from utilisateur where utilisateur_pseudo=:pseudo and utilisateur_MDP=:pass"
-        requete_nom="select utilisateur_nom as nom from utilisateur where utilisateur_pseudo=:pseudo and utilisateur_MDP=:pass"
-        requete_prenom= "select utilisateur_prenom as prenom from utilisateur where utilisateur_pseudo=:pseudo and utilisateur_MDP=:pass" 
-              
-        role=con.execute(text(requete_role),{'pass':mot_de_pass, 'pseudo':pseudo}).fetchone()
-        nom=con.execute(text(requete_nom),{'pass':mot_de_pass, 'pseudo':pseudo}).fetchone()
-        prenom=con.execute(text(requete_prenom),{'pass':mot_de_pass, 'pseudo':pseudo}).fetchone()
-        data['pseudo']=pseudo
-        data['nom']=nom
-        data['prenom']=prenom
-        
-        if role is None: 
-            flash(' pseudo et mot de passe ne correspondent pas, Veuillez vérifier votre saisie','danger')
-            return render_template('pages/index.html',**data)
-            
-        elif role[0]==1:
-            session['login']=pseudo
-            session['connexion'] = True
-            return render_template('pages/accueil_admin.html',**data)
-        
-        elif role[0]==2:
-            session['login']=pseudo
-            session['connexion'] = True
-            return render_template('pages/accueil_agent.html',**data)
-
-            
-    if not session.get('connexion'):
-        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
-        return redirect(url_for('home'))      
-    return render_template('pages/accueil_admin.html',**data)    
-             
+     
  #**********************************************************************************SE DECONNECTER********************************************************************************      
 
 @app.route('/deconnection', methods=['post','get'])
