@@ -1,6 +1,12 @@
 {% extends 'layouts/default.html' %}
 {% block body%}
 {% include 'layouts/shared/_menu-admin.html'%}
+{% if test==1%}
+    <form ACTION="{{ url_for('facturation_journaliere') }}" method='post' >
+        <button type="submit"  class="btn btn-lg btn-danger" data-bs-toggle="popover" title="facturation distribution" data-bs-content="And here's some amazing content. It's very engaging. Right?">Imprimer Facturation Détaillée</button>
+        <input type="text" class="form-control" id="inputEmail3"  name="date_tour" value="{{date_tour}}" hidden >
+    </form>
+{%endif%}    
 
 <div align="middle">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>

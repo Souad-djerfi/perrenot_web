@@ -294,7 +294,7 @@ def form_facturation():
                 'L_navette': L_navette,
                 'L_camion':L_camion,
                 'date':date}
-        return render_template('pages/facturation.html', **data)
+        return render_template('pages/facturation_globale.html', **data)
 
     #************************************************************************************************************************EDITER CAMION********************************************************************
 @app.route('/modification_camion', methods=['GET','post'])
@@ -387,7 +387,9 @@ def diagramme_aprs_tournees():
     if not session.get('connexion'):
         flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
         return redirect(url_for('home'))
-    requeteLivraison = pd.read_sql_query('SELECT e.enseigne_intitulé AS enseigne, m.magasin_id, magasin_tarif_rolls, magasin_tarif_palette, magasin_tarif_boxe FROM camion_magasin cm join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where date between "2020-01-10" and "2021-01-01"', engine)
+    date_debut=request.form['date_debut']
+    date_fin=request.form['date_fin']
+    requeteLivraison = pd.read_sql_query('SELECT e.enseigne_intitulé AS enseigne, m.magasin_id, magasin_tarif_rolls, magasin_tarif_palette, magasin_tarif_boxe FROM camion_magasin cm join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where date between "%s" and "%s"' %(date_debut,date_fin), engine)
 
     dataLivraison = pd.DataFrame(requeteLivraison)
     ens=dataLivraison["enseigne"].value_counts()
@@ -397,7 +399,7 @@ def diagramme_aprs_tournees():
     data = [go.Pie(labels=ens.enseigne, values=ens.Nbre_mag_livrés, textposition='inside', textinfo='percent+label', title='Répartition des magasins livrés par enseigne')] 
     graphJSON1 = json.dumps(data, cls=plotly.utils.PlotlyJSONEncoder)
 
-    requeteCasino = pd.read_sql_query('SELECT e.enseigne_intitulé AS enseigne, m.magasin_id, magasin_tarif_rolls, magasin_tarif_palette, magasin_tarif_boxe FROM camion_magasin cm join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where date between "2020-01-01" and "2021-01-01" and magasin_tarif_rolls <>-1 and e.enseigne_intitulé="CASINO"', engine)
+    requeteCasino = pd.read_sql_query('SELECT e.enseigne_intitulé AS enseigne, m.magasin_id, magasin_tarif_rolls, magasin_tarif_palette, magasin_tarif_boxe FROM camion_magasin cm join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where date between "%s" and "%s" and magasin_tarif_rolls <>-1 and e.enseigne_intitulé="CASINO"' %(date_debut,date_fin), engine)
     rolls = pd.DataFrame(requeteCasino)
     rolls= requeteCasino['magasin_tarif_rolls'].value_counts()
     pal=requeteCasino['magasin_tarif_palette'].value_counts()
@@ -954,6 +956,7 @@ def enregistrer_tournee():
     if not session.get('connexion'):
         flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
         return redirect(url_for('home'))
+    test= 1
     if request.method=='POST':
         nom_chauf=request.form.getlist('nom_chauf')
         vlm_rolls=request.form.getlist('vlm_rolls')
@@ -961,11 +964,10 @@ def enregistrer_tournee():
         #vlm_box=request.form.getlist('vlm_box')
         mag_code=request.form.getlist('code_mag')
         camion=request.form.getlist('camion')
-        date_tour=request.form['date_tour']
+        date_tour=request.form['date_debut']
         mag_id=request.form.getlist('mag_id')
         nbMag_par_camion=request.form.getlist('Tnbre_mag_cam')
         cpt_mag=-1
-        #for cam in range(len(camion)):
         for id, val in enumerate(nbMag_par_camion): 
             if int(val)!=0:
                 ligne=1
@@ -985,9 +987,38 @@ def enregistrer_tournee():
 
                 con.execute(text("insert into chauffeur_camion (chauf_id, camion_id, date,ligne) values (:chauf, :camion, :date, :ligne)"), {'chauf': nom_chauf[id], 'camion':camion[id], 'date':date_tour, 'ligne':ligne})
         con.execute(text("update magasin_journalier set statut_tournée=0 where  date = :date"),{'date':date_tour})
-    flash('les tournées ont bien été enregistrées', 'success') 
-    
-    return render_template('pages/diagram_apres_tournees.html')                   
+        #afficher les diagrammes
+
+        requeteLivraison = pd.read_sql_query("SELECT e.enseigne_intitulé AS enseigne, m.magasin_id, magasin_tarif_rolls, magasin_tarif_palette, magasin_tarif_boxe FROM camion_magasin cm join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where date='%s' " %(date_tour), engine)
+
+        dataLivraison = pd.DataFrame(requeteLivraison)
+        ens=dataLivraison["enseigne"].value_counts()
+        ens=ens.reset_index()
+        ens=ens.rename(columns={'enseigne':'Nbre_mag_livrés', 'index':'enseigne'})
+        
+        data = [go.Pie(labels=ens.enseigne, values=ens.Nbre_mag_livrés, textposition='inside', textinfo='percent+label', title='Répartition des magasins livrés par enseigne')] 
+        graphJSON1 = json.dumps(data, cls=plotly.utils.PlotlyJSONEncoder)
+
+        requeteCasino = pd.read_sql_query("SELECT e.enseigne_intitulé AS enseigne, m.magasin_id, magasin_tarif_rolls, magasin_tarif_palette, magasin_tarif_boxe FROM camion_magasin cm join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where date='%s'  and magasin_tarif_rolls <>-1 and e.enseigne_intitulé='CASINO' "%(date_tour), engine)
+        rolls = pd.DataFrame(requeteCasino)
+        rolls= requeteCasino['magasin_tarif_rolls'].value_counts()
+        pal=requeteCasino['magasin_tarif_palette'].value_counts()
+        rolls=rolls.reset_index()
+        pal=pal.reset_index()
+        pal=pal.rename(columns={'index':'Tarif_pal', 'magasin_tarif_palette':'Nbre_mag'})
+        rolls=rolls.rename(columns={'index':'Tarif_Rolls', 'magasin_tarif_rolls':'Nbre_mag'})
+        data1 = [go.Pie(labels=rolls.Tarif_Rolls, values=rolls.Nbre_mag, textposition='inside',text=['€'], textinfo='percent+label+text',title='Répartition Tarif Rolls pour Casino') ] 
+        data2 = [go.Pie(labels=pal.Tarif_pal, values=pal.Nbre_mag, textposition='inside',text=['€'], textinfo='percent+label+text', title='Répartition Tarif Palettes pour Casino') ] 
+        graphJSON2 = json.dumps(data1, cls=plotly.utils.PlotlyJSONEncoder)
+        graphJSON3 = json.dumps(data2, cls=plotly.utils.PlotlyJSONEncoder)
+
+        
+    flash('les tournées ont bien été enregistrées,', 'success') 
+    data={'test':test,
+          'plot1':graphJSON1,
+          'plot2':graphJSON2,
+          'date_tour':date_tour}
+    return render_template('pages/diagram_apres_tournees.html',**data)                   
                
     """for i in range(len(mag_code)):
     print("volumes racuperes avec magasins",vlm_box[i], vlm_pal[i], vlm_rolls[i], mag_code[i])
@@ -995,8 +1026,32 @@ def enregistrer_tournee():
     
         print('camion',id, camion[id])
         print(id+1, val)"""
+ #**********************************************************************************************************************************IMPRESSION FACTURATION JOURNALIERE APRES VALIDATION TOURNEES *******************************
+@app.route('/facturation_journalière', methods=['get','post']) 
+def facturation_journaliere():
+    date_tour=request.form['date_tour']
+    
+    requeteLivraison = pd.read_sql_query('SELECT m.magasin_code, magasin_tarif_rolls, nbre_rolls, magasin_tarif_palette, nbre_palette, magasin_tarif_boxe, nbre_box FROM camion_magasin cm join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where e.enseigne_intitulé ="CASINO" AND date ="%s" ;'%(date_tour), engine)
+    dataLivraison = requeteLivraison[requeteLivraison["magasin_tarif_rolls"] > 0]
+    requeteInfoTarif = pd.read_sql_query('SELECT intitule_tarif, tarif FROM info_tarification JOIN enseigne ON info_tarification.enseigne_id = enseigne.enseigne_id WHERE enseigne.enseigne_intitulé = "CASINO";', engine)
+
+    data = {
+            'infosLivraison': requeteLivraison,
+            'infosTarifs': requeteInfoTarif,
+        }
+    #crréation pdf
+    path_wkhtmltopdf = r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe'
+    config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+    rendered=render_template('pages/facturation_journaliere.html',**data)
+    rendered=rendered
+    pdf =pdfkit.from_string(rendered, False, configuration=config)
+    response=make_response(pdf)
+    response.headers['Content-Type']='application/pdf'
+    response.headers['Content-Disposition']='attachment; filename=facturation_journaliere.pdf'
+    return response
     
 #**************************************************************************************************************************************************SELECTION MAGASINS***********************************************************
+
 @app.route('/selection_magasin', methods=['get','post'])
 def selection_magasins():
     if not session.get('connexion'):

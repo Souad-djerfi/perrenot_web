@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="UTF-8">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Facture Casino</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Facturation Journalière détaillée de CASINO</h1>
+        <div class="row">
+            <div class="col-6">
+                {% set ns = namespace(found=false) %}
+                {% set dataLivraison = infosLivraison[infosLivraison["magasin_tarif_rolls"] > 0] %}
+                {% set dataLivraisonTrinome = infosLivraison[infosLivraison["magasin_tarif_rolls"] < 0] %}
+                {% set ns.coutDistribution = 0 %}
+                {% for valRolls in dataLivraison["magasin_tarif_rolls"].unique() %}
+                {% for valPalettes in dataLivraison["magasin_tarif_palette"].unique() %}
+                {% set dfRoll =  dataLivraison[infosLivraison["magasin_tarif_rolls"] == valRolls] %}
+                {% set dfRoll =  dfRoll[infosLivraison["magasin_tarif_palette"] == valPalettes] %}
+                <table class="table">
+                    <thead class="thead-light">
+                        <tr>
+                            <th rowspan=2 class="align-middle">Code Magasin</th>
+                            <th>Tarif Rolls</th>
+                            <th>Tarif Palette </th>
+                        </tr>
+                        <tr>
+                            <th>{{ valRolls }}</th>
+                            <th>{{ valPalettes }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ligne in dfRoll.itertuples() %}
+                        <tr>
+                            <td>{{ ligne.magasin_code }}</td>
+                            <td>{{ ligne.nbre_rolls }}</td>
+                            <td>{{ ligne.nbre_palette }}</td> 
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-active">
+                        <tr>
+                            {% set nbRolls = dfRoll["nbre_rolls"].sum() %}
+                            {% set nbPalettes = dfRoll["nbre_palette"].sum() %}
+                            <td>Total</td>
+                            <td>{{ nbRolls }}</td>
+                            <td>{{ nbPalettes }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+                {% set ns.coutDistribution = ns.coutDistribution + nbRolls * valRolls + nbPalettes * valPalettes %}
+                {% endfor %}
+                {% endfor %}
+                <table class="table">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Code magasin</th>
+                            <th colspan=2>Trinômes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ligne in dataLivraisonTrinome.itertuples() %}
+                        <tr>
+                            <td>{{ ligne.magasin_code }}</td>
+                            <td>{{ ligne.nbre_rolls }}</td>
+                            <td>{{ ligne.nbre_palette }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-active">
+                        <tr>
+                            <td>Total</td>
+                            <td>{{ dataLivraisonTrinome["nbre_rolls"].sum() }}</td>
+                            <td>{{ dataLivraisonTrinome["nbre_palette"].sum() }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <table class="table">
+                    <thead class="thead-light">
+                        <tr>
+                            {% set nbTotalRolls =  infosLivraison.nbre_rolls.sum() %}
+                            {% set nbTotalPalettes = infosLivraison.nbre_palette.sum() %}
+                            <th>Total global</th>
+                            <th>{{ nbTotalRolls }}</th>
+                            <th>{{ nbTotalPalettes }}</th>
+                            {% set ns.nbTotal = nbTotalRolls + nbTotalPalettes %}
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+                   
+    </div>
+<body>

@@ -26,6 +26,7 @@
                       <ul id="code_mag_ul" class="p-0 m-0">
                         <li>   
                            <div class="input-group">
+
                               <input type="text"  value= "{{  mag[5]  }}" name="mag_id" class="form-control" hidden>
                               <input type="text"  id="{{ mag[0] }}" value= "{{  mag[0]  }}" name="code_mag" class="form-control w-50" data-toggle="tooltip" data-placement="top" title="{{ mag[4] }}">
                               <!-- <input type="text"  value= "{{  mag[4]  }}" name="heur_liv_mag" class="form-control">---->
@@ -135,7 +136,8 @@
                         </div>
                       </div>
                     {%endfor%}
-                    <input  name="date_tour" value="{{date_tour}}" type="text" hidden>
+                    <input  name="date_fin" value="{{date_tour}}" type="text" hidden>
+                    <input  name="date_debut" value="{{date_tour}}" type="text" hidden>
                     <button type="submit" class="btn btn-info btn-block">Valider les tournées</button>
                   </div> 
                 </form>

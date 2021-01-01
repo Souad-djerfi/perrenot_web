@@ -36,7 +36,8 @@
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
             <a class="dropdown-item" href="#" data-toggle="modal" data-target="#facturation">Formulaire Facturation</a>
-            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#impression_facturation">Imprimer Facturation</a>
+            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#impression_facturation">Imprimer Tableaux Récapitulatifs</a>
+            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#facturation_journaliere">Imprimer Facturation Journalière</a>
             <a class="dropdown-item" href="{{ url_for('ajouter_chauf') }}">Ajouter type de tarification</a>
           </div>
         </li>
@@ -89,7 +90,7 @@
             Dashboards
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-            <a class="dropdown-item" href="{{ url_for('diagramme_aprs_tournees') }}">Diagrammes</a>
+            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#afficher_diagramme">Diagrammes</a>
             <a class="dropdown-item" href="{{ url_for('form_dataviz') }}">Rentabilité Tournées</a>
           </div>
         </li>
@@ -148,8 +149,32 @@
       </div>
     </div>
   </div>
-
-  <!-- Modal facturation-->
+<!-- Modal facturation journalière-->
+<div class="modal fade" id="facturation_journaliere" tabindex="-1" aria-labelledby="facturation" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="apropos">Selectionner date de Facturation</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form  method="POST" id= "form3" ACTION="{{ url_for('facturation_journaliere') }}">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="date" class="col-form-label" >Date Facturation:</label>
+            <input type="date" class="form-control" id="date" name= "date_tour" required>  
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+          <button type="submit" class="btn btn-primary">Imprimer Facturation Journalière</button>
+        </div>
+      </form>  
+    </div>
+  </div>
+</div>
+  <!-- Modal facturation globale-->
   <div class="modal fade" id="facturation" tabindex="-1" aria-labelledby="facturation" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -169,6 +194,35 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
             <button type="submit" class="btn btn-primary">Visualiser Formulaire</button>
+          </div>
+        </form>  
+      </div>
+    </div>
+  </div>
+  <!-- Modal diagramme-->
+  <div class="modal fade" id="afficher_diagramme" tabindex="-1" aria-labelledby="impression_facturation" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="apropos">Selectionner une période</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form  method="POST" id= "form2" ACTION="{{ url_for('diagramme_aprs_tournees') }}">
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="date" class="col-form-label" >Du:</label>
+              <input type="date" class="form-control" id="date" name= "date_debut" required>  
+            </div>
+            <div class="form-group">
+              <label for="date" class="col-form-label" >Au:</label>
+              <input type="date" class="form-control" id="date" name= "date_fin" required>  
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+            <button type="submit" class="btn btn-primary">Afficher les diagrammes</button>
           </div>
         </form>  
       </div>
