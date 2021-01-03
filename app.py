@@ -134,19 +134,19 @@ def impression_facturation():
         date_fin=request.form.getlist('date_fin')
         #facturation navette
         L_tot_navette_csn=con.execute(text("SELECT info_tarification_id, intitule_tarif, type_tarif, tarif FROM info_tarification join enseigne on enseigne.enseigne_id = info_tarification.enseigne_id where type_tarif ='navette' and enseigne.enseigne_intitulé = 'CASINO'")).fetchall()
-        L_date_facturation=con.execute(text("select distinct date(date) from tarification where date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+        L_date_facturation=con.execute(text("select distinct date(date) from tarification where date between :date_deb and :date_fin order by date"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
         L_navette_csn=con.execute(text("select tarification.info_tarification_id, intitule_tarif, date(date), valeur from info_tarification join tarification on tarification.info_tarification_id=info_tarification.info_tarification_id join enseigne on enseigne.enseigne_id=info_tarification.enseigne_id  where date between :date_deb and :date_fin and type_tarif='navette' and enseigne.enseigne_intitulé = 'CASINO'"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
         casino_ens_id=con.execute(text("select enseigne_id from enseigne where enseigne_intitulé='CASINO'")).fetchone()
         #facturation distribution
         L_tot_rolls=con.execute(text("select distinct magasin_tarif_rolls from magasin where enseigne_id=:casino_ens_id and magasin_tarif_rolls<>0"),{'casino_ens_id':casino_ens_id[0]}).fetchall()
         L_tot_pal=con.execute(text("select distinct magasin_tarif_palette from magasin where enseigne_id=:casino_ens_id and magasin_tarif_palette<>0"),{'casino_ens_id':casino_ens_id[0]}).fetchall()
-        L_date_distribution=con.execute(text("select distinct date from camion_magasin where date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+        L_date_distribution=con.execute(text("select distinct date from camion_magasin where date between :date_deb and :date_fin order by date"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
         nbre_rolls_secteur=con.execute(text("select  magasin.magasin_tarif_rolls, camion_magasin.date, sum(nbre_rolls) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_intitulé='CASINO' group by magasin.magasin_tarif_rolls, date having date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
         nbre_pal_secteur=con.execute(text("select  magasin.magasin_tarif_palette, camion_magasin.date, sum(nbre_palette) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_intitulé='CASINO' group by magasin.magasin_tarif_palette, date having date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
         #cout passage à quai
         cout_PàQ=con.execute(text("select tarif from info_tarification where type_tarif='passage_a_quai'")).fetchone()
         # cout trinome
-        L_date_trinome=con.execute(text("select distinct date,day(last_day(date)) from tarification join camion on camion.camion_id = tarification.camion_id and camion.camion_type='VL'where date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+        L_date_trinome=con.execute(text("select distinct date,day(last_day(date)) from tarification join camion on camion.camion_id = tarification.camion_id and camion.camion_type='VL'where date between :date_deb and :date_fin order by date"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
         L_tot_vl=con.execute(text("select distinct tarification.camion_id, camion_mat, camion.camion_loyer from tarification join camion on camion.camion_id=tarification.camion_id and camion.camion_type='VL' where date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
         km_trinome=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='km' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
         heure_trinome=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='heure' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
@@ -156,7 +156,7 @@ def impression_facturation():
         nbre_maj_hN_trinome=con.execute(text("select tarification.camion_id, date, sum(valeur) from tarification join camion on camion.camion_id=tarification.camion_id and camion_type='VL' where tarification.info_tarification_id=:maj_heure_nuit_trinome and date between :date_deb and :date_fin group by tarification.camion_id, date"),{'date_deb':date_deb[0], 'date_fin':date_fin[0], 'maj_heure_nuit_trinome':maj_heure_nuit_trinome[1] }).fetchall()
         # TK
         traction_id=con.execute(text("select info_tarification_id from info_tarification where enseigne_id=:casino_ens_id and intitule_tarif='traction' and type_tarif='TK'"),{'casino_ens_id':casino_ens_id[0]}).fetchone()
-        L_date_TK= con.execute(text("select distinct date from tarification join camion on camion.camion_id = tarification.camion_id and camion.camion_type='CAISSE_MOBILE'where date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+        L_date_TK= con.execute(text("select distinct date from tarification join camion on camion.camion_id = tarification.camion_id and camion.camion_type='CAISSE_MOBILE'where date between :date_deb and :date_fin order by date"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
         km_TK=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='TK' and intitule_tarif='km' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
         km_trc_TK=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='TK' and intitule_tarif='traction' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
         
@@ -390,28 +390,109 @@ def diagramme_aprs_tournees():
     date_debut=request.form['date_debut']
     date_fin=request.form['date_fin']
     requeteLivraison = pd.read_sql_query('SELECT e.enseigne_intitulé AS enseigne, m.magasin_id, magasin_tarif_rolls, magasin_tarif_palette, magasin_tarif_boxe FROM camion_magasin cm join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where date between "%s" and "%s"' %(date_debut,date_fin), engine)
-
     dataLivraison = pd.DataFrame(requeteLivraison)
     ens=dataLivraison["enseigne"].value_counts()
     ens=ens.reset_index()
     ens=ens.rename(columns={'enseigne':'Nbre_mag_livrés', 'index':'enseigne'})
-       
+    # afficher diagramme circulaire pour distribution par enseigne  
     data = [go.Pie(labels=ens.enseigne, values=ens.Nbre_mag_livrés, textposition='inside', textinfo='percent+label', title='Répartition des magasins livrés par enseigne')] 
     graphJSON1 = json.dumps(data, cls=plotly.utils.PlotlyJSONEncoder)
 
+    # afficher diagramme a bar pour les camion utilisé a cette période
+    requeteCamion = pd.read_sql_query('select camion_mat, count(camion_mat) As nbre_cam from camion join chauffeur_camion on chauffeur_camion.camion_id=camion.camion_id and date between "%s" and "%s" group by camion_mat' %(date_debut,date_fin), engine)
+    dataCamion = [go.Bar(x=requeteCamion.camion_mat,y=requeteCamion.nbre_cam)]
+    graphJSONCam = json.dumps(dataCamion, cls=plotly.utils.PlotlyJSONEncoder)
+
+    #afficher diagramme a bar camion location ou non utilisé à cette période
+    requetCamLoc=pd.read_sql_query("select date, count(camion_mat) as nbre_loc from camion join chauffeur_camion on chauffeur_camion.camion_id=camion.camion_id and date between '%s' and '%s' where camion_type ='LOCATION' group by date"%(date_debut,date_fin), engine)
+    requetCamNotLoc=pd.read_sql_query("select date, count(camion_mat) as nbre_notLoc from camion join chauffeur_camion on chauffeur_camion.camion_id=camion.camion_id and date between '%s' and '%s' where camion_type <>'LOCATION' group by date"%(date_debut,date_fin), engine)
+    requetCamType=pd.read_sql_query("select camion_type as type, count(camion_mat)  nbre_cam from camion join chauffeur_camion on chauffeur_camion.camion_id=camion.camion_id and date between '%s' and '%s' group by camion_type"%(date_debut,date_fin), engine)
+   
+    trace_loc=go.Bar(x=requetCamLoc.date, y=requetCamLoc.nbre_loc, name='Camion Location', marker=dict(color='#e73f22'))
+    trace_notLoc=go.Bar(x=requetCamNotLoc.date, y=requetCamNotLoc.nbre_notLoc, name='Camion autre que Location', marker=dict(color='#f6cb16'))
+
+    datacamLoc = [trace_loc, trace_notLoc]
+    graphJSONcamLoc = json.dumps(datacamLoc, cls=plotly.utils.PlotlyJSONEncoder)
+
+    dataCamType = [go.Pie(labels=requetCamType.type, values=requetCamType.nbre_cam, textposition='inside', textinfo='percent+label', title='Type Camion')] 
+    graphJSONCamType = json.dumps(dataCamType, cls=plotly.utils.PlotlyJSONEncoder)
+
+    
+    #afficher diagrammes par type de contrat Chauffeur
+    requeteChaufCDI = pd.read_sql_query("select chauffeur_camion.date,  count(chauffeur_camion.chauf_id) as nbre_chauf from chauffeur_camion join chauffeur on chauffeur.chauf_id = chauffeur_camion.chauf_id and chauffeur_camion.date between '%s' and '%s' join chauffeur_contrat on chauffeur_contrat.chauf_id=chauffeur.chauf_id and chauffeur_contrat.date_fin>date(now()) join contrat on contrat.contrat_id=chauffeur_contrat.contrat_id and contrat_intitule='CDI' group by chauffeur_camion.date" %(date_debut,date_fin), engine)
+    requeteChaufCDD = pd.read_sql_query("select chauffeur_camion.date,  count(chauffeur_camion.chauf_id) as nbre_chauf  from chauffeur_camion join chauffeur on chauffeur.chauf_id = chauffeur_camion.chauf_id and chauffeur_camion.date between '%s' and '%s' join chauffeur_contrat on chauffeur_contrat.chauf_id=chauffeur.chauf_id and chauffeur_contrat.date_fin>date(now()) join contrat on contrat.contrat_id=chauffeur_contrat.contrat_id and contrat_intitule='CDD' group by chauffeur_camion.date" %(date_debut,date_fin), engine)
+    requeteChaufInterim = pd.read_sql_query("select chauffeur_camion.date,  count(chauffeur_camion.chauf_id) as nbre_chauf from chauffeur_camion join chauffeur on chauffeur.chauf_id = chauffeur_camion.chauf_id and chauffeur_camion.date between '%s' and '%s' join chauffeur_contrat on chauffeur_contrat.chauf_id=chauffeur.chauf_id and chauffeur_contrat.date_fin>date(now()) join contrat on contrat.contrat_id=chauffeur_contrat.contrat_id and contrat_intitule='INTERIMAIRE' group by chauffeur_camion.date" %(date_debut,date_fin), engine)
+    requeteChaufContratGlobal = pd.read_sql_query("select contrat_intitule as intitul,  count(chauffeur_camion.chauf_id) as nbre_chauf from chauffeur_camion join chauffeur on chauffeur.chauf_id = chauffeur_camion.chauf_id and chauffeur_camion.date between '%s' and '%s' join chauffeur_contrat on chauffeur_contrat.chauf_id=chauffeur.chauf_id and chauffeur_contrat.date_fin>date(now()) join contrat on contrat.contrat_id=chauffeur_contrat.contrat_id group by contrat_intitule" %(date_debut,date_fin), engine)
+    
+
+    trace_chaufCDI=     go.Bar(x=requeteChaufCDI.date, y=requeteChaufCDI.nbre_chauf, name='CDI', marker=dict(color='#450d57'))
+    trace_chaufCDD=     go.Bar(x=requeteChaufCDD.date, y=requeteChaufCDD.nbre_chauf, name='CDD', marker=dict(color='#666699'))
+    trace_chaufInterim=     go.Bar(x=requeteChaufInterim.date, y=requeteChaufInterim.nbre_chauf, name='INTERIMAIRE', marker=dict(color='#993366'))
+    dataChaufContrat=[trace_chaufCDI, trace_chaufCDD, trace_chaufInterim]
+    graphJSONchaufContrat = json.dumps(dataChaufContrat, cls=plotly.utils.PlotlyJSONEncoder)
+
+    # diagramme circulaire chauffeur contrat global 
+    dataChaufContratGlobal = [go.Pie(labels=requeteChaufContratGlobal.intitul, values=requeteChaufContratGlobal.nbre_chauf, textposition='inside', textinfo='percent+label', title='Type de Contrat des Chauffeurs')] 
+    graphJSONChaufContratGlobal = json.dumps(dataChaufContratGlobal, cls=plotly.utils.PlotlyJSONEncoder)
+
+    #diagramme circulaire tarif de rolls 
     requeteCasino = pd.read_sql_query('SELECT e.enseigne_intitulé AS enseigne, m.magasin_id, magasin_tarif_rolls, magasin_tarif_palette, magasin_tarif_boxe FROM camion_magasin cm join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where date between "%s" and "%s" and magasin_tarif_rolls <>-1 and e.enseigne_intitulé="CASINO"' %(date_debut,date_fin), engine)
     rolls = pd.DataFrame(requeteCasino)
     rolls= requeteCasino['magasin_tarif_rolls'].value_counts()
-    pal=requeteCasino['magasin_tarif_palette'].value_counts()
     rolls=rolls.reset_index()
-    pal=pal.reset_index()
-    pal=pal.rename(columns={'index':'Tarif_pal', 'magasin_tarif_palette':'Nbre_mag'})
     rolls=rolls.rename(columns={'index':'Tarif_Rolls', 'magasin_tarif_rolls':'Nbre_mag'})
     data1 = [go.Pie(labels=rolls.Tarif_Rolls, values=rolls.Nbre_mag, textposition='inside',text=['€'], textinfo='percent+label+text',title='Répartition Tarif Rolls pour Casino') ] 
-    data2 = [go.Pie(labels=pal.Tarif_pal, values=pal.Nbre_mag, textposition='inside',text=['€'], textinfo='percent+label+text', title='Répartition Tarif Palettes pour Casino') ] 
     graphJSON2 = json.dumps(data1, cls=plotly.utils.PlotlyJSONEncoder)
-    graphJSON3 = json.dumps(data2, cls=plotly.utils.PlotlyJSONEncoder)
-    return render_template('pages/diagram_apres_tournees.html',plot1=graphJSON1, plot2=graphJSON2, plot3=graphJSON3)
+
+    #diagramme chiffre d'affaire 
+    casino_id=pd.read_sql_query("select enseigne_id from enseigne where enseigne_intitulé='CASINO'", engine).enseigne_id
+    print('caisnoooooooooooooooooooooooooooooooooooooooo idddddddddddddddddddd',casino_id)
+    requetCamLoyer=pd.read_sql_query("select date,  sum(camion_loyer/day(last_day(date))) from tarification  join info_tarification on info_tarification.info_tarification_id=tarification.info_tarification_id and type_tarif='trinome' and intitule_tarif='km' and enseigne_id=%s and date between '%s' and '%s'  join camion on camion.camion_id = tarification.camion_id  group by date order by date"%(casino_id[0],date_debut,date_fin), engine)
+    requetTkCasino=pd.read_sql_query("select date,  sum(tarif*valeur ) from tarification  join info_tarification on info_tarification.info_tarification_id=tarification.info_tarification_id and type_tarif='TK' and enseigne_id=%s and date between '%s' and '%s'  join camion on camion.camion_id = tarification.camion_id  group by date order by date"%(casino_id[0],date_debut,date_fin), engine)
+    requetTrinomeCasino=pd.read_sql_query("select date,  sum(tarif*valeur ) as cout_trinome from tarification  join info_tarification on info_tarification.info_tarification_id=tarification.info_tarification_id and type_tarif='trinome' and enseigne_id=%s and date between '%s' and '%s'  join camion on camion.camion_id = tarification.camion_id  group by date order by date"%(casino_id[0],date_debut,date_fin), engine)
+    requetDistrCasino=pd.read_sql_query("select date, sum(nbre_rolls*magasin_tarif_rolls + nbre_palette*magasin_tarif_palette) as cout_distribution  from camion_magasin  join magasin on magasin.magasin_id=camion_magasin.magasin_id and magasin_tarif_rolls <>-1 join enseigne on enseigne.enseigne_id = magasin.enseigne_id and enseigne_intitulé='CASINO' where date between '%s' and '%s' group by date order by date"%(date_debut,date_fin), engine)
+    cout_paq=pd.read_sql_query("select tarif from info_tarification  where intitule_tarif='passage_a_quai' and enseigne_id=%s"%(casino_id[0]), engine).tarif
+    cout_tri_emb=pd.read_sql_query("select tarif from info_tarification  where intitule_tarif='tri_emb' and enseigne_id=%s"%(casino_id[0]), engine).tarif
+    requetPaQCasino=pd.read_sql_query("select date,  sum(nbre_rolls+nbre_palette)*(%s) as cout_paq from camion_magasin  join magasin on magasin.magasin_id=camion_magasin.magasin_id  join enseigne on enseigne.enseigne_id = magasin.enseigne_id and enseigne_intitulé='CASINO' where date between '%s' and '%s' group by date order by date"%(cout_paq[0],date_debut,date_fin), engine)
+    requetTriEmb=pd.read_sql_query("select date,  sum(nbre_rolls+nbre_palette)*(%s) as cout_tri_emb from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id  join enseigne on enseigne.enseigne_id = magasin.enseigne_id and enseigne_intitulé='CASINO' where date between '%s' and '%s'  group by date order by date"%(cout_tri_emb[0],date_debut,date_fin), engine)
+    
+    print(requetDistrCasino)
+    print(requetTrinomeCasino)
+    print(requetPaQCasino)
+    print(requetCamLoyer)
+    requetTrinomeCasino=pd.merge(requetTrinomeCasino,requetCamLoyer,  how='outer')
+    CA_casino=pd.merge(requetDistrCasino,requetTrinomeCasino,  how='outer')
+    CA_casino=pd.merge(CA_casino,requetPaQCasino,  how='outer')
+    CA_casino=pd.merge(CA_casino,requetTkCasino,  how='outer')
+    CA_casino=pd.merge(CA_casino,requetTriEmb,  how='outer')
+    CA_casino=CA_casino.fillna(0)
+    
+    L_ens=pd.read_sql_query("select enseigne_id, enseigne_intitulé from enseigne where enseigne_actif=1 and enseigne_intitulé<>'CASINO'",engine)
+    print(L_ens.enseigne_intitulé[3])
+    print(L_ens.shape[0])
+    for cpt in range(L_ens.shape[0]):
+        requet_ens=pd.read_sql_query("select date, sum(nbre_rolls*magasin_tarif_rolls + nbre_palette*magasin_tarif_palette) as cout_distribution%s  from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id join enseigne on enseigne.enseigne_id = magasin.enseigne_id and enseigne_intitulé='%s' where date between '%s' and '%s' group by date order by date"%(cpt,L_ens.enseigne_intitulé[cpt],date_debut,date_fin),engine)
+        if not requet_ens.empty:
+            CA_casino=pd.merge(CA_casino,requet_ens, how='outer')
+            
+    sumCaCasino=CA_casino.iloc[:,1:].sum(axis = 1)
+    CA_casino_final = pd.DataFrame({'date': CA_casino['date'],'CA_casino': sumCaCasino}, columns = ['date', 'CA_casino'])
+
+    dataCA = [go.Bar(x=CA_casino_final.date,y=CA_casino_final.CA_casino)]
+    graphJSONCA = json.dumps(dataCA, cls=plotly.utils.PlotlyJSONEncoder)
+
+    print('chiffre d affaire finallllllll')
+    print(CA_casino_final)
+    print(sumCaCasino)
+    data={'plot1': graphJSON1,
+          'plot2':graphJSON2,
+          'plotCam':graphJSONCam,
+          'plotCamLoc':graphJSONcamLoc,
+          'plotChaufContrat':graphJSONchaufContrat,
+          'plotChaufContratGlobal':graphJSONChaufContratGlobal,
+          'plotCamType':graphJSONCamType,
+          'plotCA':graphJSONCA}
+    return render_template('pages/diagram_apres_tournees.html',**data)
 
         
    
@@ -1010,9 +1091,7 @@ def enregistrer_tournee():
         data1 = [go.Pie(labels=rolls.Tarif_Rolls, values=rolls.Nbre_mag, textposition='inside',text=['€'], textinfo='percent+label+text',title='Répartition Tarif Rolls pour Casino') ] 
         data2 = [go.Pie(labels=pal.Tarif_pal, values=pal.Nbre_mag, textposition='inside',text=['€'], textinfo='percent+label+text', title='Répartition Tarif Palettes pour Casino') ] 
         graphJSON2 = json.dumps(data1, cls=plotly.utils.PlotlyJSONEncoder)
-        graphJSON3 = json.dumps(data2, cls=plotly.utils.PlotlyJSONEncoder)
-
-        
+               
     flash('les tournées ont bien été enregistrées,', 'success') 
     data={'test':test,
           'plot1':graphJSON1,

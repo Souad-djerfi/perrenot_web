@@ -144,8 +144,8 @@
                             {% endfor %}
                             <td>{{ns.tot_hors_vl}}</td>
                             <td>{{(ns.tot_hors_vl+ns.VL) | round(2)}}</td>
-                            <td>{{ns.cout_distr | round(2)}}</td>
-                            <td>{{(ns.tot_hors_vl+ns.VL)*cout_PàQ | round(2)}}</td>
+                            <td>{{ns.cout_distr | round(2)}}€</td>
+                            <td>{{((ns.tot_hors_vl+ns.VL)*cout_PàQ )| round(2)}}€</td>
                         </tr>
                     {% endfor %}
                     
@@ -218,8 +218,9 @@
                                 {% set ns.test_heure=0 %}
                                 {% set ns.test_hN=0 %}
                                 <td> {{ (vl[2]/date[1]) | round(2)}}</td>
-                                {% set ns.cout_total_date=ns.cout_total_date+ (vl[2]/date[1]) | round(2) %}
-                                {% for km in  nbre_km_trinome if km[0]==vl[0] and km[1]==date[0] %}
+                               
+                                {% for km in  nbre_km_trinome if km[0]==vl[0] and km[1]==date[0] and km[2]!=0 %}
+                                    {% set ns.cout_total_date=ns.cout_total_date+ (vl[2]/date[1]) | round(2) %}
                                     {% set ns.test_km=1 %}
                                     {% set ns.cout_total_date=ns.cout_total_date+ km[2]*km_trinome[0] %}
                                     <td> {{km[2]}}</td> 
@@ -228,7 +229,7 @@
                                     <td> 0</td>
                                 {% endif %}
 
-                                {% for heure in  nbre_heure_trinome if heure[0]==vl[0] and heure[1]==date[0] %}
+                                {% for heure in  nbre_heure_trinome if heure[0]==vl[0] and heure[1]==date[0] and heure[2]!=0 %}
                                     {% set ns.test_heure=1 %}
                                     {% set ns.cout_total_date=ns.cout_total_date+ heure[2]*heure_trinome[0] %}
                                     <td> {{heure[2]}}</td> 
@@ -237,7 +238,7 @@
                                     <td> 0</td>
                                 {% endif %}
 
-                                {% for hN in  nbre_maj_hN_trinome if hN[0]==vl[0] and hN[1]==date[0] %}
+                                {% for hN in  nbre_maj_hN_trinome if hN[0]==vl[0] and hN[1]==date[0] and hN[2]!=0%}
                                     {% set ns.test_hN=1 %}
                                     {% set ns.cout_total_date=ns.cout_total_date+ hN[2]*maj_hN_trinome[0] %}
                                     <td> {{hN [2]}}</td> 
@@ -247,7 +248,7 @@
                                 {% endif %}
                                 
                             {% endfor %}
-                            <td>{{ ns.cout_total_date}}€</td>
+                            <td>{{ ns.cout_total_date | round(2)}}€</td>
                             {%set ns.cout_total_trinom=ns.cout_total_trinom+ns.cout_total_date%}
                         </tr>
                     {% endfor %}

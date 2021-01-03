@@ -1,17 +1,30 @@
 {% extends 'layouts/default.html' %}
 {% block body%}
 {% include 'layouts/shared/_menu-admin.html'%}
-{% if test==1%}
-    <form ACTION="{{ url_for('facturation_journaliere') }}" method='post' >
-        <button type="submit"  class="btn btn-lg btn-danger" data-bs-toggle="popover" title="facturation distribution" data-bs-content="And here's some amazing content. It's very engaging. Right?">Imprimer Facturation Détaillée</button>
-        <input type="text" class="form-control" id="inputEmail3"  name="date_tour" value="{{date_tour}}" hidden >
-    </form>
-{%endif%}    
+    
 
 <div align="middle">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
-
+    {% if test==1%}
+        <form ACTION="{{ url_for('facturation_journaliere') }}" method='post' >
+            <button type="submit"  class="btn btn-lg btn-danger" data-bs-toggle="popover" title="facturation distribution" data-bs-content="And here's some amazing content. It's very engaging. Right?">Imprimer Facturation Détaillée</button>
+            <input type="text" class="form-control" id="inputEmail3"  name="date_tour" value="{{date_tour}}" hidden >
+        </form>
+        <div class="chart" id="pie1">
+            <script>
+            var graphs = {{plot1 | safe}};
+            Plotly.plot('pie1',graphs,{});
+            </script>
+        </div>	
+        
+        <div class="chart" id="pie2">
+            <script>
+            var graphs2 = {{plot2 | safe}};
+            Plotly.plot('pie2',graphs2,{});
+            </script>
+        </div>
+    {% else %}
     <div class="chart" id="pie1">
         <script>
         var graphs = {{plot1 | safe}};
@@ -25,11 +38,44 @@
         Plotly.plot('pie2',graphs2,{});
         </script>
     </div>
-    <div class="chart" id="pie3">
+    <div class="chart" id="bar1">
         <script>
-        var graphs2 = {{plot3 | safe}};
-        Plotly.plot('pie3',graphs2,{});
+        var graphs2 = {{plotCam | safe}};
+        Plotly.plot('bar1',graphs2,{});
         </script>
     </div>
+    <div class="chart" id="bar2">
+        <script>
+        var graphs3 = {{plotCamLoc | safe}};
+        Plotly.plot('bar2',graphs3,{});
+        </script>
+    </div>
+    <div class="chart" id="pie4">
+        <script>
+        var graphs6 = {{plotCamType | safe}};
+        Plotly.plot('pie4',graphs6,{});
+        </script>
+    </div>
+    <div class="chart" id="bar3">
+        <script>
+        var graphs4 = {{plotChaufContrat | safe}};
+        Plotly.plot('bar3',graphs4,{});
+        </script>
+    </div>
+    <div class="chart" id="pie3">
+        <script>
+        var graphs5 = {{plotChaufContratGlobal | safe}};
+        Plotly.plot('pie3',graphs5,{});
+        </script>
+    </div>
+    <div class="chart" id="bar4">
+        <script>
+        var graphs6 = {{plotCA | safe}};
+        Plotly.plot('bar4',graphs6,{});
+        </script>
+    </div>
+    {%endif%}   
+
+    
 </div>
 {% endblock%} 
