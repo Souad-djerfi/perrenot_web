@@ -11,25 +11,32 @@
             <button type="submit"  class="btn btn-lg btn-danger" data-bs-toggle="popover" title="facturation distribution" data-bs-content="And here's some amazing content. It's very engaging. Right?">Imprimer Facturation Détaillée</button>
             <input type="text" class="form-control" id="inputEmail3"  name="date_tour" value="{{date_tour}}" hidden >
         </form>
+        <!--<div class="pie" id="pie0">
+            <script>
+                var graphs0 = {{plotEnsRolls | safe}};
+                Plotly.plot('pie0',graphs0,{});
+            </script>
+        </div>-->
         <div class="chart" id="pie1">
             <script>
-            var graphs = {{plot1 | safe}};
-            Plotly.plot('pie1',graphs,{});
+                var graphs = {{plot1 | safe}};
+                Plotly.plot('pie1',graphs,{});
             </script>
         </div>	
         
         <div class="chart" id="pie2">
             <script>
-            var graphs2 = {{plot2 | safe}};
-            Plotly.plot('pie2',graphs2,{});
+                var graphs2 = {{plot2 | safe}};
+                Plotly.plot('pie2',graphs2,{});
             </script>
         </div>
     {% else %}
     <div class="chart" id="pie1">
         <script>
-        var graphs = {{plot1 | safe}};
-        Plotly.plot('pie1',graphs,{});
+            var graphs = {{plot1 | safe}};
+            Plotly.plot('pie1',graphs,{});
         </script>
+        
     </div>	
     
     <div class="chart" id="pie2">
@@ -72,6 +79,12 @@
         <script>
         var graphs6 = {{plotCA | safe}};
         Plotly.plot('bar4',graphs6,{});
+        </script>
+    </div>
+    <div class="chart" id="line1">
+        <script>
+        var graphs9 = {{plotEnsLine | safe}};
+        Plotly.plot('line1',graphs9,{});
         </script>
     </div>
     {%endif%}   

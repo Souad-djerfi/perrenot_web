@@ -38,7 +38,7 @@
             <a class="dropdown-item" href="#" data-toggle="modal" data-target="#facturation">Formulaire Facturation</a>
             <a class="dropdown-item" href="#" data-toggle="modal" data-target="#impression_facturation">Imprimer Tableaux Récapitulatifs</a>
             <a class="dropdown-item" href="#" data-toggle="modal" data-target="#facturation_journaliere">Imprimer Facturation Journalière</a>
-            <a class="dropdown-item" href="{{ url_for('ajouter_chauf') }}">Ajouter type de tarification</a>
+            <a class="dropdown-item" href="{{ url_for('ajouter_navette') }}">Ajouter/ Editer  Navette</a>
           </div>
         </li>
         <li class="nav-item dropdown">
@@ -48,11 +48,14 @@
           <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
             <a class="dropdown-item" href="{{ url_for('espace_chauf') }}">Espace Chauffeur</a>
             <a class="dropdown-item" href="{{ url_for('ajouter_chauf') }}">Ajouter Chauffeur</a>
-            <a class="dropdown-item" href="{{ url_for('ajouter_statut_chauf') }}">Ajouter Statut Chauffeur</a>
-            <a class="dropdown-item" href=" {{ url_for('modifier_chauffeur') }}">Editer Chauffeur</a>            
-            <a class="dropdown-item" href=" {{ url_for('edit_staut_chauf') }}">Editer Statut Chauffeur</a>
+            <a class="dropdown-item" href=" {{ url_for('modifier_chauffeur') }}">Modifier Chauffeur</a>  
             <a class="dropdown-item" href="{{ url_for('modifier_chauffeur') }}">Supprimer Chauffeur</a>
-            <a class="dropdown-item" href="#">Liste Chauffeur</a>
+            <a class="dropdown-item" href="{{ url_for('ajouter_statut_chauf') }}">Ajouter Statut Chauffeur</a>
+            <a class="dropdown-item" href=" {{ url_for('edit_staut_chauf') }}">Modifier Statut Chauffeur</a>
+            <a class="dropdown-item" href=" {{ url_for('edit_staut_chauf') }}">Supprimer Statut Chauffeur</a>
+            <a class="dropdown-item" href="{{url_for('ajouter_contrat_chauf')}}">Ajouter Contrat Chauffeur</a>
+            <a class="dropdown-item" href="{{url_for('edit_contrat_chauf')}}">Modifier Contrat Chauffeur</a>
+            <a class="dropdown-item" href="{{url_for('edit_contrat_chauf')}}">Supprimer Contrat Chauffeur</a>
           </div>
         </li>
         <li class="nav-item dropdown">
@@ -61,8 +64,8 @@
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
             <a class="dropdown-item" href="{{ url_for('ajout_camion') }}">Ajouter Camion</a>
-            <a class="dropdown-item" href="#">Modifier Camion</a>
-            <a class="dropdown-item" href="#">Supprimer Camion</a>
+            <a class="dropdown-item" href="{{ url_for('edit_camion') }}">Modifier Camion</a>
+            <a class="dropdown-item" href="{{ url_for('edit_camion') }}">Supprimer Camion</a>
           </div>
         </li>
         <li class="nav-item dropdown">
@@ -70,9 +73,10 @@
             Enseigne
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-            <a class="dropdown-item" href="#">Ajouter Enseigne</a>
-            <a class="dropdown-item" href="#">Modifier Enseigne</a>
-            <a class="dropdown-item" href="#">Supprimer Enseigne</a>
+            <a class="dropdown-item" href="{{ url_for('ajout_enseigne') }}">Ajouter Enseigne</a>
+            <a class="dropdown-item" href="{{ url_for('modifier_enseigne') }}">Modifier Enseigne</a>
+            <a class="dropdown-item" href="{{ url_for('modifier_enseigne') }}">Supprimer Enseigne</a>
+            <a class="dropdown-item" href="{{ url_for('editer_tarif_casino') }}">Editer Tarification Casino</a>
           </div>
         </li>
         <li class="nav-item dropdown">
@@ -81,8 +85,8 @@
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
             <a class="dropdown-item" href="{{ url_for('ajouter_magasin') }}">Ajouter Magasin</a>
-            <a class="dropdown-item" href="#">Modifier Magasin</a>
-            <a class="dropdown-item" href="#">Supprimer Magasin</a>
+            <a class="dropdown-item" href="{{ url_for('editer_magasin') }}">Modifier Magasin</a>
+            <a class="dropdown-item" href="{{ url_for('editer_magasin') }}">Supprimer Magasin</a>
           </div>
         </li>
         <li class="nav-item dropdown">

@@ -1,0 +1,161 @@
+{% extends 'layouts/default.html' %}
+{% block body%}
+{% include 'layouts/shared/_menu-admin.html'%}
+
+  
+        
+<div class="container-fluid">
+    <div class="row">
+      <div class="col-md-3">  
+        {% include 'layouts/shared/_menu_navette.html'%}
+      </div>
+      <div class="col-md-9"> 
+        <div id="loginbox" class="mainbox col-md-10 col-md-offset-3 col-sm-6 col-sm-offset-3"> 
+          <div class="card">
+            <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+            <h5 class="card-header card text-center">  Modification/Suppression Navette:</h5>
+              <div class="card-body">
+                <div class="border border_secondary rounded-sm"> 
+                  <form id="form" method="POST" class="container form-horizontal " enctype="multipart/form-data" ACTION="{{ url_for('edit_navette') }}">
+                    <div class="input-group mb-3">
+                      <div class="input-group-prepend">
+                        <button class="btn btn-info" type="submit" id="button-addon1">Rechercher</button>
+                      </div>
+                      <input type="text" class="form-control" name="rech_nvt" placeholder="Enseinge/Intitulé-Navette" aria-label="Example text with button addon" aria-describedby="button-addon1">
+                      <div class="input-group-append">
+                                                  <!-- Button trigger modal -->
+                        <button  type="button"   class="btn btn-info" data-toggle="modal" data-target="#modifier_nvt" data-whatever="@getbootstrap" >Modifier Navette</button>
+                        <button type="button"  class="btn btn-outline-secondary" data-toggle="modal" data-target="#supprimer_nvt" value="Submit form"> Supprimer </button>
+                      </div>
+                    </div>
+                    <table id ='list_nvt' class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th scope="col" style="width:5%;">#</th>
+                          <th scope="col" style="width:12%;">Enseigne</th>
+                          <th scope="col" style="width:12%;">Intitulé-Navette</th>
+                          <th scope="col" style="width:12%;">Tarif(€)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for nvt in L_nvt %}  
+                          <tr>
+                            <th scope="row">
+                              <div class="form-check">
+                                <input class="form-check-input position-static" type="radio" checked="checked" name="nvt_select" id="R_chauf" value="{{nvt[4]}}" aria-label="...">
+                              </div>  
+                            </th>
+                            <td id="table_ens">{{nvt[2]}}</td>
+                            <td id="table_navette">{{nvt[0]}}</td>
+                            <td id="table_tarif">{{nvt[1]}}</td>
+                            <td id="table_ens_id" hidden>{{nvt[3]}}</td>
+                            <td id="table_tarif_id" hidden>{{nvt[4]}}</td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </form>              
+                </div>
+              </div>    
+                    
+            </div>    
+          </div>  
+        </div>    
+      </div>
+    </div>  
+</div>
+
+ <!-- Modal Supprimer-->
+  <div class="modal fade" id="supprimer_nvt" tabindex="-1" aria-labelledby="supprimer_nvt" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="supprimer_nvt">Confirmation...</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p> Veuillez confirmer la suppression de la navette cochée</p>
+        </div>
+        <div class="modal-footer">
+          <form action="{{ url_for('navette_supprimée') }}" method="post">
+            <input type="text" name="info_tarif_id"  id="sup_info_tarif_id" hidden/>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+            <button type="submit" class="btn btn-primary"  >Supprimer</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+<!-- fenetre modale modification statut chauffeur-->
+  <div class="modal fade" id="modifier_nvt" tabindex="-1" aria-labelledby="modifier_nvt" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modifier_chauf">Modifier Navette</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form  method="POST" id= "form2" ACTION="{{ url_for('chauffeur_statut_modifie') }}">
+          <div class="modal-body">
+            <div class="form-group">
+                <select name="modal_L_ens" class="custom-select" required>
+                    <option value="" disabled selected> <B> Choisissez une Enseigne</B></option>
+                      {% for ens in L_ens %}
+                          <option id="edit_statut" value="{{ens[0] }}" >  {{ ens[1] }} </option>
+                      {% endfor %}
+                  </select>
+              <input type="text" name="modal_info_tarif_id" value="" id="edit_info_tarif_id" hidden/><!-- pour récupérer le id tarification selectionné-->
+              <input type="text" name="modal_ens_id" id="edit_ens_id" hidden/>
+              <label for="nom" class="col-form-label">Intitulé:</label>
+              <input type="text" class="form-control" id="edit_intitule"  name="modal_intitule" disabled>
+              <label for="prenom" class="col-form-label">Tarif:</label>
+              <input type="text" class="form-control"  id="edit_tarif" name="modal_tarif">
+              
+              <!--<input type="text" class="form-control" id="edit_statut" name= "statut">-->
+                     
+              
+            </div> 
+          </div>  
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+            <input type="submit"  class="btn btn-primary" value='Confirmer modification' >
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+ <script>
+
+  $('#modifier_nvt').on('shown.bs.modal', function (e) {
+    //debut
+    var row_selected = $("input:radio:checked", "#list_nvt").closest('tr');
+    
+    //var nom= row_selected.children("#table_nom").text();
+    $('#edit_intitule').val(row_selected.children("#table_navette").text())
+    $('#edit_tarif').val(row_selected.children("#table_tarif").text())
+    $('select[name="modal_L_ens"]').val(row_selected.children("#table_ens_id").text()).attr("selected", "selected")
+    //$('#edit_statut').val(row_selected.children("#table_statut").text())
+    
+    
+    //fin
+  })
+
+  $('#supprimer_nvt').on('shown.bs.modal', function (e) {
+    //debut
+    var row_selected = $("input:radio:checked", "#list_nvt").closest('tr');
+    
+    //var nom= row_selected.children("#table_nom").text();
+    $('#sup_info_tarif_id').val(row_selected.children("#table_tarif_id").text())
+    
+
+    //fin
+  })
+</script>      
+
+{% endblock%} 

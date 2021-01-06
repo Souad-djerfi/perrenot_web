@@ -163,18 +163,20 @@
                         </div>
                     </div>
 
-                    {% for ens in L_enseigne: %}
-                        <div class="tab-pane fade " id="list-{{ ens[0] }}" role="tabpanel">
+                    {% for cpt_ens in range (nbre_ens): %}
+                        <div class="tab-pane fade " id="list-{{ L_enseigne[cpt_ens][0] }}" role="tabpanel">
                             <div class="card text-center">
-                                <h5 class="card-header"> <em>Formulaire de Facturation de {{ ens[1] }} pour {{date}}:</em></h5>
+                                <h5 class="card-header"> <em>Formulaire de Facturation de {{ L_enseigne[cpt_ens][1] }} pour {{date}}:</em></h5>
                                 <div class="card-body">
+                                  {% for nvt in L_navette_ens[cpt_ens]%}
                                     <div class="form-group row">
-                                        <label for="inputEmail3" class="col-sm-3 col-form-label"><strong> Entrepôt: </strong></label>
+                                        <label for="inputEmail3" class="col-sm-3 col-form-label"><strong> {{nvt[1]}}: </strong></label>
                                         <div class="col-sm-9">
-                                          <input type="text" class="form-control" id="inputEmail3" name="ens_nvt" value="{{ ens[0] }}" hidden >
+                                          <input type="text" class="form-control" id="inputEmail3" name="ens_nvt" value="{{nvt[2] }}" hidden >
                                           <input type="number" class="form-control" id="inputEmail3" placeholder="Nombre de fois"  name="ens_nvt_nbre" value="0">
                                         </div>
                                     </div>
+                                  {% endfor %}  
                                 </div>
                                 <!--<div class="card-footer text-muted">
                                     2 days ago

@@ -1,0 +1,109 @@
+{% extends 'layouts/default.html' %}
+{% block body%}
+{% include 'layouts/shared/_menu-admin.html'%}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+<!-- JavaScript Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW" crossorigin="anonymous"></script>
+
+<!------ Include the above in your HEAD tag ---------->
+<div class="container-fluid">  
+
+    <div class="container-fluid">  
+        <div class="row">
+            <div class="col-md-2">  
+                {% include 'layouts/shared/_menu_enseigne.html'%}
+            </div>
+            <div class="col-md-2"></div>
+            <div class="col-md-6">     
+                <div class="card">
+                    <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+                    <div class="row">
+                       
+                    </div>
+                    <div class="tab-content" id="nav-tabContent">
+                        <div class="tab-pane fade show active " id="ajout_mag" role="tabpanel" >
+                            <div class="accordion" id="accordionExample">
+                                <div class="accordion-item">
+                                  <h2 class="accordion-header" id="headingOne">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                      <strong><em>Ajout magasin pour la nouvelle Enseigne {{ ens_intitulé }}: </em> </strong>
+                                    </button>
+                                  </h2>
+                                  {% if test_ajout_mag ==1 %}
+                                    <div id="collapseOne" class="accordion-collapse collapse show " aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                                    {% else %}
+                                        <div id="collapseOne" class="accordion-collapse collapse  " aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                                    {% endif %}
+                                    <div class="accordion-body">
+                                      <div class="row">
+                                        <form ACTION="{{ url_for('ajouter_magasin') }}" name="ajout_util" id="form" class="form-horizontal default" enctype="multipart/form-data" method="POST" >
+                                            <div class="form-group">
+                                                <input id="ens_intitule" type="text" class="form-control" name="ens_ajouT" value="{{ens_intitulé}}" disabled>       
+                                                <input id="ens_intitule" type="text" class="form-control" name="nvl_ens" value="{{ens_intitulé}}" hidden>                                  
+                                                <input  type="text" class="form-control" name="liste_ens" value="{{nvl_ens_id}}" hidden >                                        
+                                                <label for ="code">Code Magasin:</label> </B>
+                                                <input id="code" type="text" class="form-control" name="code" value="{{code}}" required >                                        
+                                                <label for ="adresse" class="col-form-label">Adresse du magasin:</label>
+                                                <input id="adresse" type="text" class="form-control" name="adresse" value="{{adresse}}" required >                                        
+                                                <label for ="heure" class="col-form-label">Heure de livraison du magasin:</label>
+                                                <input id="heure" type="time" class="form-control" name="heure" value="{{heure}}" required >                                        
+                                                <label for ="rolls" class="col-form-label">tarif Rolls:</label>
+                                                <input id="rolls" type="text" class="form-control" name="rolls" value="{{rolls}}" >                                        
+                                                <label for ="pallete" class="col-form-label">tarif Palette:</label>
+                                                <input id="pallete" type="text" class="form-control" name="palette" value="{{palette}}" >   
+                                                <label for ="boxe" class="col-form-label">tarif boxe:</label>
+                                                <input id="box" type="text" class="form-control" name="boxe" value="{{boxe}}" >   
+                                            </div> 
+                                            <div >
+                                                <button type="submit" href="#" class="btn btn-primary"> Ajouter</button> 
+                                                <button type="reset" class="btn btn-primary" > Annuler</button>                         
+                                            </div>
+                                        </form>  
+                                      </div> 
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="accordion-item">
+                                  <h2 class="accordion-header" id="headingTwo">
+                                    <button class="accordion-button collapsed " type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                      <strong> <em> Ajouter Navette pour la nouvelle Enseigne {{ ens_intitulé }}:  </em></strong>
+                                    </button>
+                                  </h2>
+                                  {% if test_ajout_mag ==1 %}
+                                    <div id="collapseTwo" class="accordion-collapse collapse " aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+                                  {%else %} 
+                                  <div id="collapseTwo" class="accordion-collapse collapse show" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">    
+                                  {% endif %}
+                                    <div class="accordion-body">
+                                      <div class="row">
+                                        <form ACTION="{{ url_for('ajouter_navette') }}" name="ajout_util" id="form" class="form-horizontal default" enctype="multipart/form-data"  method="POST" >
+                                            <div class="form-group">
+                                                <input id="tarif" type="text" class="form-control" name="enseigne_intitule" value="{{ens_intitulé}}" disabled > 
+                                                <input id="tarif" type="text" class="form-control" name="enseigne_intitule" value="{{ens_intitulé}}" hidden >
+                                                <input id="tarif" type="text" class="form-control" name="liste_ens" value="{{nvl_ens_id}}" hidden >
+                                                <input id="tarif" type="text" class="form-control" name="test_ens" value="1" hidden >
+                                                
+                                                <label for ="nvt" class="col-form-label">Intitulé-Navette:</label>
+                                                <input id="nvt" type="text" class="form-control" name="navette" value="{{navette}}" required >                                        
+                                                <label for ="tarif" class="col-form-label">Tarif(€):</label>
+                                                <input id="tarif" type="text" class="form-control" name="tarif" value="{{tarif}}" required >                                        
+                                                                              
+                                            </div>   
+                                            <div >
+                                                <button type="submit" href="#" class="btn btn-primary"> Ajouter</button> 
+                                                <button type="reset" class="btn btn-primary" > Annuler</button>                         
+                                            </div>
+                                        </form> 
+                                      </div>
+                                   </div>
+                                  </div>
+                                </div> 
+                                
+                    </div>                     
+            </div>  
+        </div>
+    </div>      
+</div>
+
+
+{% endblock%} 

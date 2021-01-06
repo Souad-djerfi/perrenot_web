@@ -1,0 +1,128 @@
+{% extends 'layouts/default.html' %}
+{% block body%}
+{% include 'layouts/shared/_menu-admin.html'%}
+<!------<link href="//netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+ Include the above in your HEAD tag ---------->
+  
+ 
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-3">  
+      {% include 'layouts/shared/_menu_enseigne.html'%}
+    </div>
+    <div class="col-md-9">
+      <div id="loginbox" class="mainbox col-md-8 col-md-offset-3 col-sm-6 col-sm-offset-3"> 
+        <div class="card">
+          <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+          <h5 class="card-header card text-center">  Modification/Suppression Enseigne:</h5>
+            <div class="card-body">
+              <div class="border border_secondary rounded-sm"> 
+                <form id="form" method="POST" class="container form-horizontal " enctype="multipart/form-data" ACTION="{{ url_for('modifier_enseigne') }}">
+                  <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                      <button class="btn btn-info" type="submit" id="button-addon1">Rechercher</button>
+                    </div>
+                    <input type="text" class="form-control" name="rech_ens" placeholder="Nom de l'enseigne" aria-label="Example text with button addon" aria-describedby="button-addon1">
+                    <div class="input-group-append">
+                      <!-- Button trigger modal -->
+                      <button  type="button"   class="btn btn-info" data-toggle="modal" data-target="#modifier_ens" data-whatever="@getbootstrap" >Modifier Enseigne</button>
+                      <button type="button"  class="btn btn-outline-secondary" data-toggle="modal" data-target="#supprimer_ens" value="Submit form"> Supprimer </button>
+                    </div>
+                  </div>
+                  <table id ='list_ens' class="table table-hover">
+                    <thead>
+                      <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Institulé</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for ens in liste_ens %}  
+                        <tr>
+                          <th scope="row">
+                            <div class="form-check">
+                              <input class="form-check-input position-static" type="radio" checked="checked" name="ens_select" id="R_ens" value="{{ens[0]}}" aria-label="...">
+                            </div>  
+                          </th>
+                          <td id="table_intutile">{{ens[0]}}</td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </form>                          
+              </div>
+            </div>
+        </div>    
+      </div> 
+    </div>     
+  </div>
+</div>
+
+
+ <!-- Modal Supprimer-->
+ <div class="modal fade" id="supprimer_ens" tabindex="-1" aria-labelledby="supprimer_ensLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="supprimer_ensLabel">Confirmation...</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p> Veuillez confirmer la suppression de l'enseigne coché</p>
+      </div>
+      <div class="modal-footer">
+        <form action="{{ url_for('supp_enseigne') }}" method="post">
+          <input type="text" name="sup_ens" value="" id="sup_ens" hidden/>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-primary">Supprimer</button>
+      </form>
+      </div>
+    </div>
+  </div>
+</div>
+</form>
+<!-- fenetre modale modification enseigne-->
+<div class="modal fade" id="modifier_ens" tabindex="-1" aria-labelledby="modifier_ens" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modifier_ens">Modifier Enseigne</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form  method="POST" id= "form2" ACTION="{{ url_for('enseigne_modifier') }}">
+          <div class="form-group">
+            <label for="intitule" class="col-form-label">Intitulé :</label>
+            <input type="text" class="form-control" id="edit_intitule" name="intitule" value="{{ens_info[0]}}">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+            <input type="submit"  class="btn btn-primary" value='Confirmer modification' >
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+
+  $('#modifier_ens').on('shown.bs.modal', function (e) {
+    //debut
+    var row_selected = $("input:radio:checked", "#list_ens").closest('tr');
+    
+    //var nom= row_selected.children("#table_nom").text();
+    $('#edit_intitule').val(row_selected.children("#table_intutile").text())
+
+    //fin
+  })
+</script>      
+
+{% endblock%} 
