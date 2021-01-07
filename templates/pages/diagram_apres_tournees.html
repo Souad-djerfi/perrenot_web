@@ -17,6 +17,7 @@
                 Plotly.plot('pie0',graphs0,{});
             </script>
         </div>-->
+        
         <div class="chart" id="pie1">
             <script>
                 var graphs = {{plot1 | safe}};
@@ -31,6 +32,19 @@
             </script>
         </div>
     {% else %}
+        <strong> <em class="list-group-item list-group-item-action list-group-item-dark">Ensemble de Diagrammes pour la période entre {{date_debut }} et  {{date_fin }}: </em></strong>
+        <div class="chart" id="bar4">
+            <script>
+            var graphs6 = {{plotCA | safe}};
+            Plotly.plot('bar4',graphs6,{});
+            </script>
+        </div>
+        <div class="chart" id="line1">
+            <script>
+            var graphs9 = {{plotEnsLine | safe}};
+            Plotly.plot('line1',graphs9,{});
+            </script>
+        </div>
     <div class="chart" id="pie1">
         <script>
             var graphs = {{plot1 | safe}};
@@ -75,18 +89,8 @@
         Plotly.plot('pie3',graphs5,{});
         </script>
     </div>
-    <div class="chart" id="bar4">
-        <script>
-        var graphs6 = {{plotCA | safe}};
-        Plotly.plot('bar4',graphs6,{});
-        </script>
-    </div>
-    <div class="chart" id="line1">
-        <script>
-        var graphs9 = {{plotEnsLine | safe}};
-        Plotly.plot('line1',graphs9,{});
-        </script>
-    </div>
+    
+    
     {%endif%}   
 
     

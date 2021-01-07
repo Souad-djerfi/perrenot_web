@@ -115,13 +115,25 @@ def ajout_camion():
     return render_template('pages/ajouter_camion.html')
     #*************************************************************************************************************************FORMULAIRE DATAVIZ*****************************************
 
-@app.route('/Visualisation_données', methods=['GET','post'])
-def form_dataviz():
+@app.route('/Feuille-de-route', methods=['GET','post'])
+def feuille_route():
     if not session.get('connexion'):
         flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
         return redirect(url_for('home'))
+    path_wkhtmltopdf = r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe'
+    config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+    #pdfkit.from_url("http://google.com", "out.pdf", configuration=config)
+    rendered=''
+    for cpt in range(5) :
+        rendered=render_template('pages/feuille_route.html', essai=cpt)
+        rendered+=rendered
+        pdf =pdfkit.from_string(rendered, False, configuration=config)
+        response=make_response(pdf)
+        response.headers['Content-Type']='application/pdf'
+        response.headers['Content-Disposition']='attachment; filename=feuille_route.pdf'
+        print(cpt)
+    return response
     
-    return render_template('pages/dataviz.html')
 #************************************************************************************************************************IMPRESSION FACTURATION*****************************************
 
 @app.route('/impresion_facturation', methods=['GET','post'])
@@ -570,14 +582,14 @@ def diagramme_aprs_tournees():
       
     trace_loc=go.Bar(x=requetCamLoc.date, y=requetCamLoc.nbre_loc, name='Camion Location', marker=dict(color='#e73f22'))
     trace_notLoc=go.Bar(x=requetCamNotLoc.date, y=requetCamNotLoc.nbre_notLoc, name='Camion autre que Location', marker=dict(color='#f6cb16'))
-    layoutCamLoc=go.Layout(title="Utilisation camion de Location et Non Location", xaxis=dict(title="Date des Tournées "), yaxis=dict(title="Nombre d'utilisations "),)
+    layoutCamLoc=go.Layout(title="Utilisation camion de Location et Non Location", xaxis=dict(title="Date des Tournées "), yaxis=dict(title="Nombre d'Utilisations "),)
     
 
     datacamLoc = [trace_loc, trace_notLoc]
     figcamLoc=go.Figure(data=datacamLoc, layout=layoutCamLoc)
     graphJSONcamLoc = json.dumps(figcamLoc, cls=plotly.utils.PlotlyJSONEncoder)
 
-    dataCamType = [go.Pie(labels=requetCamType.type, values=requetCamType.nbre_cam, textposition='inside', textinfo='percent+label', title='Type Camion')] 
+    dataCamType = [go.Pie(labels=requetCamType.type, values=requetCamType.nbre_cam, textposition='inside', textinfo='percent+label', title='Répartition par Type Camion')] 
     graphJSONCamType = json.dumps(dataCamType, cls=plotly.utils.PlotlyJSONEncoder)
 
     
@@ -632,11 +644,7 @@ def diagramme_aprs_tournees():
     sumCaCasino=CA_casino.iloc[:,1:].sum(axis = 1)
     #tracer la ligne
     CA_casino_line = pd.DataFrame({'date': CA_casino['date'],'CA_casino': sumCaCasino}, columns = ['date', 'CA_casino'])
-
-    meanCaCasino=CA_casino.iloc[:,1:].mean(axis = 1)
-    
     casinoLine=go.Scatter( x=CA_casino_line.date, y=CA_casino_line.CA_casino, mode = 'lines+markers', name='CASINO')
-    #casinoLineMean=go.Scatter( x=CA_casino_line_mean.date, y=CA_casino_line_mean.CA_casino, mode = 'lines+markers', name='UTILE')
     dataLine=[casinoLine]
    
     L_ens=pd.read_sql_query("select enseigne_id, enseigne_intitulé from enseigne where enseigne_actif=1 and enseigne_intitulé<>'CASINO'",engine)
@@ -649,21 +657,19 @@ def diagramme_aprs_tournees():
             requet_ens_sum=requet_ens.iloc[:,1:].sum(axis = 1)
             requet_ens_final = pd.DataFrame({'date': requet_ens.date,'CA_ens': requet_ens_sum}, columns = ['date', 'CA_ens'])
             ens_Line=go.Scatter( x=requet_ens_final.date, y=requet_ens_final.CA_ens, mode = 'lines+markers',  name=L_ens.iloc[cpt][1])
-            ens_Line.update_layout(title='Average High and Low Temperatures in New York',
-                   xaxis_title='Month',
-                   yaxis_title='Temperature (degrees F)')
             dataLine.append(ens_Line)
             
         elif not requet_ens.empty and requeteNvt_ens.empty:
-            ens_Line=go.Scatter( x=requet_ens.date, y=requet_ens.cout_distribution, mode = 'lines+markers', name=L_ens.iloc[cpt][1])
+            ens_Line=go.Scatter( x=requet_ens['date'], y=requet_ens['cout_distribution'], mode = 'lines+markers', name=L_ens.iloc[cpt][1])
             dataLine.append(ens_Line)
         elif  requet_ens.empty and not requeteNvt_ens.empty:    
-            ens_Line=go.Scatter( x=requeteNvt_ens.date, y=requeteNvt_ens.cout_navette, mode = 'lines+markers', name=L_ens.iloc[cpt][1])
+            ens_Line=go.Scatter( x=requeteNvt_ens['date'], y=requeteNvt_ens['cout_navette'], mode = 'lines+markers', name=L_ens.iloc[cpt][1])
             dataLine.append(ens_Line)
 
-    graphJSONCA_ens = json.dumps(dataLine, cls=plotly.utils.PlotlyJSONEncoder)
-
-
+    layoutline=go.Layout(title="Chiffre d'Affaire par Enseigne", xaxis=dict(title="Date"), yaxis=dict(title="Chiffre d'Affaire En Euro"),)
+    figCALine=go.Figure(data=dataLine, layout=layoutline)
+    graphJSONCA_ens = json.dumps(figCALine, cls=plotly.utils.PlotlyJSONEncoder)
+   
     for cpt in range(L_ens.shape[0]):
         requet_ens=pd.read_sql_query("select date, sum(nbre_rolls*magasin_tarif_rolls + nbre_palette*magasin_tarif_palette) as cout_distribution%s  from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id join enseigne on enseigne.enseigne_id = magasin.enseigne_id and enseigne_intitulé='%s' where date between '%s' and '%s' group by date order by date"%(cpt,L_ens.iloc[cpt][1],date_debut,date_fin),engine)
         requeteNvt_ens=pd.read_sql_query("select tarification.date, sum(tarif*valeur) as cout_navette%s from tarification join info_tarification on info_tarification.info_tarification_id=tarification.info_tarification_id and type_tarif='navette' and enseigne_id=%s and date between '%s' and '%s'group by date order by date"%(cpt,L_ens.iloc[cpt][0],date_debut,date_fin),engine)
@@ -676,7 +682,7 @@ def diagramme_aprs_tournees():
     #tracer diagrammme a bar chiffre d affaire
     CA_casino_final = pd.DataFrame({'date': CA_casino['date'],'CA_casino': sumCaCasino}, columns = ['date', 'CA_casino'])
     traceBarCA=go.Bar(x=CA_casino_final.date,y=CA_casino_final.CA_casino, marker=dict(color='#D5D8DC'))
-    layoutBarCA=go.Layout(title="Chiffre d'affaire global", xaxis=dict(title="Date"), yaxis=dict(title="Chiffre d'affaire"),)
+    layoutBarCA=go.Layout(title="Chiffre d'affaire global", xaxis=dict(title="Date"), yaxis=dict(title="Chiffre d'Affaire en Euro"),)
     dataBarCA = [traceBarCA]
     figBarCA=go.Figure(data=dataBarCA, layout=layoutBarCA)
     graphJSONCA = json.dumps(figBarCA, cls=plotly.utils.PlotlyJSONEncoder)
@@ -689,7 +695,9 @@ def diagramme_aprs_tournees():
           'plotChaufContratGlobal':graphJSONChaufContratGlobal,
           'plotCamType':graphJSONCamType,
           'plotCA':graphJSONCA,
-          'plotEnsLine':graphJSONCA_ens
+          'plotEnsLine':graphJSONCA_ens,
+          'date_debut':date_debut,
+          'date_fin':date_fin
           }
     return render_template('pages/diagram_apres_tournees.html',**data)
 
@@ -1455,7 +1463,7 @@ def selection_magasins():
     
 
  #**********************************************************************************************************************VALIDER les MAGASINS CHOISIS**********************************************************       
-@app.route('/valider_magasins', methods=['get','post'])
+@app.route('/Effectuer-les-tounrées', methods=['get','post'])
 def valider_magasins():
     if not session.get('connexion'):
         flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
