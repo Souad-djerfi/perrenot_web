@@ -27,7 +27,7 @@
             Feuilles de Route
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-            <a class="dropdown-item" href="{{ url_for('feuille_route') }}">Imprimer Feuilles de route</a>
+            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#feuille_route">Feuille de Route</a>
           </div>
         </li>
         <li class="nav-item dropdown">
@@ -150,6 +150,32 @@
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Ok</button>
           
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Feuille de route-->
+  <div class="modal fade" id="feuille_route" tabindex="-1" aria-labelledby="feuille_route" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="apropos">Selectionner Date des Tournées</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form  method="POST" id= "form2" ACTION="{{ url_for('feuille_route') }}">
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="date" class="col-form-label" >Date Tournées:</label>
+              <input type="date" class="form-control" id="date" name= "date" required>  
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+            <button type="submit" class="btn btn-primary">Imprimer les Feuilles</button>
+          </div>
+        </form>  
       </div>
     </div>
   </div>

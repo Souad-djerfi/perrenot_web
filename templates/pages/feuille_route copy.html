@@ -4,57 +4,86 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Feuille de Route</title>
+        <base href="http://www.example.com/">
         <meta name="pdfkit-page-size" content="Legal"/>
         <meta name="pdfkit-orientation" content="Landscape"/>
+        <!--<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">-->
+        <link href="{{ url_for('static', filename='css/style.css', _external=True) }}" rel="stylesheet" >
+        <link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css', _external=True)}}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" integrity="sha512-+4zCK9k+qNFUR5X+cKL9EIR+ZOhtIloNl9GIKS57V1MyNsYpYcUrUeQc9vNfzsWfV28IaLL3i96P9sdNyeRssA==" crossorigin="anonymous" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>   
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.5.3/umd/popper.min.js" integrity="sha512-53CQcu9ciJDlqhK7UD8dZZ+TF2PFGZrOngEYM/8qucuQba+a+BXOIRsp9PoMNJI3ZeLMVNIxIfZLbG/CdHI5PA==" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+        
+    
+        
     </head>
     <body>
-        <font size="2pt"> 
+        <font size="3pt"> 
         <div class="container-fluid">
             <div style = "display:block; clear:both; page-break-after:always;"></div>
             <div class="row">  
-                <strong> <H2><em class="list-group-item list-group-item-action list-group-item-dark">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ORDRE DE MISSION Du {{date}}: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em></H2></strong>
-               <!--<img src="D:\PerrenotStage\PerrenotWeb\perrenot_web\static\images\jp-feuille-route.png"/>-->
-               <!-- <img src="{{url_for('static', filename='images/jp-feuille-route.png', _external=True)}}" />-->
+                <strong> <H2><em class="list-group-item list-group-item-action list-group-item-primary">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ORDRE DE MISSION Du {{date}}: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</em></H2></strong>
+               <img src="D:\PerrenotStage\PerrenotWeb\perrenot_web\static\images\jp-feuille-route.png"/>
+                <!-- <img src="{{url_for('static', filename='images/jp-feuille-route.png', _external=True)}}" />-->
             </div>
             <div class="row">
-                <div class="col-6">     
+                <div class="col-3">     
                     <table class="table table-bordered border-primary">
                         <thead>
                             <tr>
                                 <th scope="col">Véhicule: {{chauffeur[5]}}</th>
-                                <th scope="col">Chauffeur "{{chauffeur[1]}} {{chauffeur[2]}}" </th>
-                                <th scope="col">Remorque</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div> 
+                <div class="col-3">     
+                    <table class="table table-bordered border-primary">
+                        <thead>
+                            <tr>
+                            <th scope="col">Chauffeur "{{chauffeur[1]}} {{chauffeur[2]}}" </th>
+                            
+                            </tr>
+                        </thead>
+                    </table>
+                </div> 
+                <div class="col-3">     
+                    <table class="table table-bordered border-primary">
+                        <thead>
+                            <tr>
+                            <th scope="col">Remorque</th>
+                            
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+                               
+               
+            </div>    
+            <div class='row'>  
+                <div class="col-2">     
+                    <table class="table table-bordered border-primary">
+                        <thead>
+                            <tr>
                                 <th scope="col">Heure de prise de poste:</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td></td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
                             </tr>
                             
                         </tbody>
                     </table>
-                </div> 
-                
-               
-               
-            </div>    
-            <div class='row'>  
-                
+                </div>
                   
-                <div class="col-12">     
+                <div class="col-3">     
                     <table class="table table-bordered border-primary">
                         <thead>
                             <tr>
                                 <th scope="col"> </th>
                                 <th scope="col">LITRAGE</th>
                                 <th scope="col">LIEU DE PRISE</th>
-                                <th colspan=2>Kilométrage</th>
-                                <th colspan=2 scope="col">HORAIRE</th>
-                                <th colspan=3 class="align-middle"> PASSAGE AUTOROUTE</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -62,34 +91,83 @@
                                 <td>GASOIL</td>
                                 <td>     </td>
                                 <td>    </td>
-                                <td>KM Départ</td>
-                                <td>    </td>
-                                <td>heure Départ</td>
-                                <td>    </td>
-                                <th scope="col">LA BARQUE</th>
-                                <th scope="col">OUI</th>
-                                <th scope="col">NON</th>
                             </tr>
                             <tr>
                                 <td>FLUE</td>
                                 <td>    </td>
                                 <td>  </td>
-                                <td>KM Arrivée</td>
-                                <td>    </td>
-                                <td>heure Arrivée</td>
-                                <td>    </td>
-                                <td>ALLEE</td>
-                                <td>     </td>
-                                <td>    </td>
                             </tr>
                             <tr>
                                 <td>AD BLUE</td>
                                 <td>     </td>
                                 <td>     </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div> 
+                <div class="col-2">     
+                    <table class="table table-bordered border-primary">
+                        <thead>
+                            <tr>
+                                <th scope="col">Kilométrage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>KM Départ</td>
+                            </tr>
+                            <tr>
+                                <td>KM Arrivée</td>
+                            </tr>
+                            <tr>
                                 <td>Nombre KM</td>
-                                <td>    </td>                                
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>  
+                <div class="col-2">     
+                    <table class="table table-bordered border-primary">
+                        <thead>
+                            <tr>
+                            <th scope="col">HORAIRE</th>
+                            
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>heure Départ</td>
+                            </tr>
+                            <tr>
+                                <td>heure Arrivée</td>
+                            </tr>
+                            <tr>
                                 <td>Pause</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>  
+            </div>    
+            <div class='row'>  
+                  
+                <div class="col-4">     
+                    <table class="table table-bordered border-primary">
+                        <thead>
+                            <tr>
+                                <th colspan=3 class="align-middle"> PASSAGE AUTOROUTE</th>
+                            </tr>
+                            <tr>   
+                                <th scope="col">LA BARQUE</th>
+                                <th scope="col">OUI</th>
+                                <th scope="col">NON</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ALLEE</td>
+                                <td>     </td>
                                 <td>    </td>
+                            </tr>
+                            <tr>
                                 <td>RETOUR</td>
                                 <td>    </td>
                                 <td>  </td>
@@ -97,11 +175,6 @@
                         </tbody>
                     </table>
                 </div> 
-                 
-               
-            </div>    
-            <div class='row'>  
-                  
                 <div class="col-6">     
                     <table class="table table-bordered border-primary">
                         <thead>

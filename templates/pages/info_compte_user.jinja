@@ -7,32 +7,80 @@
 {% endif %}
 <div class="container-fluid">  
     <div class="row">
-        <div class="col-md-2"></div>
+        <div class="col-md-3"></div>
         <div class="col-md-6">     
             <div class="card">
-                <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
                 <h5 class="card-header card text-center"> <i class="fa fa-user" > Mes informations:</i></h5>
                     <div class="card-body">
-                        <div class="border border_secondary rounded-sm">
-                            <form ACTION="{{ url_for('chang_info_user') }}" name="ajout_util" id="form" class="form-horizontal default" enctype="multipart/form-data"  method="POST" >
-                                <div class="form-group">
-                                    <label for ="user" class="col-form-label">Pseudo:</label>
-                                    <input id="user" type="text" class="form-control" name="pseudo" value="{{pseudo}}" required >                                        
-                                    <label for ="nom" class="col-form-label">Nom:</label>
-                                    <input id="nom" type="text" class="form-control" name="nom" value="{{nom}}" required >                                        
-                                    <label for ="prenom" class="col-form-label">Prénom:</label>
-                                    <input id="prenom" type="text" class="form-control" name="prenom" value="{{prenom}}" required >                                        
-                                    <label for ="mdp" class="col-form-label">Ancien Mot de passe:</label>
-                                    <input id="mdp" type="password" class="form-control" name="mdp"  required>                                        
-                                    <label for ="Conmdp" class="col-form-label">Nouveau mot de passe:</label>
-                                    <input id="Conmdp" type="password" class="form-control" name="nvMDP" >  
-                                    <label for ="Conmdp" class="col-form-label">Confirmer mot de passe:</label>
-                                    <input id="Conmdp" type="password" class="form-control" name="cNvMDP" >                                      
-                                </div>   
-                                <div >
-                                    <button type="submit" href="#" class="btn btn-primary"> Modifier</button> 
-                                    <button type="reset" class="btn btn-primary" > Annuler</button>                         
+                        <div class="border border_secondary rounded-lg">
+                            <form ACTION="{{ url_for('chang_info_user') }}" name="ajout_util" id="form" class="form-horizontal " enctype="multipart/form-data"  method="POST" >
+                                <div class="form-group row">   
                                 </div>
+                                    <div class="form-group row">
+                                        <div class="col-sm-1">
+                                        </div>
+                                        <label for ="user" class="col-sm-4 col-form-label"><strong>Pseudo:</strong></label>
+                                        <div class="col-sm-6">
+                                            <input id="user" type="text" class="form-control" name="pseudo" value="{{pseudo}}" required >
+                                        </div> 
+                                        <div class="col-sm-1">
+                                        </div>       
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-sm-1">
+                                        </div>
+                                        <label for ="nom" class="col-sm-4 col-form-label"><strong>Nom:</strong></label>
+                                        <div class="col-sm-6">
+                                            <input id="nom" type="text" class="form-control" name="nom" value="{{nom}}" required >  
+                                        </div>
+                                        <div class="col-sm-1">
+                                        </div>  
+                                    </div>    
+                                    <div class="form-group row">
+                                        <div class="col-sm-1">
+                                        </div>                                       
+                                        <label for ="prenom" class="col-sm-4 col-form-label"><strong>Prénom:</strong></label>
+                                        <div class="col-sm-6">
+                                            <input id="prenom" type="text" class="form-control" name="prenom" value="{{prenom}}" required > 
+                                        </div>
+                                        <div class="col-sm-1">
+                                        </div> 
+                                    </div>   
+                                    <div class="form-group row">
+                                        <div class="col-sm-1">
+                                        </div>  
+                                        <label for ="mdp" class="col-sm-4 col-form-label"><strong>Ancien Mot de passe:</strong></label>
+                                        <div class="col-sm-6">
+                                            <input id="mdp" type="password" class="form-control" name="mdp"  required>   
+                                        </div>
+                                        <div class="col-sm-1">
+                                        </div> 
+                                    </div>                                         
+                                    <div class="form-group row">
+                                        <div class="col-sm-1">
+                                        </div>  
+                                        <label for ="Conmdp" class="col-sm-4 col-form-label"><strong>Nouveau mot de passe:</strong></label>
+                                        <div class="col-sm-6">
+                                            <input id="Conmdp" type="password" class="form-control" name="nvMDP" >  
+                                        </div>
+                                        <div class="col-sm-1">
+                                        </div>  
+                                    </div>
+                                    <div class="form-group row">
+                                        <div class="col-sm-1">
+                                        </div> 
+                                        <label for ="Conmdp" class="col-sm-4 col-form-label"><strong>Confirmer mot de passe:</strong></label>
+                                        <div class="col-sm-6">
+                                            <input id="Conmdp" type="password" class="form-control" name="cNvMDP" >                                      
+                                        </div>  
+                                        <div class="col-sm-1">
+                                        </div>  
+                                    </div>
+                                    <div class="card-footer text-center">
+                                        <button type="submit" href="#" class="btn btn-primary "> Modifier</button> 
+                                        <button type="reset" class="btn btn-primary" > Annuler</button>  
+                                    </div>                     
+                                
                             </form> 
                         </div>      
                     </div>   

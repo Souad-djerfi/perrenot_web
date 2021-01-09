@@ -153,6 +153,7 @@
     $('#edit_nom').val(row_selected.children("#table_nom").text())
     $('#edit_prenom').val(row_selected.children("#table_prenom").text())
     //$('#edit_contrat').val(row_selected.children("#table_contrat").text())
+    $('select[name="modal_liste_contrat"]').val(row_selected.children("#table_contrat_id").text()).attr("selected", "selected")
     $('#edit_date_debut').val(row_selected.children("#table_date_deb").text())
     $('#edit_date_fin').val(row_selected.children("#table_date_fin").text())
     $('#edit_anc_contrat_id').val(row_selected.children("#table_contrat_id").text())

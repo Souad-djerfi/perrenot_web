@@ -16,6 +16,7 @@ import plotly, json
 from flask import * 
 import os
 
+
 #Définition de la variable d'Application Flask
 app = Flask(__name__)
 
@@ -120,18 +121,26 @@ def feuille_route():
     if not session.get('connexion'):
         flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
         return redirect(url_for('home'))
+    date=request.form['date']    
+    L_chauf_cam=con.execute(text("select chauffeur_camion.chauf_id, chauf_nom, chauf_prenom, ligne ,chauffeur_camion.camion_id, camion_mat  from chauffeur join chauffeur_camion on chauffeur_camion.chauf_id=chauffeur.chauf_id and chauffeur_camion.date =:date join camion on camion.camion_id=chauffeur_camion.camion_id group by chauffeur_camion.chauf_id,ligne"),{'date':date}).fetchall()
     path_wkhtmltopdf = r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe'
     config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+    
+    css=["D:\\PerrenotStage\\PerrenotWeb\\perrenot_web\\templates\\pages\\bootstrap.min.css","D:\\PerrenotStage\\PerrenotWeb\\perrenot_web\\static\\css\\style.css","D:\\PerrenotStage\\PerrenotWeb\\perrenot_web\\static\\css\\bootstrap.css"]
     #pdfkit.from_url("http://google.com", "out.pdf", configuration=config)
     rendered=''
-    for cpt in range(5) :
-        rendered=render_template('pages/feuille_route.html', essai=cpt)
-        rendered+=rendered
-        pdf =pdfkit.from_string(rendered, False, configuration=config)
-        response=make_response(pdf)
-        response.headers['Content-Type']='application/pdf'
-        response.headers['Content-Disposition']='attachment; filename=feuille_route.pdf'
-        print(cpt)
+    for chauf in L_chauf_cam : 
+        L_mag=con.execute(text("select camion_magasin.magasin_id, magasin_code,magasin_heure_livr, magasin_adresse, nbre_rolls, nbre_palette from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id and ligne=:ligne and camion_id=:cam and date=:date  "),{'ligne':chauf[3],'cam':chauf[4],'date':date}) 
+        data={'chauffeur':chauf,
+            'camion':L_mag,
+            'date':date}    
+        rendered+=render_template('pages/feuille_route.html', **data)
+        pdf =pdfkit.from_string(rendered, False,css=css, configuration=config)
+        
+    response=make_response(pdf)
+    response.headers['Content-Type']='application/pdf'
+    response.headers['Content-Disposition']='inline; filename=feuille_route.pdf'
+        
     return response
     
 #************************************************************************************************************************IMPRESSION FACTURATION*****************************************
@@ -555,14 +564,15 @@ def diagramme_aprs_tournees():
     ens=ens.reset_index()
     ens=ens.rename(columns={'enseigne':'Nbre_mag_livrés', 'index':'enseigne'})
     # afficher diagramme circulaire pour distribution par enseigne  
-    data = [go.Pie(labels=ens.enseigne, values=ens.Nbre_mag_livrés, textposition='inside', textinfo='percent+label', title='Répartition des magasins livrés par enseigne')] 
-    graphJSON1 = json.dumps(data, cls=plotly.utils.PlotlyJSONEncoder)
+    data = [go.Pie(labels=ens.enseigne, values=ens.Nbre_mag_livrés, textposition='inside', textinfo='percent+label')] 
+    layoutPieEns=go.Layout(title="3. Répartition des magasins livrés par Enseigne", )
+    figPieEns=go.Figure(data=data, layout=layoutPieEns)
+    graphJSON1 = json.dumps(figPieEns, cls=plotly.utils.PlotlyJSONEncoder)
 
     # afficher diagramme a bar pour les camion utilisé a cette période
     requeteCamion = pd.read_sql_query('select camion_mat, count(camion_mat) As nbre_cam from camion join chauffeur_camion on chauffeur_camion.camion_id=camion.camion_id and date between "%s" and "%s" group by camion_mat' %(date_debut,date_fin), engine)
     traceFRQCamBar=     go.Bar(x=requeteCamion.camion_mat,y=requeteCamion.nbre_cam)
-    layoutFRQCamBar=go.Layout(title="Fraquence d'utilisation Des Camions", xaxis=dict(title="Immatriculations des camions "), yaxis=dict(title="Nombre d'utilisations "),)
-    
+    layoutFRQCamBar=go.Layout(title="5. Fréquence d'utilisation Des Camions", xaxis=dict(title="Immatriculations des camions "), yaxis=dict(title="Nombre d'utilisations "),)
     dataCamFRQBar=[traceFRQCamBar]
     figBarChauf=go.Figure(data=dataCamFRQBar, layout=layoutFRQCamBar)
     graphJSONCam = json.dumps(figBarChauf, cls=plotly.utils.PlotlyJSONEncoder)
@@ -582,15 +592,17 @@ def diagramme_aprs_tournees():
       
     trace_loc=go.Bar(x=requetCamLoc.date, y=requetCamLoc.nbre_loc, name='Camion Location', marker=dict(color='#e73f22'))
     trace_notLoc=go.Bar(x=requetCamNotLoc.date, y=requetCamNotLoc.nbre_notLoc, name='Camion autre que Location', marker=dict(color='#f6cb16'))
-    layoutCamLoc=go.Layout(title="Utilisation camion de Location et Non Location", xaxis=dict(title="Date des Tournées "), yaxis=dict(title="Nombre d'Utilisations "),)
+    layoutCamLoc=go.Layout(title="6. Utilisation camion de Location et Non Location", xaxis=dict(title="Date des Tournées "), yaxis=dict(title="Nombre d'Utilisations "),)
     
 
     datacamLoc = [trace_loc, trace_notLoc]
     figcamLoc=go.Figure(data=datacamLoc, layout=layoutCamLoc)
     graphJSONcamLoc = json.dumps(figcamLoc, cls=plotly.utils.PlotlyJSONEncoder)
 
-    dataCamType = [go.Pie(labels=requetCamType.type, values=requetCamType.nbre_cam, textposition='inside', textinfo='percent+label', title='Répartition par Type Camion')] 
-    graphJSONCamType = json.dumps(dataCamType, cls=plotly.utils.PlotlyJSONEncoder)
+    dataCamType = [go.Pie(labels=requetCamType.type, values=requetCamType.nbre_cam, textposition='inside', textinfo='percent+label', title='')] 
+    layoutPieCam=go.Layout(title="7. Répartition Camions de Livraison par Type ", )
+    figPieCam=go.Figure(data=dataCamType, layout=layoutPieCam)
+    graphJSONCamType = json.dumps(figPieCam, cls=plotly.utils.PlotlyJSONEncoder)
 
     
     
@@ -604,15 +616,17 @@ def diagramme_aprs_tournees():
     trace_chaufCDI=     go.Bar(x=requeteChaufCDI.date, y=requeteChaufCDI.nbre_chauf, name='CDI', marker=dict(color='#450d57'))
     trace_chaufCDD=     go.Bar(x=requeteChaufCDD.date, y=requeteChaufCDD.nbre_chauf, name='CDD', marker=dict(color='#666699'))
     trace_chaufInterim=     go.Bar(x=requeteChaufInterim.date, y=requeteChaufInterim.nbre_chauf, name='INTERIMAIRE', marker=dict(color='#993366'))
-    layoutChaufBar=go.Layout(title="Chauffeur par Type de Contrat", xaxis=dict(title="Date"), yaxis=dict(title="Nombre Chauffeur"),)
+    layoutChaufBar=go.Layout(title="8. Nombre de Chauffeurs par Type de Contrat", xaxis=dict(title="Date"), yaxis=dict(title="Nombre Chauffeur"),)
     
     dataChaufContrat=[trace_chaufCDI, trace_chaufCDD, trace_chaufInterim]
     figBarChauf=go.Figure(data=dataChaufContrat, layout=layoutChaufBar)
     graphJSONchaufContrat = json.dumps(figBarChauf, cls=plotly.utils.PlotlyJSONEncoder)
 
     # diagramme circulaire chauffeur contrat global 
-    dataChaufContratGlobal = [go.Pie(labels=requeteChaufContratGlobal.intitul, values=requeteChaufContratGlobal.nbre_chauf, textposition='inside', textinfo='percent+label', title='Type de Contrat des Chauffeurs')] 
-    graphJSONChaufContratGlobal = json.dumps(dataChaufContratGlobal, cls=plotly.utils.PlotlyJSONEncoder)
+    dataChaufContratGlobal = [go.Pie(labels=requeteChaufContratGlobal.intitul, values=requeteChaufContratGlobal.nbre_chauf, textposition='inside', textinfo='percent+label', )] 
+    layoutPieCam=go.Layout(title='9. Répartition des Chauffeurs par Type de Contrat ', )
+    figPieCam=go.Figure(data=dataChaufContratGlobal, layout=layoutPieCam)
+    graphJSONChaufContratGlobal = json.dumps(figPieCam, cls=plotly.utils.PlotlyJSONEncoder)
 
     #diagramme circulaire tarif de rolls 
     requeteCasino = pd.read_sql_query('SELECT e.enseigne_intitulé AS enseigne, m.magasin_id, magasin_tarif_rolls, magasin_tarif_palette, magasin_tarif_boxe FROM camion_magasin cm join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where date between "%s" and "%s" and magasin_tarif_rolls <>-1 and e.enseigne_intitulé="CASINO"' %(date_debut,date_fin), engine)
@@ -620,8 +634,10 @@ def diagramme_aprs_tournees():
     rolls= requeteCasino['magasin_tarif_rolls'].value_counts()
     rolls=rolls.reset_index()
     rolls=rolls.rename(columns={'index':'Tarif_Rolls', 'magasin_tarif_rolls':'Nbre_mag'})
-    data1 = [go.Pie(labels=rolls.Tarif_Rolls, values=rolls.Nbre_mag, textposition='inside',text=['€'], textinfo='percent+label+text',title='Répartition Tarif Rolls pour Casino') ] 
-    graphJSON2 = json.dumps(data1, cls=plotly.utils.PlotlyJSONEncoder)
+    data1 = [go.Pie(labels=rolls.Tarif_Rolls, values=rolls.Nbre_mag, textposition='inside',text=['€'], textinfo='percent+label+text',) ] 
+    layoutPieRolls=go.Layout(title='4. Répartition Tarif Rolls pour Casino', )
+    figPieCam=go.Figure(data=data1, layout=layoutPieRolls)
+    graphJSON2 = json.dumps(figPieCam, cls=plotly.utils.PlotlyJSONEncoder)
 
     #diagramme chiffre d'affaire 
     casino_id=pd.read_sql_query("select enseigne_id as ens_id from enseigne where enseigne_intitulé='CASINO'", engine)['ens_id']
@@ -666,7 +682,7 @@ def diagramme_aprs_tournees():
             ens_Line=go.Scatter( x=requeteNvt_ens['date'], y=requeteNvt_ens['cout_navette'], mode = 'lines+markers', name=L_ens.iloc[cpt][1])
             dataLine.append(ens_Line)
 
-    layoutline=go.Layout(title="Chiffre d'Affaire par Enseigne", xaxis=dict(title="Date"), yaxis=dict(title="Chiffre d'Affaire En Euro"),)
+    layoutline=go.Layout(title="2. Chiffre d'Affaire par Enseigne", xaxis=dict(title="Date"), yaxis=dict(title="Chiffre d'Affaire En Euro"),)
     figCALine=go.Figure(data=dataLine, layout=layoutline)
     graphJSONCA_ens = json.dumps(figCALine, cls=plotly.utils.PlotlyJSONEncoder)
    
@@ -682,7 +698,7 @@ def diagramme_aprs_tournees():
     #tracer diagrammme a bar chiffre d affaire
     CA_casino_final = pd.DataFrame({'date': CA_casino['date'],'CA_casino': sumCaCasino}, columns = ['date', 'CA_casino'])
     traceBarCA=go.Bar(x=CA_casino_final.date,y=CA_casino_final.CA_casino, marker=dict(color='#D5D8DC'))
-    layoutBarCA=go.Layout(title="Chiffre d'affaire global", xaxis=dict(title="Date"), yaxis=dict(title="Chiffre d'Affaire en Euro"),)
+    layoutBarCA=go.Layout(title="1. Chiffre d'affaire global", xaxis=dict(title="Date"), yaxis=dict(title="Chiffre d'Affaire en Euro"),)
     dataBarCA = [traceBarCA]
     figBarCA=go.Figure(data=dataBarCA, layout=layoutBarCA)
     graphJSONCA = json.dumps(figBarCA, cls=plotly.utils.PlotlyJSONEncoder)
@@ -721,7 +737,6 @@ def ajout_enseigne():
         else:
             con.execute(text("insert into enseigne (enseigne_intitulé) value (:ens)"),{'ens':intitule})
             nvl_ens_id=con.execute(text("select enseigne_id from enseigne where enseigne_intitulé=:ens"),{'ens':intitule}).fetchone()
-            print("id nouvelle enseignnnnnnnnnnnnnnnnnnnnnnnnnnne",nvl_ens_id)
             data['ens_intitulé']=intitule
             data['test_ens']=1
             data['nvl_ens_id']=nvl_ens_id[0]
@@ -737,6 +752,7 @@ def modifier_enseigne():
     rech_ens=''
     ens_select=''
     ens_info=[ '' for i in range(9)]
+
     liste_ens=con.execute(text("select enseigne_intitulé from enseigne where enseigne_actif=1")).fetchall()
     data={ 'liste_ens': liste_ens,
             'rech_ens':rech_ens, 
@@ -769,9 +785,9 @@ def modifier_enseigne():
 def enseigne_modifier():
     ens_intitule=request.form['intitule']
 
-    test_code_ens=con.execute(text("select enseigne_id from enseigne where enseigne_intitulé=:ens_intitule"), {'ens_intitule':ens_intitule})
-    if ens_intitule =="None":
-        con.execute(text("insert into enseigne (enseigne_intitulé) values (:ens_intitule)"),{'ens_intitule':ens_intitule})    
+    test_ens_id=con.execute(text("select enseigne_id from enseigne where enseigne_intitulé=:ens_intitule"), {'ens_intitule':ens_intitule}).fetchone()
+    if test_ens_id:
+        flash("Cet intitulé d'enseigne existe déjà, Veuillez le changer ",'danger')  
     else :
         con.execute(text("update enseigne set enseigne_intitulé=:ens_intitule"),{'ens_intitule':ens_intitule})
  
@@ -1393,7 +1409,6 @@ def enregistrer_tournee():
         pal=pal.rename(columns={'index':'Tarif_pal', 'magasin_tarif_palette':'Nbre_mag'})
         rolls=rolls.rename(columns={'index':'Tarif_Rolls', 'magasin_tarif_rolls':'Nbre_mag'})
         data1 = [go.Pie(labels=rolls.Tarif_Rolls, values=rolls.Nbre_mag, textposition='inside',text=['€'], textinfo='percent+label+text',title='Répartition Tarif Rolls pour Casino') ] 
-        data2 = [go.Pie(labels=pal.Tarif_pal, values=pal.Nbre_mag, textposition='inside',text=['€'], textinfo='percent+label+text', title='Répartition Tarif Palettes pour Casino') ] 
         graphJSON2 = json.dumps(data1, cls=plotly.utils.PlotlyJSONEncoder)
                
     flash('les tournées ont bien été enregistrées,', 'success') 

@@ -26,7 +26,7 @@
                                 <div class="accordion-item">
                                   <h2 class="accordion-header" id="headingOne">
                                     <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                                      <strong><em>Ajout magasin pour la nouvelle Enseigne {{ ens_intitulé }}: </em> </strong>
+                                      <strong><em>Ajout magasin pour la nouvelle Enseigne -{{ ens_intitulé }}-: </em> </strong>
                                     </button>
                                   </h2>
                                   {% if test_ajout_mag ==1 %}
@@ -36,28 +36,98 @@
                                     {% endif %}
                                     <div class="accordion-body">
                                       <div class="row">
-                                        <form ACTION="{{ url_for('ajouter_magasin') }}" name="ajout_util" id="form" class="form-horizontal default" enctype="multipart/form-data" method="POST" >
-                                            <div class="form-group">
-                                                <input id="ens_intitule" type="text" class="form-control" name="ens_ajouT" value="{{ens_intitulé}}" disabled>       
-                                                <input id="ens_intitule" type="text" class="form-control" name="nvl_ens" value="{{ens_intitulé}}" hidden>                                  
-                                                <input  type="text" class="form-control" name="liste_ens" value="{{nvl_ens_id}}" hidden >                                        
-                                                <label for ="code">Code Magasin:</label> </B>
-                                                <input id="code" type="text" class="form-control" name="code" value="{{code}}" required >                                        
-                                                <label for ="adresse" class="col-form-label">Adresse du magasin:</label>
-                                                <input id="adresse" type="text" class="form-control" name="adresse" value="{{adresse}}" required >                                        
-                                                <label for ="heure" class="col-form-label">Heure de livraison du magasin:</label>
-                                                <input id="heure" type="time" class="form-control" name="heure" value="{{heure}}" required >                                        
-                                                <label for ="rolls" class="col-form-label">tarif Rolls:</label>
-                                                <input id="rolls" type="text" class="form-control" name="rolls" value="{{rolls}}" >                                        
-                                                <label for ="pallete" class="col-form-label">tarif Palette:</label>
-                                                <input id="pallete" type="text" class="form-control" name="palette" value="{{palette}}" >   
-                                                <label for ="boxe" class="col-form-label">tarif boxe:</label>
-                                                <input id="box" type="text" class="form-control" name="boxe" value="{{boxe}}" >   
-                                            </div> 
-                                            <div >
-                                                <button type="submit" href="#" class="btn btn-primary"> Ajouter</button> 
-                                                <button type="reset" class="btn btn-primary" > Annuler</button>                         
-                                            </div>
+                                        <form ACTION="{{ url_for('ajouter_magasin') }}" name="ajout_util" id="form" class="form-horizontal " enctype="multipart/form-data" method="POST" >
+                                                                                          <div class="form-group row">
+                                                  <div class="col-sm-1">
+                                                  </div>
+                                                  <label for ="code" class="col-sm-4 col-form-label"><strong>Enseigne:</strong></label>
+                                                  <div class="col-sm-6">
+                                                    <input id="ens_intitule" type="text" class="form-control" name="ens_ajouT" value="{{ens_intitulé}}" disabled>       
+                                                    <input id="ens_intitule" type="text" class="form-control" name="nvl_ens" value="{{ens_intitulé}}" hidden>                                  
+                                                    <input  type="text" class="form-control" name="liste_ens" value="{{nvl_ens_id}}" hidden >   
+                                                  </div> 
+                                                  <div class="col-sm-1">
+                                                  </div>       
+                                              </div> 
+                                                <div class="form-group row">
+                                                  <div class="col-sm-1">
+                                                  </div>
+                                                  <label for ="code" class="col-sm-4 col-form-label"><strong>Code Magasin:</strong></label>
+                                                  <div class="col-sm-6">
+                                                      <input id="code" type="text" class="form-control" name="code" value="{{code}}" required > 
+                                                  </div> 
+                                                  <div class="col-sm-1">
+                                                  </div>       
+                                              </div>        
+                                                  
+                                              <div class="form-group row">
+                                                  <div class="col-sm-1">
+                                                  </div>
+                                                  <label for ="adresse" class="col-sm-4 col-form-label"><strong>Adresse du magasin:</strong></label>
+                                                  <div class="col-sm-6">
+                                                      <input id="adresse" type="text" class="form-control" name="adresse" value="{{adresse}}" required > 
+                                                  </div> 
+                                                  <div class="col-sm-1">
+                                                  </div>       
+                                              </div>     
+                                              <div class="form-group row">
+                                                  <div class="col-sm-1">
+                                                  </div>
+                                                  <label for ="heure" class="col-sm-4 col-form-label"><strong>Heure de livraison:</strong></label>
+                                                  <div class="col-sm-6">
+                                                      <input id="heure" type="time" class="form-control" name="heure" value="{{heure}}" required > 
+                                                  </div> 
+                                                  <div class="col-sm-1">
+                                                  </div>       
+                                              </div>                                              
+                                                  
+                                              <div class="form-group row">
+                                                  <div class="col-sm-1">
+                                                  </div>
+                                                  <label for ="rolls" class="col-sm-4 col-form-label"><strong>Tarif Rolls:</strong></label>
+                                                  <div class="col-sm-6">
+                                                      <input id="rolls" type="text" class="form-control" name="rolls" value="{{rolls}}" > 
+                                                  </div> 
+                                                  <div class="col-sm-1">
+                                                  </div>       
+                                              </div>                                            
+                                                 
+                                              <div class="form-group row">
+                                                  <div class="col-sm-1">
+                                                  </div>
+                                                  <label for ="pallete" class="col-sm-4 col-form-label"><strong>Tarif Palette:</strong></label>
+                                                  <div class="col-sm-6">
+                                                      <input id="pallete" type="text" class="form-control" name="palette" value="{{palette}}" >   
+                                                  </div> 
+                                                  <div class="col-sm-1">
+                                                  </div>       
+                                              </div>     
+                                                                                         
+                                              <div class="form-group row">
+                                                  <div class="col-sm-1">
+                                                  </div>
+                                                  <label for ="box" class="col-sm-4 col-form-label"><strong>Tarif Box:</strong></label>
+                                                  <div class="col-sm-6">
+                                                      <input id="box" type="text" class="form-control" name="boxe" value="{{boxe}}" >    
+                                                  </div> 
+                                                  <div class="col-sm-1">
+                                                  </div>       
+                                              </div>      
+                                                  
+                                                  
+                                                  
+                                              
+                                              <div class="card-footer text-center">
+                                                  <button type="submit" href="#" class="btn btn-primary"> Ajouter</button> 
+                                                  <button type="reset" class="btn btn-primary" > Annuler</button>                         
+                                              </div>  
+
+
+
+
+
+
+                                                
                                         </form>  
                                       </div> 
                                     </div>
@@ -66,7 +136,7 @@
                                 <div class="accordion-item">
                                   <h2 class="accordion-header" id="headingTwo">
                                     <button class="accordion-button collapsed " type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                                      <strong> <em> Ajouter Navette pour la nouvelle Enseigne {{ ens_intitulé }}:  </em></strong>
+                                      <strong> <em> Ajouter Navette pour la nouvelle Enseigne -{{ ens_intitulé }}-:  </em></strong>
                                     </button>
                                   </h2>
                                   {% if test_ajout_mag ==1 %}
@@ -76,16 +146,16 @@
                                   {% endif %}
                                     <div class="accordion-body">
                                       <div class="row">
-                                        <form ACTION="{{ url_for('ajouter_navette') }}" name="ajout_util" id="form" class="form-horizontal default" enctype="multipart/form-data"  method="POST" >
+                                        <form ACTION="{{ url_for('ajouter_navette') }}" name="ajout_util" id="form" class="form-horizontal " enctype="multipart/form-data"  method="POST" >
                                             <div class="form-group">
                                                 <input id="tarif" type="text" class="form-control" name="enseigne_intitule" value="{{ens_intitulé}}" disabled > 
                                                 <input id="tarif" type="text" class="form-control" name="enseigne_intitule" value="{{ens_intitulé}}" hidden >
                                                 <input id="tarif" type="text" class="form-control" name="liste_ens" value="{{nvl_ens_id}}" hidden >
                                                 <input id="tarif" type="text" class="form-control" name="test_ens" value="1" hidden >
                                                 
-                                                <label for ="nvt" class="col-form-label">Intitulé-Navette:</label>
+                                                <label for ="nvt" class="col-form-label"><strong>Intitulé-Navette:</strong></label>
                                                 <input id="nvt" type="text" class="form-control" name="navette" value="{{navette}}" required >                                        
-                                                <label for ="tarif" class="col-form-label">Tarif(€):</label>
+                                                <label for ="tarif" class="col-form-label"><strong>Tarif(€):</strong></label>
                                                 <input id="tarif" type="text" class="form-control" name="tarif" value="{{tarif}}" required >                                        
                                                                               
                                             </div>   

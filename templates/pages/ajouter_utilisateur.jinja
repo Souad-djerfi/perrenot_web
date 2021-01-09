@@ -16,26 +16,75 @@
                 <h5 class="card-header card text-center"><i class="fa fa-user-plus" >  Ajouter un nouvel utilisateur: </i></h5>
                     <div class="card-body">
                         <div class="border border_secondary rounded-sm">
-                            <form ACTION="{{ url_for('ajouter_user') }}" name="ajout_util" id="form" class="form-horizontal default" enctype="multipart/form-data"  method="POST" >
-                                <div class="form-group">
-                                    <select name="liste_roles" class="custom-select my-1 mr-sm-2" required>
-                                        <option value="" disabled selected>  Choisissez un Rôle   </option>
-                                        {% for i in range(nbre_role) %}
-                                            <option value="{{role[i][0]}}">  {{role[i][1]}} </option>
-                                        {% endfor %}
-                                    </select>
-                                    <label for ="user" class="col-form-label">Pseudo:</label>
-                                    <input id="user" type="text" class="form-control" name="pseudo" value="{{pseudo}}" required >                                        
-                                    <label for ="nom" class="col-form-label">Nom:</label>
-                                    <input id="nom" type="text" class="form-control" name="nom" value="{{nom}}" required >                                        
-                                    <label for ="prenom" class="col-form-label">Prénom:</label>
-                                    <input id="prenom" type="text" class="form-control" name="prenom" value="{{prenom}}" required >                                        
-                                    <label for ="mdp" class="col-form-label">Mot de passe:</label>
-                                    <input id="mdp" type="password" class="form-control" name="mdp" value="{{mdp}}" required>                                        
-                                    <label for ="Conmdp" class="col-form-label">Confirmer mot de passe:</label>
-                                    <input id="Conmdp" type="password" class="form-control" name="Cmdp" value="{{Cmdp}}" required >                                        
-                                </div>   
-                                <div >
+                            <form ACTION="{{ url_for('ajouter_user') }}" name="ajout_util" id="form" class="form-horizontal" enctype="multipart/form-data"  method="POST" >
+                                <div class="form-group row">
+                                    <div class="col-sm-1">
+                                    </div>  
+                                    <label  class="col-sm-4 col-form-label"><strong>Role:</strong></label>
+                                    <div class="col-sm-6">
+                                        <select name="liste_roles" class="custom-select my-1 mr-sm-2" required>
+                                            <option value="" disabled selected>  Choisissez un Rôle   </option>
+                                            {% for i in range(nbre_role) %}
+                                                <option value="{{role[i][0]}}">  {{role[i][1]}} </option>
+                                            {% endfor %}
+                                        </select> 
+                                    </div>
+                                    <div class="col-sm-1">
+                                    </div>  
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-sm-1">
+                                    </div>  
+                                    <label for ="user" class="col-sm-4 col-form-label"><strong>Pseudo:</strong></label>
+                                    <div class="col-sm-6">
+                                        <input id="user" type="text" class="form-control" name="pseudo" value="{{pseudo}}" required >   
+                                    </div>
+                                    <div class="col-sm-1">
+                                    </div>  
+                                </div> 
+                                <div class="form-group row">
+                                    <div class="col-sm-1">
+                                    </div>  
+                                    <label for ="nom" class="col-sm-4 col-form-label"><strong>Nom:</strong></label>
+                                    <div class="col-sm-6">
+                                        <input id="nom" type="text" class="form-control" name="nom" value="{{nom}}" required >  
+                                    </div>
+                                    <div class="col-sm-1">
+                                    </div>  
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-sm-1">
+                                    </div>  
+                                    <label for ="prenom" class="col-sm-4 col-form-label"><strong>Prénom:</strong></label>
+                                    <div class="col-sm-6">
+                                        <input id="prenom" type="text" class="form-control" name="prenom" value="{{prenom}}" required > 
+                                    </div>
+                                    <div class="col-sm-1">
+                                    </div>  
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-sm-1">
+                                    </div>  
+                                    <label for ="mdp" class="col-sm-4 col-form-label"><strong>Mot de passe:</strong></label>
+                                    <div class="col-sm-6">
+                                        <input id="mdp" type="password" class="form-control" name="mdp" value="{{mdp}}" required> 
+                                    </div>
+                                    <div class="col-sm-1">
+                                    </div>  
+                                </div>    
+                                <div class="form-group row">
+                                    <div class="col-sm-1">
+                                    </div>  
+                                    <label for ="Conmdp" class="col-sm-4 col-form-label"><strong>Confirmer mot de passe:</strong></label>
+                                    <div class="col-sm-6">
+                                        <input id="Conmdp" type="password" class="form-control" name="Cmdp" value="{{Cmdp}}" required >
+                                    </div>
+                                    <div class="col-sm-1">
+                                    </div>  
+                                </div>    
+                                                                   
+                                 
+                                <div class="card-footer text-center">
                                     <button type="submit" href="#" class="btn btn-primary"> Ajouter</button> 
                                     <button type="reset" class="btn btn-primary" > Annuler</button>                         
                                 </div>
