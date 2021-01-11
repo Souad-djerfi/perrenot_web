@@ -121,8 +121,8 @@ def feuille_route():
     if not session.get('connexion'):
         flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
         return redirect(url_for('home'))
-    date=request.form['date']    
-    L_chauf_cam=con.execute(text("select chauffeur_camion.chauf_id, chauf_nom, chauf_prenom, ligne ,chauffeur_camion.camion_id, camion_mat  from chauffeur join chauffeur_camion on chauffeur_camion.chauf_id=chauffeur.chauf_id and chauffeur_camion.date =:date join camion on camion.camion_id=chauffeur_camion.camion_id group by chauffeur_camion.chauf_id,ligne"),{'date':date}).fetchall()
+    date=request.form['date_tour']    
+    L_chauf_cam=con.execute(text("select chauffeur_camion.chauf_id, chauf_nom, chauf_prenom, ligne ,chauffeur_camion.camion_id, camion_mat  from chauffeur join chauffeur_camion on chauffeur_camion.chauf_id=chauffeur.chauf_id and chauffeur_camion.date =:date join camion on camion.camion_id=chauffeur_camion.camion_id group by chauffeur_camion.chauf_id,chauffeur_camion.camion_id"),{'date':date}).fetchall()
     path_wkhtmltopdf = r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe'
     config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
     
@@ -139,7 +139,7 @@ def feuille_route():
         
     response=make_response(pdf)
     response.headers['Content-Type']='application/pdf'
-    response.headers['Content-Disposition']='inline; filename=feuille_route.pdf'
+    response.headers['Content-Disposition']='attachment; filename=feuille_route.pdf'
         
     return response
     
@@ -1397,8 +1397,11 @@ def enregistrer_tournee():
         ens=ens.reset_index()
         ens=ens.rename(columns={'enseigne':'Nbre_mag_livrés', 'index':'enseigne'})
         
-        data = [go.Pie(labels=ens.enseigne, values=ens.Nbre_mag_livrés, textposition='inside', textinfo='percent+label', title='Répartition des magasins livrés par enseigne')] 
-        graphJSON1 = json.dumps(data, cls=plotly.utils.PlotlyJSONEncoder)
+        data = [go.Pie(labels=ens.enseigne, values=ens.Nbre_mag_livrés, textposition='inside', textinfo='percent+label')] 
+        layoutPieEns=go.Layout(title="1. Répartition des magasins livrés par Enseigne", )
+        figPieEns=go.Figure(data=data, layout=layoutPieEns)
+        graphJSON1 = json.dumps(figPieEns, cls=plotly.utils.PlotlyJSONEncoder)
+
 
         requeteCasino = pd.read_sql_query("SELECT e.enseigne_intitulé AS enseigne, m.magasin_id, magasin_tarif_rolls, magasin_tarif_palette, magasin_tarif_boxe FROM camion_magasin cm join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where date='%s'  and magasin_tarif_rolls <>-1 and e.enseigne_intitulé='CASINO' "%(date_tour), engine)
         rolls = pd.DataFrame(requeteCasino)
@@ -1408,8 +1411,13 @@ def enregistrer_tournee():
         pal=pal.reset_index()
         pal=pal.rename(columns={'index':'Tarif_pal', 'magasin_tarif_palette':'Nbre_mag'})
         rolls=rolls.rename(columns={'index':'Tarif_Rolls', 'magasin_tarif_rolls':'Nbre_mag'})
-        data1 = [go.Pie(labels=rolls.Tarif_Rolls, values=rolls.Nbre_mag, textposition='inside',text=['€'], textinfo='percent+label+text',title='Répartition Tarif Rolls pour Casino') ] 
-        graphJSON2 = json.dumps(data1, cls=plotly.utils.PlotlyJSONEncoder)
+
+        data1 = [go.Pie(labels=rolls.Tarif_Rolls, values=rolls.Nbre_mag, textposition='inside',text=['€'], textinfo='percent+label+text') ] 
+
+        layoutPieRolls=go.Layout(title='2. Répartition Tarif Rolls pour Casino', )
+        figPieCam=go.Figure(data=data1, layout=layoutPieRolls)
+        graphJSON2 = json.dumps(figPieCam, cls=plotly.utils.PlotlyJSONEncoder)
+        
                
     flash('les tournées ont bien été enregistrées,', 'success') 
     data={'test':test,
