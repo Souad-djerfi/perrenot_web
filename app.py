@@ -1193,6 +1193,51 @@ def ajouter_user():
         
     else:
         return render_template('pages/ajouter_utilisateur.jinja', **data)    
+#************************************************************************************************************************SUPPRIMER USER********************************************************************
+@app.route('/supprimer_user', methods=['GET','post'])
+def supprimer_user():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
+    rech_user=''
+    user_select=''
+    user_info=[ '' for i in range(9)]
+    liste_user= con.execute(text("select utilisateur_id, utilisateur_pseudo, utilisateur_nom, utilisateur_prenom   from utilisateur  ")).fetchall()
+    data={ 'liste_user': liste_user,
+            'rech_user':rech_user, 
+            'user_info':user_info
+         }
+      
+    if request.method=='POST':
+        # Si l utilisateur a tapé un nom dans la bare de recherche:
+        if request.form['rech_user']:
+            rech_user=request.form['rech_user']
+            liste_user_rech=con.execute(text("select utilisateur_id, utilisateur_pseudo, utilisateur_nom, utilisateur_prenom, utilisateur.role_id, role_intitule from utilisateur join role on role.role_id=utilisateur.role_id where  (utilisateur_pseudo LIKE :user or utilisateur_prenom LIKE :user or utilisateur_nom LIKE :user)   "), {'user': rech_user +'%'}).fetchall()
+            if liste_user_rech:
+                data['liste_user']=liste_user_rech
+            else:
+                flash(' le nom/pseudo que vous avez tapé ne correspond à aucun utilistateur','danger')
+            return render_template('pages/supprimer_user.html', **data)   
+        # si l utilisateur a coché un nom:
+                   
+        if request.form['user_select']!='':
+            user_select=request.form['user_select']
+            user_info=con.execute(text("select utilisateur_id, utilisateur_pseudo, utilisateur_nom, utilisateur_prenom from utilisateur  where  utilisateur_id = :user"), {'user':user_select}).fetchone()
+            data['user_info']=user_info
+            #return render_template('pages/modifier_chauf.html', **data)
+        
+    return render_template('pages/supprimer_user.html', **data) 
+#***********************************************************************************************************************USER SUPPRIMé********************************************************************
+@app.route('/user_supprimé', methods=['GET','post'])
+def user_supprimé():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
+    user_supprimé=request.form['user_id']
+    con.execute(text('delete from utilisateur where utilisateur_id=:user_id'),{'user_id': user_supprimé})
+    flash("l'utilisateur a été bien supprimé",'success')
+    return redirect(url_for('supprimer_user'))
+    
 
 #*******************************************************************************************Ajouter un MAGASN**************************************************************************
 @app.route('/ajout_magasin', methods=['GET','post'])
@@ -1309,7 +1354,7 @@ def magasin_modifie():
         
     return redirect(url_for('editer_magasin'))
      
-#***********************************************************************************************Editer un Magasin********************************************************************
+#***********************************************************************************************Editer un Magasin**************************************************************************
 @app.route('/modification_magasin', methods=['GET','post'])
 def editer_magasin():
     if not session.get('connexion'):
