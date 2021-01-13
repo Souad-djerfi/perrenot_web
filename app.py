@@ -1190,7 +1190,7 @@ def supprimer_user():
     rech_user=''
     user_select=''
     user_info=[ '' for i in range(9)]
-    liste_user= con.execute(text("select utilisateur_id, utilisateur_pseudo, utilisateur_nom, utilisateur_prenom   from utilisateur  ")).fetchall()
+    liste_user= con.execute(text("select utilisateur_id, utilisateur_pseudo, utilisateur_nom, utilisateur_prenom, role_intitule   from utilisateur  join role on role.role_id=utilisateur.role_id")).fetchall()
     data={ 'liste_user': liste_user,
             'rech_user':rech_user, 
             'user_info':user_info
@@ -1471,7 +1471,6 @@ def facturation_journaliere():
     date_tour=request.form['date_tour']
     
     requeteLivraison = pd.read_sql_query('SELECT m.magasin_code, magasin_tarif_rolls, nbre_rolls, magasin_tarif_palette, nbre_palette, magasin_tarif_boxe, nbre_box FROM camion_magasin cm join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where e.enseigne_intitulé ="CASINO" AND date ="%s" ;'%(date_tour), engine)
-    dataLivraison = requeteLivraison[requeteLivraison["magasin_tarif_rolls"] > 0]
     requeteInfoTarif = pd.read_sql_query('SELECT intitule_tarif, tarif FROM info_tarification JOIN enseigne ON info_tarification.enseigne_id = enseigne.enseigne_id WHERE enseigne.enseigne_intitulé = "CASINO";', engine)
 
     data = {

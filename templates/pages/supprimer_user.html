@@ -12,7 +12,7 @@
         <div id="loginbox" class="mainbox col-md-10 col-md-offset-3 col-sm-6 col-sm-offset-3"> 
           <div class="card">
             <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-            <h5 class="card-header card text-center">  Suppression d'un compte utilisateur:</h5>
+            <h5 class="card-header card text-center d-inline"> <i class="fas fa-user-times"></i>   Suppression d'un compte utilisateur:</h5>
               <div class="card-body">
                 <div class="border border_secondary rounded-sm"> 
                   <form id="form" method="POST" class="container form-horizontal " enctype="multipart/form-data" ACTION="{{ url_for('supprimer_user') }}">
@@ -31,10 +31,10 @@
                       <thead>
                         <tr>
                           <th scope="col">#</th>
-                          <th scope="col" style="width:18%;">Pseudo</th>
-                          <th scope="col" style="width:18%;">Nom</th>
-                          <th scope="col" style="width:18%;">Prénom</th>
-                          <th scope="col" style="width:20%;">Role</th>
+                          <th scope="col" style="width:25%;">Pseudo</th>
+                          <th scope="col" style="width:25%;">Nom</th>
+                          <th scope="col" style="width:20%;">Prénom</th>
+                          <th scope="col" style="width:25%;">Role</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -48,9 +48,10 @@
                             <td id="table_pseudo">{{user[1]}}</td>
                             <td id="table_nom">{{user[2]}}</td>
                             <td id="table_prenom">{{user[3]}}</td>
-                            <td id="table_role">{{user[5]}}</td>
+                            <td id="table_role">{{user[4]}}</td>
                             <td id="table_role_id" hidden>{{user[4]}}</td>
                             <td id="table_user_id" hidden>{{user[0]}}</td>
+                            
                           </tr>
                         {% endfor %}
                       </tbody>
@@ -79,7 +80,7 @@
         <form action="{{ url_for('user_supprimé') }}" method="post">
           <div class="modal-body">
             <div class="form-group">
-              <p> Veuillez confirmer la suppression del'utilisateur coché</p>
+              <p> Veuillez confirmer la suppression de l'utilisateur coché</p>
               <input type="text" name="user_id"  id="sup_user_id" hidden/>
             </div>
           </div>

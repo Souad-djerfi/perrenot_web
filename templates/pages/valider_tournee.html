@@ -294,6 +294,16 @@
             this.append(draggedItem);
             this.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
           });
+          $(document).on('change keyup','#code_mag_ul input',function(e){
+            compterEnseignesCamion();
+            TotRol();
+            TotRolCamAjout()
+            TotPalCamAjout()
+            pourcentageCamAjt()
+            TotPal();
+            pourcentage();
+
+          })
         }
       }
     </script>
