@@ -14,6 +14,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 import plotly, json
 from flask import * 
+from werkzeug.security import generate_password_hash, check_password_hash
 import os
 
 
@@ -33,6 +34,8 @@ def home():
     
     return render_template('pages/index.html')
 
+ 
+        
 #*************************************************************************************************IDENTIFICATION***************************************************************        
 @app.route('/Accueil', methods=['post', 'get'])
 def identification():
@@ -46,43 +49,27 @@ def identification():
     if request.method== 'POST':
         
         mot_de_pass=request.form['mdp']
-        mot_de_pass=hashlib.sha1(str.encode(mot_de_pass)).hexdigest() # crypter le mot de passe tapé et le comparer avec celui qui est enregitré dans la BDD
         pseudo=request.form['pseudo']
-        
-        requete_role="select role_id as id from utilisateur where utilisateur_pseudo=:pseudo and utilisateur_MDP=:pass"
-        requete_nom="select utilisateur_nom as nom from utilisateur where utilisateur_pseudo=:pseudo and utilisateur_MDP=:pass"
-        requete_prenom= "select utilisateur_prenom as prenom from utilisateur where utilisateur_pseudo=:pseudo and utilisateur_MDP=:pass" 
-              
-        role=con.execute(text(requete_role),{'pass':mot_de_pass, 'pseudo':pseudo}).fetchone()
-        nom=con.execute(text(requete_nom),{'pass':mot_de_pass, 'pseudo':pseudo}).fetchone()
-        prenom=con.execute(text(requete_prenom),{'pass':mot_de_pass, 'pseudo':pseudo}).fetchone()
-        data['pseudo']=pseudo
-        data['nom']=nom
-        data['prenom']=prenom
-        
-        if role is None: 
-            flash(' pseudo et mot de passe ne correspondent pas, Veuillez vérifier votre saisie','danger')
-            return render_template('pages/index.html',**data)
+        data['pseudo']=str(pseudo)
+        test_pseudo=con.execute(text("select utilisateur_pseudo, utilisateur_MDP, role_id from utilisateur where utilisateur_pseudo=:pseudo"),{'pseudo':pseudo}).fetchone()
+        mot_de_pass= str(mot_de_pass)
+        if test_pseudo and check_password_hash(str(test_pseudo[1]),mot_de_pass)==True:
             
-        elif role[0]==1:
-            session['login']=pseudo
-            session['role']=1
-            session['connexion'] = True
-            return render_template('pages/accueil_admin.html',**data)
-        
-        elif role[0]==2:
-            session['login']=pseudo
-            session['role']=2
-            session['connexion'] = True
-            return render_template('pages/accueil_agent.html',**data)
+            if test_pseudo[2]==1:
+                session['login']=pseudo
+                session['role']=1
+                session['connexion'] = True
+                return render_template('pages/accueil_admin.html',**data)
+            elif test_pseudo[2]==2:
+                session['login']=pseudo
+                session['role']=2
+                session['connexion'] = True
+                return render_template('pages/accueil_agent.html',**data)
 
-            
-    if not session.get('connexion'):
-        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
-        return redirect(url_for('home'))      
-    return render_template('pages/accueil_admin.html',**data)    
-        
-
+        flash(' pseudo et mot de passe ne correspondent pas, Veuillez vérifier votre saisie','danger')
+        return render_template('pages/index.html',**data)
+         
+    return render_template('pages/accueil_admin.html',**data)       
 
 #*********************************************************************************************************************AJOUTER CAMION***************************************************************************
 @app.route('/Ajouter_Camion', methods=['GET','post'])
@@ -1161,7 +1148,8 @@ def ajouter_user():
         elif request.form['mdp'] != request.form['Cmdp']:
             flash('les deux mots de passe ne correspondent pas','danger')
         else:
-            Fmdp=hashlib.sha1(str.encode(Fmdp)).hexdigest()
+           # Fmdp=hashlib.sha1(str.encode(Fmdp)).hexdigest()
+            Fmdp=generate_password_hash(str(Fmdp))
             #requete_ajout="call create_utilisateur(:nom,:prenom,:mdp,:pseudo, :role)"
            
             """conect = pymysql.connect(host='localhost', user='simplon', password='Simplon2020', db='perrenot', cursorclass= pymysql.cursors.DictCursor)
@@ -1675,8 +1663,8 @@ def chang_info_user():
         if request.form['nvMDP']!=request.form['cNvMDP']:
             flash('les deux nouveaux mot de passes ne correspondent pas','danger')
         else:
-            mot_de_pass=hashlib.sha1(str.encode(mot_de_pass)).hexdigest()  
-            if mot_de_pass != info_user[2]:
+           # mot_de_pass=hashlib.sha1(str.encode(mot_de_pass)).hexdigest()  
+            if check_password_hash(str(info_user[2]),mot_de_pass)==False:    
                 flash("Veuillez vérifier la saisie de l'ancien mot de passe",'danger')
             elif test_pseudo:
                 flash("Le nouveau pseudo que vous venez de taper existe déjà! Veuillez le changer",'danger')  
@@ -1686,7 +1674,8 @@ def chang_info_user():
                 session['login']=request.form['pseudo']
             else:
                 nvMDP=request.form['nvMDP']
-                nvMDP=hashlib.sha1(str.encode(nvMDP)).hexdigest()
+                #nvMDP=hashlib.sha1(str.encode(nvMDP)).hexdigest()
+                nvMDP=generate_password_hash(str(nvMDP))
                 con.execute(text("update utilisateur set utilisateur_nom=:nvNom, utilisateur_prenom=:nvPrenom, utilisateur_pseudo=:nvPseudo, utilisateur_MDP=:nvMDP where utilisateur_id=:user_id"),{'nvNom':nvNom,'nvPrenom':nvPrenom,'nvPseudo':nvPseudo,'nvMDP':nvMDP, 'user_id':user_id})
                 session['login']=request.form['pseudo']
                 flash("Les modifications ont bien été prises en compte",'success')
