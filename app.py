@@ -117,7 +117,7 @@ def feuille_route():
     #pdfkit.from_url("http://google.com", "out.pdf", configuration=config)
     rendered=''
     for chauf in L_chauf_cam : 
-        L_mag=con.execute(text("select camion_magasin.magasin_id, magasin_code,magasin_heure_livr, magasin_adresse, nbre_rolls, nbre_palette from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id and ligne=:ligne and camion_id=:cam and date=:date  "),{'ligne':chauf[3],'cam':chauf[4],'date':date}) 
+        L_mag=con.execute(text("select camion_magasin.magasin_id, magasin_code,magasin_heure_livr, magasin_adresse, nbre_rolls, nbre_palette from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id and ligne=:ligne and camion_id=:cam and date=:date  order by :date"),{'ligne':chauf[3],'cam':chauf[4],'date':date}) 
         data={'chauffeur':chauf,
             'camion':L_mag,
             'date':date}    
@@ -738,9 +738,9 @@ def ajout_enseigne():
 def modifier_enseigne(): 
     rech_ens=''
     ens_select=''
-    ens_info=[ '' for i in range(9)]
+    ens_info=[ '' for i in range(2)]
 
-    liste_ens=con.execute(text("select enseigne_intitulé from enseigne where enseigne_actif=1")).fetchall()
+    liste_ens=con.execute(text("select enseigne_intitulé, enseigne_id from enseigne where enseigne_actif=1")).fetchall()
     data={ 'liste_ens': liste_ens,
             'rech_ens':rech_ens, 
             'ens_info':ens_info,
@@ -762,31 +762,36 @@ def modifier_enseigne():
         # si l utilisateur a coché un nom:
         if request.form['ens_select']!='':
             ens_select=request.form['ens_select']
-            ens_info=con.execute(text("select enseigne_intitulé from enseigne where enseigne_intitulé=:ens_select and enseigne_actif=1"), {'ens_select':ens_select}).fetchone()
+            ens_info=con.execute(text("select enseigne_intitulé, enseigne_id from enseigne where enseigne_intitulé=:ens_select and enseigne_actif=1"), {'ens_select':ens_select}).fetchone()
             data['ens_info']=ens_info
         
     return render_template('pages/modifier_ens.html', **data) 
 
 #**********VALIDER MODIFICATION enseigne********** 
-@app.route('/modification_enregistrée', methods=['GET','post'])
+@app.route('/modification_enregistrée', methods=['GET','post']) #+++++++++++++++++++++++++++++++++++vérifier la récupération de l id enseinge
 def enseigne_modifier():
     ens_intitule=request.form['intitule']
-
+    ens_id=request.form['ens_id']
     test_ens_id=con.execute(text("select enseigne_id from enseigne where enseigne_intitulé=:ens_intitule"), {'ens_intitule':ens_intitule}).fetchone()
     if test_ens_id:
         flash("Cet intitulé d'enseigne existe déjà, Veuillez le changer ",'danger')  
     else :
-        con.execute(text("update enseigne set enseigne_intitulé=:ens_intitule"),{'ens_intitule':ens_intitule})
- 
-    flash('les modifications ont été bien prises en compte', 'success')
+        con.execute(text("update enseigne set enseigne_intitulé=:ens_intitule where enseigne_id=:ens_id"),{'ens_intitule':ens_intitule, 'ens_id':ens_id})
+        flash('les modifications ont été bien prises en compte', 'success')
     return redirect(url_for('modifier_enseigne'))
    
 #**********SUPPRIMMER enseigne**********
 @app.route('/Supprimer_Enseigne', methods=['GET','post'])
 def supp_enseigne():
-    ens=request.form['ens_select']
+    ens=request.form['sup_ens']
     print('confirmation enseigne supprimé',ens)
-    return render_template('pages/modifier_ens.html')        
+    ens_id=con.execute(text('select enseigne_id from enseigne where enseigne_intitulé=:ens'), {'ens':ens}).fetchone()
+    con.execute(text('update enseigne set enseigne_actif=0 where enseigne_intitulé=:ens'),{'ens':ens})
+    con.execute(text('update magasin set magasin_actif=0 where enseigne_id=:ens'),{'ens':ens_id[0]})
+    con.execute(text('update info_tarification set tarification_actif=0 where enseigne_id=:ens'),{'ens':ens_id[0]})
+    flash('la suppression de l enseigne cochée a bien été prise en charge', 'success')
+    
+    return redirect(url_for('modifier_enseigne'))        
    
 #**************************************************************************************************************************AJOUTER CHAUFFEUR**********************************************************************
 #

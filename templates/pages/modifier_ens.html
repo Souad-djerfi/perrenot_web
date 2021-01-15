@@ -47,6 +47,7 @@
                             </div>  
                           </th>
                           <td id="table_intutile">{{ens[0]}}</td>
+                          <td id="table_ens_id" hidden>{{ens[1]}}</td>
                         </tr>
                       {% endfor %}
                     </tbody>
@@ -76,7 +77,7 @@
       </div>
       <div class="modal-footer">
         <form action="{{ url_for('supp_enseigne') }}" method="post">
-          <input type="text" name="sup_ens" value="" id="sup_ens" hidden/>
+          <input type="text" name="sup_ens" value="" id="edit_ens_intitule" hidden/>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
         <button type="submit" class="btn btn-primary">Supprimer</button>
       </form>
@@ -100,6 +101,7 @@
           <div class="form-group">
             <label for="intitule" class="col-form-label">Intitulé :</label>
             <input type="text" class="form-control" id="edit_intitule" name="intitule" value="{{ens_info[0]}}">
+            <input type="text" class="form-control" id="edit_ens_id" name="ens_id" value="{{ens_info[1]}}">
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
@@ -120,6 +122,18 @@
     
     //var nom= row_selected.children("#table_nom").text();
     $('#edit_intitule').val(row_selected.children("#table_intutile").text())
+    $('#edit_ens_id').val(row_selected.children("#table_ens_id").text())
+
+    //fin
+  })
+
+  $('#supprimer_ens').on('shown.bs.modal', function (e) {
+    //debut
+    var row_selected = $("input:radio:checked", "#list_ens").closest('tr');
+    
+    //var nom= row_selected.children("#table_nom").text();
+    $('#edit_ens_intitule').val(row_selected.children("#table_intutile").text())
+    
 
     //fin
   })

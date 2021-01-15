@@ -36,19 +36,20 @@
                 Plotly.plot('pie0',graphs0,{});
             </script>
         </div>-->
-        
-        <div class="chart" id="pie1">
-            <script>
-                var graphs = {{plot1 | safe}};
-                Plotly.plot('pie1',graphs,{});
-            </script>
-        </div>	
-        
-        <div class="chart" id="pie2">
-            <script>
-                var graphs2 = {{plot2 | safe}};
-                Plotly.plot('pie2',graphs2,{});
-            </script>
+        <div style="display: flex;justify-content: center;">
+            <div class="chart" id="pie1">
+                <script>
+                    var graphs = {{plot1 | safe}};
+                    Plotly.plot('pie1',graphs,{});
+                </script>
+            </div>	
+            
+            <div class="chart" id="pie2">
+                <script>
+                    var graphs2 = {{plot2 | safe}};
+                    Plotly.plot('pie2',graphs2,{});
+                </script>
+            </div>
         </div>
     {% else %}
         <h3><strong> <em class="list-group-item list-group-item-action list-group-item-dark">Ensemble de Diagrammes pour la période entre {{date_debut }} et  {{date_fin }}: </em></strong></h3>
@@ -64,20 +65,22 @@
             Plotly.plot('line1',graphs9,{});
             </script>
         </div>
-    <div class="chart" id="pie1">
-        <script>
-            var graphs = {{plot1 | safe}};
-            Plotly.plot('pie1',graphs,{});
-        </script>
+        <div style="display: flex;justify-content: center;">
+        <div class="chart" id="pie1">
+            <script>
+                var graphs = {{plot1 | safe}};
+                Plotly.plot('pie1',graphs,{});
+            </script>
+            
+        </div>	
         
-    </div>	
-    
-    <div class="chart" id="pie2">
-        <script>
-        var graphs2 = {{plot2 | safe}};
-        Plotly.plot('pie2',graphs2,{});
-        </script>
-    </div>
+        <div class="chart" id="pie2">
+            <script>
+            var graphs2 = {{plot2 | safe}};
+            Plotly.plot('pie2',graphs2,{});
+            </script>
+        </div>
+        </div>
     <div class="chart" id="bar1">
         <script>
         var graphs2 = {{plotCam | safe}};
