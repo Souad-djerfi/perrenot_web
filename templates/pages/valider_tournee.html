@@ -20,17 +20,18 @@
                 <div class="card">
                   <h5 class="card-header">Magasins à livrer le: {{date_tour}}</h5>
                   <div class="card-body">
-                <div class="list">
+                <div class="list" style=" max-height: 100vh; overflow-y: scroll; ">
                   {% for mag in mag_code: %}
-                    <div class="list-item" draggable="true">
+
+                    <div id="list_mag" class="list-item" draggable="true" data-heure="{{ mag[4] | replace(':','') }}">
                       <ul id="code_mag_ul" class="p-0 m-0">
                         <li>   
                             <div class="input-group">
                               <input type="text"  value= "{{  mag[5]  }}" name="mag_id" class="form-control" hidden>
-                              <input type="text"  style="cursor: pointer;" id="{{ mag[0] }}" value= "{{  mag[0]  }}" name="code_mag" class="form-control w-50" data-toggle="tooltip" data-placement="top" title="{{ mag[4] }}">
+                              <input type="text"  style="cursor: pointer;" id="{{ mag[0] }}" value= "{{  mag[0]  }}" name="code_mag" class="form-control w-50" data-toggle="tooltip" data-placement="top" title="{{ mag[4] }}" required>
                               <!-- <input type="text"  value= "{{  mag[4]  }}" name="heur_liv_mag" class="form-control">---->
-                              <input type="text"  style="cursor: pointer;" value= "{{  mag[1]  }}" id="vlm_rolls" name="vlm_rolls" class="form-control" data-toggle="tooltip" data-placement="top" title="ROLLS">   
-                              <input type="text" style="cursor: pointer;" value= "{{  mag[2]  }}" id="vlm_pal" name="vlm_pal" class="form-control" data-toggle="tooltip" data-placement="top" title="PALETTE">
+                              <input type="text"  style="cursor: pointer;" value= "{{  mag[1]  }}" id="vlm_rolls" name="vlm_rolls" class="form-control" data-toggle="tooltip" data-placement="top" title="ROLLS" required>   
+                              <input type="text" style="cursor: pointer;" value= "{{  mag[2]  }}" id="vlm_pal" name="vlm_pal" class="form-control" data-toggle="tooltip" data-placement="top" title="PALETTE" required>
                               <!--<input type="text"  value= "{{  mag[3]  }}" id="vlm_box" name="vlm_box" class="form-control"> --->
                             </div>
                            </span> 
@@ -48,8 +49,8 @@
                     {% for cam in liste_camion: %}
                       <div class="col-md-3 mb-3" id="cam_num_{{loop.index0}}">
                         <div class="row">
-                          <div class="card">
-                              <div class="card-header">
+                          <div class="card ">
+                              <div id="entete_camion_{{loop.index0}}" class="card-header mb-3">
                                 <div class="row">
                                   <!--<div class="col-md-6">-->
                                      <!--<i class="fas fa-truck-moving text-primary"></i>-->&nbsp;&nbsp;Immat: {{ cam[0] }} 
@@ -70,7 +71,7 @@
                               <input  name="camion" value="{{ cam[2] }}" type="text" hidden>  
                               <input id="capMax_{{loop.index0}}" value="{{ cam[1] }}" type="text" hidden>
                               <input id="nbre_mag_cam_{{loop.index0}}" name="Tnbre_mag_cam" type="text" hidden>
-                              <div class="list"></div>
+                              <div id="box_mag" class="list"></div>
                             </div>
                             <div class="card-footer text-muted">
                                 <div class="input-group">
@@ -144,12 +145,26 @@
               </div>
                 
 
-
-   
-
     <script>
-      const list_items = document.querySelectorAll('.list-item');
-      const lists = document.querySelectorAll('.list');
+
+      //function TriMagHor(){
+      //$('div[id^="cam_ajout_"]').each(function(i,e) {
+      //var camActifID = e.id.split('_').pop()
+      //var magHor = $("#"+e.target.id+" #list_mag");
+      //$("#cam_ajout_"+camActifID+" #list_mag").each(function(){
+      //magHor.sort(function(a, b){ 
+      //return $(a).data("heure")-$(b).data("heure")});
+      //$(e.target).html(magHor);
+          
+       
+        //var magHor = $("#"+e.target.id+" #list_mag");
+            //magHor.sort(function(a, b){ 
+            //return $(a).data("heure")-$(b).data("heure")});
+            //$(e.target).html(magHor);
+      //});
+     //});
+    //}
+
       function TotRolCamAjout(){
         $('div[id^="cam_ajout_"]').each(function(i,e) {
           var camActifID = e.id.split('_').pop()
@@ -183,7 +198,7 @@
           var nbr_pal=parseFloat($('#tot_pal_mag_ajout_'+camActifID).val(), 10)
           
           var totalPourc=Math.round(((nbr_pal*1.6+nbr_rol)*100)/cap_cam)
-          console.log("total: "+totalPourc)
+          //console.log("total: "+totalPourc)
           $('#pourcRempl_'+camActifID).val(totalPourc+"%")
     
         });
@@ -223,21 +238,34 @@
           var nbr_pal=parseFloat($('#nbr_tot_pal_'+camActifID).val(), 10)
           
           var totalPourc=Math.round(((nbr_pal*1.6+nbr_rol)*100)/cap_cam)
-          console.log("total: "+totalPourc)
+          //console.log("total: "+totalPourc)
           $('#pourcRempl_'+camActifID).val(totalPourc+"%")
+          if (parseInt(totalPourc)>100){
+            
+            if (!$("#entete_camion_"+camActifID).hasClass("bg-danger")){
+              
+              $("#entete_camion_"+camActifID).addClass("bg-danger");
+            }
+          }
+          else{
+            if ($("#entete_camion_"+camActifID).hasClass("bg-danger")){
+              $("#entete_camion_"+camActifID).removeClass("bg-danger");
+            } 
+          }
+
     
         });
       }
-      $('select[id^=cam_mat_ajout_]').change(function(){
-                   if ($(this).is(":selected"))
-                        {
-                    alert ("hiiiiiiiiiiiiiiiiiiiii");
-                        } 
-                    else 
-                        {
-                            alert ("bye");
-                        }
-                })
+      //$('select[id^=cam_mat_ajout_]').change(function(){
+        //           if ($(this).is(":selected"))
+          //              {
+            //        alert ("hiiiiiiiiiiiiiiiiiiiii");
+              //          } 
+                //    else 
+                  //      {
+                    //        alert ("bye");
+                      //  }
+                //})
 
       function compterEnseignesCamion(){
         $('div[id^="cam_num_"]').each(function(i,e) {
@@ -247,7 +275,8 @@
         });
       }
 
-      let draggedItem = null;
+      const list_items = document.querySelectorAll('.list-item');
+      var draggedItem = null;
 
       for (let i = 0; i < list_items.length; i++) {
         const item = list_items[i];
@@ -266,45 +295,56 @@
           }, 0);
         })
 
-        for (let j = 0; j < lists.length; j ++) {
-          const list = lists[j];
-
-          list.addEventListener('dragover', function (e) {
-            e.preventDefault();
-          });
-          
-          list.addEventListener('dragenter', function (e) {
-            e.preventDefault();
-            this.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
-          });
-
-          list.addEventListener('dragleave', function (e) {
-            this.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
-          });
-
-          list.addEventListener('drop', function (e) {
-            compterEnseignesCamion();
-            TotRol();
-            TotRolCamAjout()
-            TotPalCamAjout()
-            pourcentageCamAjt()
-            TotPal();
-            pourcentage();
-            console.log('drop');
-            this.append(draggedItem);
-            this.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
-          });
-          $(document).on('change keyup','#code_mag_ul input',function(e){
-            compterEnseignesCamion();
-            TotRol();
-            TotRolCamAjout()
-            TotPalCamAjout()
-            pourcentageCamAjt()
-            TotPal();
-            pourcentage();
-
-          })
-        }
       }
+
+      const lists = document.querySelectorAll('.list');
+
+      for (let j = 0; j < lists.length; j ++) {
+        const list = lists[j];
+
+        list.addEventListener('dragover', function (e) {
+          e.preventDefault();
+        });
+        
+        list.addEventListener('dragenter', function (e) {
+          e.preventDefault();
+          this.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
+        });
+
+        list.addEventListener('dragleave', function (e) {
+          this.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+        });
+
+        list.addEventListener('drop', function (e) {
+          this.append(draggedItem);
+          this.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+
+          compterEnseignesCamion();
+          TotRol();
+          TotRolCamAjout()
+          TotPalCamAjout()
+          pourcentageCamAjt()
+          TotPal();
+          pourcentage();
+
+          var magHor = $(this).find("#list_mag");
+          magHor.sort(function(a, b){ 
+          return $(a).data("heure")-$(b).data("heure")});
+          $(this).html(magHor);
+        });
+
+        
+      }
+      
+
+      $(document).on('change keyup','#code_mag_ul input',function(e){
+        compterEnseignesCamion();
+        TotRol();
+        TotRolCamAjout()
+        TotPalCamAjout()
+        pourcentageCamAjt()
+        TotPal();
+        pourcentage();
+      })
     </script>
 {% endblock %}    

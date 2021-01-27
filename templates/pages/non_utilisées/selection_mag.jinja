@@ -5,7 +5,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-6">
-                <form method="POST" ACTION="{{ url_for('contact') }}" >
+                <form method="POST" ACTION="{{ url_for('home') }}" >
                     <label for ="pseudo">veuillez selectionner votre fichier excel pour extraire les magasins et leurs volumes</label>  <br>   
                     <input type="file" id="pseudo"  name='fichier'><br>
 
@@ -15,7 +15,7 @@
                     Cochez les enseignes  :<br />
                     {% for i in range(nbre_ens): %}
                                 
-                        <input type="checkbox" name="liste_ens" id="{{ enseigne[i][0] }}" value="{{ enseigne[i][0] }}"/> <label for="{{ enseigne[i][0] }}">{{ enseigne[i][0] }}</label><br />
+                        <input type="checkbox" name="liste_ens" id="{{ L_enseigne[i][0] }}" value="{{ L_enseigne[i][0] }}"/> <label for="{{ L_enseigne[i][0] }}">{{ L_enseigne[i][1] }}</label><br />
                     {% endfor %} 
                      <input type='submit' value='Se connecter' class="btn btn-danger" >
                 </form>

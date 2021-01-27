@@ -13,10 +13,10 @@
         {% include 'layouts/shared/_menu_magasin.html'%}
       </div>
       <div class="col-md-10">
-        <div id="loginbox" class="mainbox col-md-10 col-md-offset-3 col-sm-6 col-sm-offset-3"> 
+        <div id="loginbox" class="mainbox col-md-11 col-md-offset-3 col-sm-6 col-sm-offset-3"> 
           <div class="card">
             <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-            <h5 class="card-header card text-center">  Modification/Suppression Magasin:</h5>
+            <h5 class="card-header card text-center d-inline"> <i class="far fa-edit"></i> Modification/Suppression Magasin:</h5>
               <div class="card-body">
                 <div class="border border_secondary rounded-sm"> 
                   <form id="form" method="POST" class="container form-horizontal " enctype="multipart/form-data" ACTION="{{ url_for('editer_magasin') }}">
@@ -156,6 +156,7 @@
     $('#edit_heure_livr').val(row_selected.children("#table_heure_livr").text())
     $('#edit_tarif_rolls').val(row_selected.children("#table_tarif_rolls").text())
     $('#edit_tarif_pal').val(row_selected.children("#table_tarif_pal").text())
+    $('select[name="modal_ensNv"]').val(row_selected.children("#table_enseigne_id").text()).attr("selected", "selected")
 
     //fin
   })

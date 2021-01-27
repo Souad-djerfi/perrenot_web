@@ -17,6 +17,7 @@
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
             <a class="dropdown-item" href="{{ url_for('selection_magasins') }}">Nouvelles Tournées</a>
+            <a class="dropdown-item" href="{{ url_for('anc_selection_magasins') }}">Ancienne Nouvelles Tournées</a>
             <a class="dropdown-item" href="#">Modifier Tournées</a>
             <a class="dropdown-item" href="#">Reprendre Tournées Brouillon</a>
             
@@ -143,10 +144,14 @@
         </div>
         <div class="modal-body">
 
-          <p> Perrenot-web </p>
-          <p> version 1.0 </p>...
+          <p>  <strong> Perrenot-web version 1.0 </strong></p>...        
+          <p class="fw-bolder fst-italic" > <em> Application Web réalisée par DJERFI Souad:</em> <a  href="http://domywebsite.fr">bensaad.souad@gmail.com</a>   </strong></p>
+          <p class="fw-bolder fst-italic" > <em> Partie javascript par: </em> <a id="domywebsite" href="http://domywebsite.fr">DoMyWebsite</a>  </p>...
+          <p> <small>Copyright &copy; 2021 Perrenot-web.Tous Droits Réservés</small> </p>
+
         </div>
         <div class="modal-footer">
+          
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Ok</button>
           
         </div>
@@ -159,7 +164,7 @@
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="apropos">Selectionner Date des Tournées</h5>
+          <h5 class="modal-title" id="apropos">Impression des Feuilles de Route</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
@@ -167,7 +172,7 @@
         <form  method="POST" id= "form2" ACTION="{{ url_for('feuille_route') }}">
           <div class="modal-body">
             <div class="form-group">
-              <label for="date" class="col-form-label" >Date Tournées:</label>
+              <label for="date" class="col-form-label" >Sélectionner Date de Tournées:</label>
               <input type="date" class="form-control" id="date" name= "date_tour" required>  
             </div>
           </div>

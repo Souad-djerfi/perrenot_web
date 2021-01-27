@@ -26,7 +26,7 @@
                     </tr>
                     <tr>
                         {% for nvt in  L_tot_navette_csn%}
-                            <th> {{nvt[3]}}</th>
+                            <th> {{nvt[3]}}€</th>
                         {% endfor %}
                         
                     </tr>
@@ -71,6 +71,7 @@
                     </tr>
                 </tbody>
             </table> 
+            <div style = "display:block; clear:both; page-break-after:always;"></div>
             <h3 class="text-left">2. DISTRIBUTION:</h3> 
               
             <table class="table">
@@ -92,13 +93,13 @@
                     </tr>
                     <tr>
                         {% for rolls in  L_tot_rolls if rolls[0]|int !=-1%}
-                            <th> {{rolls[0]}}</th>
+                            <th> {{rolls[0]}}€</th>
                         {% endfor %}
                         <th> LOC</th>
                         {% for pal in  L_tot_pal%}
-                            <th>{{pal[0]}}</th>
+                            <th>{{pal[0 | round(2)]}}€</th>
                         {% endfor %}
-                        <th>{{cout_PàQ}}</th>
+                        <th>{{cout_PàQ | round(2)}}€</th>
                     </tr>
 
                 </thead>
@@ -117,7 +118,7 @@
                                 {% for rolls_sect in nbre_rolls_secteur %}  
                                     {% if rolls_sect[0] ==trf_rolls[0] and rolls_sect[1]==date[0] and  rolls_sect[0]|int !=-1 %}
                                         {% set ns.test=0 %}
-                                        <td> {{ rolls_sect[2] }}</td>
+                                        <td> {{ rolls_sect[2] | round(2) }}</td>
                                         {%set ns.tot_hors_vl= ns.tot_hors_vl+ rolls_sect[2]%} 
                                         {%set ns.cout_distr=ns.cout_distr+(rolls_sect[2]*trf_rolls[0])%}
                                     {% elif rolls_sect[0]|int ==-1 and  rolls_sect[1]==date[0] and ns.test_VL==0 %}   
@@ -129,13 +130,13 @@
                                         <td> 0</td>
                                 {% endif %}
                             {% endfor %}
-                            <td>{{ns.VL}}</td>
+                            <td>{{ns.VL | round(2)}}</td>
                             {% for trf_pal in L_tot_pal %}
                                 {% set ns.test=1 %}
                                 {% for pal_sect in nbre_pal_secteur %}  
                                     {% if pal_sect[0] ==trf_pal[0] and pal_sect[1]==date[0] %}
                                         {% set ns.test=0 %}
-                                        <td> {{ pal_sect[2]}}</td>
+                                        <td> {{ pal_sect[2] | round(2) }}</td>
                                         {%set ns.tot_hors_vl= ns.tot_hors_vl+ pal_sect[2]%}
                                         {%set ns.cout_distr=ns.cout_distr+(pal_sect[2]*trf_pal[0])%}
                                     {% endif %}
@@ -144,7 +145,7 @@
                                     <td> 0</td>
                                 {% endif %}
                             {% endfor %}
-                            <td>{{ns.tot_hors_vl}}</td>
+                            <td>{{ns.tot_hors_vl | round(2)}}</td>
                             <td>{{(ns.tot_hors_vl+ns.VL) | round(2)}}</td>
                             <td>{{ns.cout_distr | round(2)}}€</td>
                             <td>{{((ns.tot_hors_vl+ns.VL)*cout_PàQ )| round(2)}}€</td>
@@ -163,29 +164,30 @@
                                 {% set ns.total_rolls=ns.total_rolls+rolls_sect[2] %}
                                 {% set ns.total_hors_vl=ns.total_hors_vl+rolls_sect[2] %}
                             {% endfor %}         
-                            <td> {{ns.total_rolls}}</td>
+                            <td> {{ns.total_rolls | round(2)}}</td>
                             {% set ns.cout_total_distri=ns.cout_total_distri+(ns.total_rolls* trf_rolls[0]) %}
                         {% endfor %}
                         {% for rolls_sect in nbre_rolls_secteur if rolls_sect[0]|int ==-1 %}  
                             {% set ns.total_vl=ns.total_vl+rolls_sect[2] %}
                         {% endfor %}
-                        <td> {{ns.total_vl}}</td>
+                        <td> {{ns.total_vl | round(2)}}</td>
                             {% for trf_pal in L_tot_pal  %}
                                 {%set ns.total_pal=0%}
                                 {% for pal_sect in nbre_pal_secteur if  pal_sect[0] ==trf_pal[0]  %}  
                                     {% set ns.total_pal=ns.total_pal+pal_sect[2] %}
                                     {% set ns.total_hors_vl=ns.total_hors_vl+pal_sect[2] %}
                                 {% endfor %}         
-                                <td> {{ns.total_pal}}</td>
+                                <td> {{ns.total_pal | round(2)}}</td>
                                 {% set ns.cout_total_distri=ns.cout_total_distri+(ns.total_pal* trf_pal[0]) %}
                             {% endfor %}
-                            <td> {{ns.total_hors_vl}}</td>
-                            <td> {{ns.total_hors_vl + ns.total_vl}}</td>
-                            <td>{{ns.cout_total_distri}}€</td>
+                            <td> {{ns.total_hors_vl | round(2)}}</td>
+                            <td> {{(ns.total_hors_vl + ns.total_vl) | round(2)}}</td>
+                            <td>{{ns.cout_total_distri | round(2) }}€</td>
                             <td>{{((ns.total_hors_vl + ns.total_vl)*cout_PàQ) | round(2)}}€</td>
                     </tr>
                 </tbody>
             </table> 
+            <div style = "display:block; clear:both; page-break-after:always;"></div>
             <!--TRINOME-->
             <h3 class="text-left">3. TRINOME:</h3> 
             <table class="table">
@@ -280,13 +282,13 @@
                                 <td> {{ns.total_hN_vl}}</td>
                                         
                             {% endfor %}
-                        <td> {{ns.cout_total_trinom}}€</td>
+                        <td> {{ns.cout_total_trinom | round(2)}}€</td>
                     </tr>
                 </tbody>
             </table> 
 
             <!-- TK -->
-            
+            <div style = "display:block; clear:both; page-break-after:always;"></div>
             <h3 class="text-left">4. THERME KILOMETRIQUE:</h3> 
             <table class="table">
                 <thead class="thead-light">

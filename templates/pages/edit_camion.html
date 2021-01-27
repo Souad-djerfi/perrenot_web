@@ -16,7 +16,7 @@
         <div id="loginbox" class="mainbox col-md-10 col-md-offset-3 col-sm-6 col-sm-offset-3"> 
           <div class="card" style="display: inline-flex;">
             <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-            <h5 class="card-header card text-center">  Modification/Suppression Camion:</h5>
+            <h5 class="card-header card text-center d-inline"> <i class="far fa-edit"></i> Modification/Suppression Camion:</h5>
               <div class="card-body">
                 <div class="border border_secondary rounded-sm"> 
                   <form id="form" method="POST" class="container form-horizontal " enctype="multipart/form-data" ACTION="{{ url_for('edit_camion') }}">
@@ -61,6 +61,7 @@
                             <td id="table_cam_id" hidden >{{cam[0]}}</td>     
                             <td id="table_mat_anc" hidden>{{cam[1]}}</td>
                             <td id="table_cap">{{cam[2]}}</td>
+                            <td id="table_etat_id" hidden>{{cam[3]}}</td>
                             {%if cam[3]==1%}
                               <td id="table_etat">Disponible</td>
                             {%else%}  
@@ -124,44 +125,84 @@
       <form  method="POST" id= "form2" ACTION="{{ url_for('camion_modifie') }}">
         <div class="modal-body">
           <div class="form-group">
-            <label for="edit_mat" class="col-form-label">Immatriculation:</label>
+            <div class="form-group row">
+              <label for="edit_mat" class="col-sm-4 col-form-label" ><strong>Immatriculation:</strong></label>
+              <div class="col-sm-8">
+                 <input type="text" class="form-control" id="edit_mat" name="mat">
+              </div> 
+            </div>
             <input type="text" name="mat_anc" id="edit_mat_anc" hidden>
             <input type="text" name="cam_id" id="edit_cam_id" hidden>
-            <input type="text" class="form-control" id="edit_mat" name="mat">
-            <label for="edit_cap" class="col-form-label">Capacité:</label>
-            <input type="text" class="form-control" id="edit_cap" name="cap"><br>
-            <select name="etat" class="custom-select" required>
-                <option value="" disabled selected> <B> Selectionner Etat</B></option>
-                <option id="edit_statut" value="1" >  Disponible </option>
-                <option id="edit_statut" value="0" >  En panne </option>
-            </select><br><br>
-            <select name="liste_type" class="custom-select" required>
-                <option value="" disabled selected>  Choisissez un Type</option>
-                <option value="PORTEUR" >PORTEUR</option>
-                <option value="CAISSE_MOBILE" >  CAISSE_MOBILE </option>
-                <option value="LOCATION" >  LOCATION </option>
-                <option value="VL" >  VL </option>
-                <option value="TRACTEUR" >  TRACTEUR </option>
-                <option value="SEMI_REMORQUE" >  SEMI_REMORQUE </option>
-            </select><br>
-            <label for="horaire" class="col-form-label">Tonnage:</label>
-            <input type="text" class="form-control" id="edit_tonnage" name="tonnage"><br>
-            <select name="fonction" class="custom-select" required>
-                <option value="" disabled selected>  Choisissez une fonction</option>
+            
+              <div class="form-group row">
+                <label for="edit_cap" class="col-sm-4 col-form-label"><strong>Capacité:</strong></label>
+                <div class="col-sm-8">
+                  <input type="text" class="form-control" id="edit_cap" name="cap">
+                </div>  
+            </div>  
+            <div class="input-group mt-2 w-100">
+              <select name="etat" class="custom-select " required>
+                  <option value="" disabled selected> <B> Etat</B></option>
+                  <option id="edit_statut" value="1" >  Disponible </option>
+                  <option id="edit_statut" value="0" >  En panne </option>
+              </select>
+            </div>  
+            <div class="form-group row mt-2 w-100">  
+              <div class="col-sm-1"></div>
+              <select name="liste_type" class="custom-select col-sm-5" required>
+                  <option value="" disabled selected>  Type</option>
+                  <option value="PORTEUR" >PORTEUR</option>
+                  <option value="CAISSE_MOBILE" >  CAISSE_MOBILE </option>
+                  <option value="LOCATION" >  LOCATION </option>
+                  <option value="VL" >  VL </option>
+                  <option value="TRACTEUR" >  TRACTEUR </option>
+                  <option value="SEMI_REMORQUE" >  SEMI_REMORQUE </option>
+              </select>
+              <div class="col-sm-1"></div>
+              <select name="fonction" class="custom-select col-sm-5"  required>
+                <option value="" disabled selected>  Fonction</option>
                 <option value="FRIGO" >  FRIGO </option>
                 <option value="BI_TEMP" >  BI_TEMP </option>
                 <option value="TRR" >  TRR </option>
             </select>
-            <label for="panier3" class="col-form-label">Assurance:</label>
-            <input type="text" class="form-control" id="edit_assurance" name= "assurance">
-            <label for="panier3" class="col-form-label">Loyer:</label>
-            <input type="text" class="form-control" id="edit_loyer" name= "loyer">
-            <label for="panier3" class="col-form-label">Entretien:</label>
-            <input type="text" class="form-control" id="edit_entretien" name= "entretien">
-            <label for="panier3" class="col-form-label">Pneus:</label>
-            <input type="text" class="form-control" id="edit_pneus" name= "pneus">
-            <label for="panier3" class="col-form-label">Consomation:</label>
-            <input type="text" class="form-control" id="edit_consomation" name= "consomation">
+            </div>
+            <div class="form-group row">
+              <label for="horaire" class="col-sm-4 col-form-label"><strong>Tonnage:</strong></label>
+              <div class="col-sm-8">
+                <input type="text" class="form-control" id="edit_tonnage" name="tonnage">
+              </div>  
+            </div>
+            
+            <div class="form-group row">
+              <label for="panier3" class="col-sm-4 col-form-label"><strong>Assurance:</strong></label>
+              <div class="col-sm-8">
+                <input type="text" class="form-control" id="edit_assurance" name= "assurance">
+              </div>  
+            </div>
+            <div class="form-group row">
+              <label for="panier3" class="col-sm-4 col-form-label"><strong>Loyer:</strong></label>
+              <div class="col-sm-8">
+                <input type="text" class="form-control" id="edit_loyer" name= "loyer">
+              </div>
+            </div>
+            <div class="form-group row">
+              <label for="panier3" class="col-sm-4 col-form-label"><strong>Entretien:</strong></label>
+              <div class="col-sm-8">
+                <input type="text" class="form-control" id="edit_entretien" name= "entretien">
+              </div>  
+            </div>  
+            <div class="form-group row">
+              <label for="panier3" class="col-sm-4 col-form-label"><strong>Pneus:</strong></label>
+              <div class="col-sm-8">
+                <input type="text" class="form-control" id="edit_pneus" name= "pneus">
+              </div>
+            </div>    
+            <div class="form-group row">
+              <label for="panier3" class="col-sm-4 col-form-label"><strong>Consomation:</strong></label>
+              <div class="col-sm-8">
+                <input type="text" class="form-control" id="edit_consomation" name= "consomation">
+              </div> 
+            </div>   
           </div>  
         </div>  
         <div class="modal-footer">
@@ -190,7 +231,9 @@
     $('#edit_entretien').val(row_selected.children("#table_entretien").text())
     $('#edit_pneus').val(row_selected.children("#table_pneus").text())
     $('#edit_consomation').val(row_selected.children("#table_conso").text())
-
+    $('select[name="liste_type"]').val(row_selected.children("#table_type").text()).attr("selected", "selected")
+    $('select[name="fonction"]').val(row_selected.children("#table_fonction").text()).attr("selected", "selected")
+    $('select[name="etat"]').val(row_selected.children("#table_etat_id").text()).attr("selected", "selected")
     //fin
   })
 
