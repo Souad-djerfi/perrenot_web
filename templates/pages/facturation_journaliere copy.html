@@ -12,11 +12,16 @@
         <div class="row">
             <div class="col-6">
                 {% set ns = namespace(found=false) %}
-                {% set ns.nbTotalRolls=0%}
-                {% set ns.nbTotalPal=0%}
-                {% for tarif in L_tarif %}
-                    {% set ns.total_rolls=0%}
-                    {% set ns.total_pal=0%}
+                {% set dataLivraison = infosLivraison[infosLivraison["magasin_tarif_rolls"] > 0] %}
+                {% set dataLivraisonTrinome = infosLivraison[infosLivraison["magasin_tarif_rolls"] < 0] %}
+                {% set ns.coutDistribution = 0 %}
+                {% for valRolls in dataLivraison["magasin_tarif_rolls"].unique() %}
+                {% for valPalettes in dataLivraison["magasin_tarif_palette"].unique() %}
+                {% set dfRoll =  dataLivraison[infosLivraison["magasin_tarif_rolls"] == valRolls] %}
+                {% set dfRoll =  dfRoll[infosLivraison["magasin_tarif_palette"] == valPalettes] %}
+                {% set nbRolls = dfRoll["nbre_rolls"].sum() %}
+                {% set nbPalettes = dfRoll["nbre_palette"].sum() %}
+                {% if nbRolls|int !=0 or nbPalettes|int !=0 %}
                     <table class="table">
                         <thead class="thead-light">
                             <tr>
@@ -25,34 +30,33 @@
                                 <th>Tarif Palette </th>
                             </tr>
                             <tr>
-                                <th>{{ tarif[0] }}</th>
-                                <th>{{ tarif[1] }}</th>
+                                <th>{{ valRolls }}</th>
+                                <th>{{ valPalettes }}</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {% for mag in L_magasin if mag[1]==tarif[0]%}
-                                <tr>
-                                    <td>{{ mag[0] }}</td>
-                                    <td>{{ mag[2] }}</td>
-                                    <td>{{ mag[4] }}</td> 
-                                </tr>
-                                {% set ns.total_rolls=ns.total_rolls+mag[2] %}
-                                {% set ns.total_pal=ns.total_pal+ mag[4]%}
+                            {% for ligne in dfRoll.itertuples() %}
+
+                            <tr>
+                                <td>{{ ligne.magasin_code }}</td>
+                                <td>{{ ligne.nbre_rolls }}</td>
+                                <td>{{ ligne.nbre_palette }}</td> 
+                            </tr>
                             {% endfor %}
                         </tbody>
                         <tfoot class="table-active">
-                                <tr>
-                                    <td>Total</td>
-                                    <td>{{ ns.total_rolls }}</td>
-                                    <td>{{ ns.total_pal }}</td>
-                                    {% set ns.nbTotalRolls=ns.nbTotalRolls+ns.total_rolls %}
-                                    {% set ns.nbTotalPal=ns.nbTotalPal+ns.total_pal%}
-                                </tr>
-                            </tfoot>
-                        </table>
-                {% endfor %}
-
+                            <tr>
+                                <td>Total</td>
+                                <td>{{ nbRolls }}</td>
+                                <td>{{ nbPalettes }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    {% set ns.coutDistribution = ns.coutDistribution + nbRolls * valRolls + nbPalettes * valPalettes %}
+                {% endif %}    
                
+                {% endfor %}
+                {% endfor %}
                 <table class="table">
                     <thead class="thead-light">
                         <tr>
@@ -61,13 +65,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% set ns.totale_rolls_trinome=0 %}
-                        {% set ns.totale_pal_trinome=0 %}
+                        {% set ns.totle_rolls_trinome=0 %}
+                        {% set ns.totle_pal_trinome=0 %}
                         {%for ligne in L_trinome  %}
                         <tr>
                             <td>{{ ligne[0] }}</td>
-                            {% set ns.totale_rolls_trinome=ns.totale_rolls_trinome+ ligne[2] %}
-                            {% set ns.totale_pal_trinome=ns.totale_pal_trinome+ ligne[4] %}
+                            {% set ns.totle_rolls_trinome=ns.totle_rolls_trinome+ ligne[2] %}
+                            {% set ns.totle_pal_trinome=ns.totle_pal_trinome+ ligne[4] %}
                             {% if ligne[1]==-1 %}
                                 <td>{{ ligne[2]|int }}(Trinôme)</td>
                             {% else %}    
@@ -84,18 +88,20 @@
                     <tfoot class="table-active">
                         <tr>
                             <td>Total</td>
-                            <td>{{ ns.totale_rolls_trinome }}</td>
-                            <td>{{ ns.totale_pal_trinome }}</td>
+                            <td>{{ ns.totle_rolls_trinome }}</td>
+                            <td>{{ ns.totle_pal_trinome }}</td>
                         </tr>
                     </tfoot>
                 </table>
                 <table class="table">
                     <thead class="thead-light">
                         <tr>
+                            {% set nbTotalRolls =  infosLivraison.nbre_rolls.sum() %}
+                            {% set nbTotalPalettes = infosLivraison.nbre_palette.sum() %}
                             <th>Total global</th>
-                            <th>{{ ns.nbTotalRolls + ns.totale_rolls_trinome}}</th>
-                            <th>{{ ns.nbTotalPal + ns.totale_pal_trinome }}</th>
-                            
+                            <th>{{ nbTotalRolls + ns.totle_rolls_trinome}}</th>
+                            <th>{{ nbTotalPalettes + ns.totle_pal_trinome }}</th>
+                            {% set ns.nbTotal = nbTotalRolls + nbTotalPalettes %}
                         </tr>
                     </thead>
                 </table>
