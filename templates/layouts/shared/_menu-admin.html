@@ -16,11 +16,9 @@
             Tournée
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-            <a class="dropdown-item" href="{{ url_for('selection_magasins') }}">Nouvelles Tournées</a>
-            <a class="dropdown-item" href="{{ url_for('anc_selection_magasins') }}">Ancienne Nouvelles Tournées</a>
-            <a class="dropdown-item" href="#">Modifier Tournées</a>
-            <a class="dropdown-item" href="#">Reprendre Tournées Brouillon</a>
-            
+            <a class="dropdown-item" href="#"  data-toggle="modal" data-target="#nouvelles-tournées">Nouvelles Tournées</a>
+            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#modifier_tournées">Modifier Tournées</a>
+            <a class="dropdown-item" href="#">Annuler Tournées</a>
           </div>
         </li>
         <li class="nav-item dropdown">
@@ -184,6 +182,39 @@
       </div>
     </div>
   </div>
+  <!-- Modal modifier tournées-->
+  <div class="modal fade" id="modifier_tournées" tabindex="-1" aria-labelledby="modifier_tournées" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="apropos">Modifications tournées déjà enregitrées</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form  method="POST" id= "form2" ACTION="{{ url_for('modifier_tournees') }}">
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="date" class="col-form-label" >Sélectionner Date de Tournées:</label>
+              <input type="date" class="form-control" id="date" name= "date_tour" required>  
+            </div>
+            <div class="form-group">
+              <label for="date" class="col-form-label" >Nombre de camions à rajouter:</label>
+              <input type="number" class="form-control" id="camionPlus" name= "camionPlus" required>  
+            </div>
+            <div class="form-group">
+              <label for="date" class="col-form-label" >Nombre de magasins à rajouter:</label>
+              <input type="number" class="form-control" id="magPlus" name= "magPlus" required>  
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+            <button type="submit" class="btn btn-primary">Modifier</button>
+          </div>
+        </form>  
+      </div>
+    </div>
+  </div>
 <!-- Modal facturation journalière-->
 <div class="modal fade" id="facturation_journaliere" tabindex="-1" aria-labelledby="facturation" aria-hidden="true">
   <div class="modal-dialog">
@@ -294,6 +325,32 @@
     </div>
   </div>
 
+  <!-- Modal Nouvelles tournées-->
+  <div class="modal fade" id="nouvelles-tournées" tabindex="-1" aria-labelledby="nouvelles-tournées" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" >Nouvelles Tournées:</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form  method="POST" id= "form2" ACTION="{{ url_for('selection_magasins') }}">
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="date" class="col-form-label" >Veuillez choisir la date des Tournées:</label>
+              <input type="date" class="form-control" id="date" name= "date_tour" required>  
+            </div>
+            
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+            <button type="submit" class="btn btn-primary">Valider</button>
+          </div>
+        </form>  
+      </div>
+    </div>
+  </div>
   <br>
   
     {% with messages = get_flashed_messages(with_categories=true) %}

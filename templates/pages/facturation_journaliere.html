@@ -43,8 +43,8 @@
                         <tfoot class="table-active">
                                 <tr>
                                     <td>Total</td>
-                                    <td>{{ ns.total_rolls }}</td>
-                                    <td>{{ ns.total_pal }}</td>
+                                    <td>{{ ns.total_rolls |round(2)}}</td>
+                                    <td>{{ ns.total_pal|round(2) }}</td>
                                     {% set ns.nbTotalRolls=ns.nbTotalRolls+ns.total_rolls %}
                                     {% set ns.nbTotalPal=ns.nbTotalPal+ns.total_pal%}
                                 </tr>
@@ -84,8 +84,8 @@
                     <tfoot class="table-active">
                         <tr>
                             <td>Total</td>
-                            <td>{{ ns.totale_rolls_trinome }}</td>
-                            <td>{{ ns.totale_pal_trinome }}</td>
+                            <td>{{ ns.totale_rolls_trinome|round(2) }}</td>
+                            <td>{{ ns.totale_pal_trinome|round(2) }}</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -93,8 +93,8 @@
                     <thead class="thead-light">
                         <tr>
                             <th>Total global</th>
-                            <th>{{ ns.nbTotalRolls + ns.totale_rolls_trinome}}</th>
-                            <th>{{ ns.nbTotalPal + ns.totale_pal_trinome }}</th>
+                            <th>{{ (ns.nbTotalRolls + ns.totale_rolls_trinome)|round(2)}}</th>
+                            <th>{{ (ns.nbTotalPal + ns.totale_pal_trinome)|round(2) }}</th>
                             
                         </tr>
                     </thead>

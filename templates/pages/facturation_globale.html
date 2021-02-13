@@ -42,9 +42,36 @@
                                                   <label for="inputEmail3" class="col-sm-3 col-form-label">Immatriculation:</label>
                                                   <div class="col-sm-9">
                                                     <input type="text" class="form-control" id="inputEmail3" placeholder="{{vl[0]}}"  name="vl_mat" aria-hidden="" disabled>
-                                                    <input type="text" class="form-control" id="inputEmail3" placeholder="{{vl[0]}}" value="{{vl[1]}}" name="vl_mat" hidden>
+                                                    <input type="text" class="form-control" id="inputEmail3"  value="{{vl[1]}}" name="vl_mat" hidden>
                                                   </div>
                                               </div>
+                                              {%if test_fact==1 and nbre_trinome>0 %}
+                                                <div class="form-group row">
+                                                    <label for="inputEmail3" class="col-sm-3 col-form-label">KM:</label>
+                                                    <div class="col-sm-9">
+                                                      {% for km in km_trinome if km[1]==vl[1] %}
+                                                        <input type="text" class="form-control" id="inputEmail3" placeholder="Nombre de KM parcouru" value="{{km[0]}}" name="vl_km" required >
+                                                      {% endfor %}  
+                                                    </div>
+                                                </div>  
+                                                <div class="form-group row">
+                                                  <label for="inputEmail3" class="col-sm-3 col-form-label">Heure:</label>
+                                                  <div class="col-sm-9">
+                                                    {% for heure in heure_trinome if heure[1]==vl[1] %}
+                                                    <input type="text" class="form-control" id="inputEmail3" placeholder="Nombre d'heures " value="{{heure[0]}}" name="vl_heure" required>
+                                                    {% endfor %}
+                                                  </div>
+                                                </div>    
+                                                <div class="form-group row">
+                                                  <label for="inputEmail3" class="col-sm-3 col-form-label">Heure Nuit:</label>
+                                                  <div class="col-sm-9">
+                                                    {% for MHN in MHN_trinome if MHN[1]==vl[1] %}
+                                                      <input type="text" class="form-control" id="inputEmail3" placeholder="Nombre d'heures de nuit" value="{{MHN [0]}}" name="vl_heure_nuit" required>
+                                                    {% endfor%}  
+                                                  </div>
+                                                </div>
+
+                                              {% else %}
                                               <div class="form-group row">
                                                   <label for="inputEmail3" class="col-sm-3 col-form-label">KM:</label>
                                                   <div class="col-sm-9">
@@ -63,6 +90,7 @@
                                                     <input type="text" class="form-control" id="inputEmail3" placeholder="Nombre d'heures de nuit" name="vl_heure_nuit" required>
                                                   </div>
                                               </div>
+                                              {% endif%}
                                           </div>
                                         </div>
                                       </div>
@@ -84,19 +112,32 @@
                                       <div class="col-sm-6">
                                         <div class="card">
                                             <div class="card-body">
+                                              <div class="form-group row">
+                                                  <label for="inputEmail3" class="col-sm-3 col-form-label">Immatriculation:</label>
+                                                  <div class="col-sm-9">
+                                                    <input type="text" class="form-control" id="inputEmail3" placeholder="{{cm[0]}}"  disabled>
+                                                     <input type="text" class="form-control"   value="{{cm[1]}}" name="cm_id" hidden>
+                                                  </div>
+                                              </div>
+                                              {% if test_fact==1 and nbre_TK>0 %}
                                                 <div class="form-group row">
-                                                    <label for="inputEmail3" class="col-sm-3 col-form-label">Immatriculation:</label>
-                                                    <div class="col-sm-9">
-                                                      <input type="text" class="form-control" id="inputEmail3" placeholder="{{cm[0]}}"  disabled>
-                                                      <input type="text" class="form-control"   value="{{cm[1]}}" name="cm_id" hidden>
-                                                    </div>
+                                                  <label for="inputEmail3" class="col-sm-3 col-form-label">KM:</label>
+                                                  <div class="col-sm-9">
+                                                    {% for km in km_TK if km[1]==cm[1]%}
+                                                      <input type="text" class="form-control" id="inputEmail3" placeholder="Nombre de KM parcouru" value="{{km[0]}}" name="cm_km" required >
+                                                    {% endfor %}  
+                                                  </div>
                                                 </div>
+                                              
+
+                                              {% else %}
                                                 <div class="form-group row">
                                                     <label for="inputEmail3" class="col-sm-3 col-form-label">KM:</label>
                                                     <div class="col-sm-9">
                                                       <input type="text" class="form-control" id="inputEmail3" placeholder="Nombre de KM parcouru" value="" name="cm_km" required >
                                                     </div>
                                                 </div>
+                                              {% endif %}
                                             </div>
                                         </div>
                                       </div>
@@ -107,18 +148,29 @@
                                             <div class="card-body">
                                               <div class="form-group row">
                                                 <label for="inputEmail3" class="col-sm-3 col-form-label">Traction -{{tr+1}}-:</label>
+                                                
                                                 <div class="col-sm-9">
-                                                  <input type="text" class="form-control" id="inputEmail3" placeholder="Nombre de KM parcouru" value="" name="trc_km" required>
+                                                  {% if test_fact==1 and nbre_traction>0 %}
+                                                  <input type="text" class="form-control" id="inputEmail3" placeholder="Nombre de KM parcouru" value="{{traction_TK[tr][0]|float}}" name="trc_km" required>
+                                                  {%else%}
+                                                    <input type="text" class="form-control" id="inputEmail3" placeholder="Nombre de KM parcouru" value="" name="trc_km" required>
+                                                  {%endif%}
                                                 </div>
                                               </div>
                                               <div class="form-group row">
                                                 <label for="inputEmail3" class="col-sm-3 col-form-label">Immatriculation:</label>
                                                 <div class="col-sm-9">
                                                   <select name="traction_mat" class="custom-select" required>
-                                                    <option value="" disabled selected> <B> Choisissez immat du tracteur</B></option>
+                                                    <!--<option value="" disabled selected> <B> Choisissez immat du tracteur</B></option>-->
+                                                    
                                                     {% for cm in L_camion %}
+                                                      {% if test_fact==1 and nbre_traction>0 and traction_TK[tr][1]==cm[1]  %}
+                                                        <option  value="{{ cm[1] }}" selected>  {{ cm[0] }}  --  {{ cm[2] }} </option>
+                                                      {% else %}
                                                         <option  value="{{ cm[1] }}" >  {{ cm[0] }}  --  {{ cm[2] }} </option>
+                                                      {% endif %}  
                                                     {% endfor %}
+                                                    
                                                   </select>
                                                 </div>
                                               </div>
@@ -139,6 +191,7 @@
                                 <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
                                     <div class="accordion-body"> 
                                         <div class="row">
+                                          {% set ns = namespace(found=false) %}
                                             {% for nvt in L_navette %}
                                                 <div class="col-sm-6">
                                                     <div class="card">
@@ -147,7 +200,19 @@
                                                                 <label for="inputEmail3" class="col-sm-3 col-form-label"><strong> {{nvt[0]}}: </strong></label>
                                                                 <div class="col-sm-9">
                                                                   <input type="text" class="form-control" id="inputEmail3"  name="csn_nvt_type" value="{{nvt[1]}}" hidden >
-                                                                  <input type="number" class="form-control" id="inputEmail3" placeholder="Nombre de fois" name="csn_nvt_nbre"  >
+                                                                  
+                                                                  {%set ns.test_nvt_csn=0%}
+                                                                  {%set ns.test_nvt_ens=0%}
+                                                                  {% if test_fact==1 %}
+                                                                    
+                                                                    {% for nvt_csn in navette_casino if nvt_csn[1]==nvt[1]%}
+                                                                      {%set ns.test_nvt_csn=1%}
+                                                                      <input type="number" class="form-control" id="inputEmail3" placeholder="Nombre de fois" value="{{nvt_csn[0]|int}}" name="csn_nvt_nbre"  >
+                                                                    {%endfor%}
+                                                                  {%endif%}
+                                                                  {%if ns.test_nvt_csn==0%}
+                                                                    <input type="number" class="form-control" id="inputEmail3" placeholder="Nombre de fois" name="csn_nvt_nbre"  >
+                                                                  {% endif %}  
                                                                     
                                                                 </div>
                                                             </div>
@@ -169,11 +234,20 @@
                                 <h5 class="card-header"> <em>Formulaire de Facturation de {{ L_enseigne[cpt_ens][1] }} pour {{date_converti}}:</em></h5>
                                 <div class="card-body">
                                   {% for nvt in L_navette_ens[cpt_ens]%}
+                                    {% set ns.test_nvt_ens=0 %}
                                     <div class="form-group row">
                                         <label for="inputEmail3" class="col-sm-3 col-form-label"><strong> {{nvt[1]}}: </strong></label>
                                         <div class="col-sm-9">
                                           <input type="text" class="form-control" id="inputEmail3" name="ens_nvt" value="{{nvt[2] }}" hidden >
-                                          <input type="number" class="form-control" id="inputEmail3" placeholder="Nombre de fois"  name="ens_nvt_nbre" value="0">
+                                          {% if test_fact==1 %}
+                                            {% for nvt_ens in navette_ens if nvt_ens[2]==L_enseigne[cpt_ens][0] and nvt_ens[1]==nvt[0]%}
+                                              {% set ns.test_nvt_ens=1 %}
+                                              <input type="number" class="form-control" id="inputEmail3" placeholder="Nombre de fois" value={{nvt_ens[0]|int}} name="ens_nvt_nbre" value="0"> 
+                                            {%endfor%}
+                                          {%endif%}
+                                          {% if ns.test_nvt_ens==0 %}
+                                            <input type="number" class="form-control" id="inputEmail3" placeholder="Nombre de fois"  name="ens_nvt_nbre" value="0">
+                                          {% endif %}
                                         </div>
                                     </div>
                                   {% endfor %}  

@@ -52,10 +52,8 @@
                             <td > {{ns.cout}}€</td>
                         </tr>
                     {% endfor %}
-                </tbody>
-                <tfoot class="table-dark">
                     <tr >
-                        <th >Total</th>
+                        <th class="table-dark" >Total</th>
                             {%set ns.cout_total=0%}
                             {% for nvt in L_tot_navette_csn %}
                                 {%set ns.total=0%}
@@ -66,12 +64,12 @@
                                         {% endif %}
                                     {% endfor %} 
                                 {% endfor %}
-                                <th > {{ns.total|int}}</th>
+                                <th class="table-dark"  > {{ns.total|int}}</th>
                                 {% set ns.cout_total=ns.cout_total+ns.total*nvt[3] %}
                             {% endfor %}
-                        <th > {{ns.cout_total}}€</th>
+                        <th class="table-dark"  > {{ns.cout_total}}€</th>
                     </tr>
-                </tfoot>
+                </tbody>
                 
             </table> 
             <div style = "display:block; clear:both; page-break-after:always;"></div>
@@ -156,10 +154,8 @@
                             <td>{{((ns.tot_hors_vl+ns.VL)*cout_PàQ )| round(2)}}€</td>
                         </tr>
                     {% endfor %}
-                </tbody>
-                <tfoot class="table-dark">
-                    <tr>
-                        <td>Total</td>
+                    <tr  >
+                        <td class="table-dark">Total</td>
                         {%set ns.cout_total_distri=0%}
                         {%set ns.total_hors_vl=0%}
                         {%set ns.total_vl=0%}
@@ -170,29 +166,29 @@
                                 {% set ns.total_rolls=ns.total_rolls+rolls_sect[2] %}
                                 {% set ns.total_hors_vl=ns.total_hors_vl+rolls_sect[2] %}
                             {% endfor %}         
-                            <td> {{ns.total_rolls | round(2)}}</td>
+                            <td class="table-dark"> {{ns.total_rolls | round(2)}}</td>
                             {% set ns.cout_total_distri=ns.cout_total_distri+(ns.total_rolls* trf_rolls[0]) %}
                         {% endfor %}
                         {% for rolls_sect in nbre_rolls_secteur if rolls_sect[0]|int ==-1 %}  
                             {% set ns.total_vl=ns.total_vl+rolls_sect[2] %}
                         {% endfor %}
-                        <td> {{ns.total_vl | round(2)}}</td>
+                        <td class="table-dark"> {{ns.total_vl | round(2)}}</td>
                             {% for trf_pal in L_tot_pal  %}
                                 {%set ns.total_pal=0%}
                                 {% for pal_sect in nbre_pal_secteur if  pal_sect[0] ==trf_pal[0]  %}  
                                     {% set ns.total_pal=ns.total_pal+pal_sect[2] %}
                                     {% set ns.total_hors_vl=ns.total_hors_vl+pal_sect[2] %}
                                 {% endfor %}         
-                                <td> {{ns.total_pal | round(2)}}</td>
+                                <td class="table-dark"> {{ns.total_pal | round(2)}}</td>
                                 {% set ns.cout_total_distri=ns.cout_total_distri+(ns.total_pal* trf_pal[0]) %}
                             {% endfor %}
-                            <td> {{ns.total_hors_vl | round(2)}}</td>
-                            <td> {{(ns.total_hors_vl + ns.total_vl) | round(2)}}</td>
-                            <td>{{ns.cout_total_distri | round(2) }}€</td>
-                            <td>{{((ns.total_hors_vl + ns.total_vl)*cout_triEmb) | round(2)}}€</td>
-                            <td>{{((ns.total_hors_vl + ns.total_vl)*cout_PàQ) | round(2)}}€</td>
+                            <td class="table-dark"> {{ns.total_hors_vl | round(2)}}</td>
+                            <td class="table-dark"> {{(ns.total_hors_vl + ns.total_vl) | round(2)}}</td>
+                            <td class="table-dark">{{ns.cout_total_distri | round(2) }}€</td>
+                            <td class="table-dark">{{((ns.total_hors_vl + ns.total_vl)*cout_triEmb) | round(2)}}€</td>
+                            <td class="table-dark">{{((ns.total_hors_vl + ns.total_vl)*cout_PàQ) | round(2)}}€</td>
                     </tr>
-                </tfoot>
+                </tbody>
                 
             </table> 
             <div style = "display:block; clear:both; page-break-after:always;"></div>
@@ -264,38 +260,34 @@
                             {%set ns.cout_total_trinom=ns.cout_total_trinom+ns.cout_total_date%}
                         </tr>
                         {% endfor %}
-                </tbody>        
-                <tfoot class="table-dark">        
-                    
-                    <tr>
-                        <td>Total</td>
-                            {% for vl in L_tot_vl %}
-                                {% set ns.total_km_vl=0 %}
-                                {% set ns.total_loyer_vl=0 %}
-                                {% set ns.total_heure_vl=0 %}
-                                {% set ns.total_hN_vl=0 %}
-                                {% for date in jour_ouvrable %}
-                                    {% set ns.total_loyer_vl=ns.total_loyer_vl+vl[2]/date[1]%}
+                        <tr>
+                            <td class="table-dark">Total</td>
+                                {% for vl in L_tot_vl %}
+                                    {% set ns.total_km_vl=0 %}
+                                    {% set ns.total_loyer_vl=0 %}
+                                    {% set ns.total_heure_vl=0 %}
+                                    {% set ns.total_hN_vl=0 %}
+                                    {% for date in jour_ouvrable %}
+                                        {% set ns.total_loyer_vl=ns.total_loyer_vl+vl[2]/date[1]%}
+                                    {% endfor %}
+                                    <td class="table-dark"> {{ns.total_loyer_vl | round(2)}}</td>
+                                    {% for km in nbre_km_trinome  if km[0]==vl[0]  %}
+                                        {% set ns.total_km_vl=ns.total_km_vl+km[2] %}   
+                                    {% endfor %}
+                                    <td class="table-dark"> {{ns.total_km_vl}}</td>
+                                    {% for heure in nbre_heure_trinome  if heure[0]==vl[0]  %}
+                                        {% set ns.total_heure_vl=ns.total_heure_vl+heure[2] %}   
+                                    {% endfor %}
+                                    <td class="table-dark"> {{ns.total_heure_vl}}</td>
+                                    {% for hN in nbre_maj_hN_trinome  if hN[0]==vl[0]  %}
+                                        {% set ns.total_hN_vl=ns.total_hN_vl+ hN[2] %}   
+                                    {% endfor %}
+                                    <td class="table-dark"> {{ns.total_hN_vl}}</td>
+                                            
                                 {% endfor %}
-                                <td> {{ns.total_loyer_vl | round(2)}}</td>
-                                {% for km in nbre_km_trinome  if km[0]==vl[0]  %}
-                                    {% set ns.total_km_vl=ns.total_km_vl+km[2] %}   
-                                {% endfor %}
-                                <td> {{ns.total_km_vl}}</td>
-                                {% for heure in nbre_heure_trinome  if heure[0]==vl[0]  %}
-                                    {% set ns.total_heure_vl=ns.total_heure_vl+heure[2] %}   
-                                {% endfor %}
-                                <td> {{ns.total_heure_vl}}</td>
-                                {% for hN in nbre_maj_hN_trinome  if hN[0]==vl[0]  %}
-                                    {% set ns.total_hN_vl=ns.total_hN_vl+ hN[2] %}   
-                                {% endfor %}
-                                <td> {{ns.total_hN_vl}}</td>
-                                        
-                            {% endfor %}
-                        <td> {{ns.cout_total_trinom | round(2)}}€</td>
-                    </tr>
-                </tfoot>    
-                
+                            <td class="table-dark"> {{ns.cout_total_trinom | round(2)}}€</td>
+                        </tr>
+                </tbody>               
             </table> 
 
             <!-- TK -->
@@ -360,29 +352,24 @@
                             
                         </tr>
                     {% endfor %}
-                </tbody>    
-                <tfoot class="table-dark">    
                     <tr>
-                        <td>Total</td>
+                        <td class="table-dark">Total</td>
                             {% for CM in L_tot_CM %}
                                 {% set ns.total_km_CM=0 %}
                                 {% for km in nbre_km_TK  if km[0]==CM[0]  %}
                                     {% set ns.total_km_CM=ns.total_km_CM+km[2] %}   
                                 {% endfor %}
-                                <td> {{ns.total_km_CM |round(2)}}</td>
+                                <td class="table-dark"> {{ns.total_km_CM |round(2)}}</td>
                             {% endfor %}  
                             
                             {% for trc in  tot_traction  %}
-                                <td> {{trc}}</td>
+                                <td class="table-dark"> {{trc}}</td>
                             {% endfor %}
-                        <td> {{ns.cout_total_TK |round(2)}}€</td>
+                        <td class="table-dark"> {{ns.cout_total_TK |round(2)}}€</td>
                     </tr>
-                </tfoot>    
-                
+                </tbody>    
             </table> 
         </div>
-        <footer> 
-            
-        </footer> 
+        
     </div>
 <body>

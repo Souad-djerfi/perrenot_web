@@ -1,0 +1,425 @@
+{% extends 'layouts/default.html' %}
+{% block body%}
+    {% include 'layouts/shared/_menu-admin.html'%}
+    <!--<link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='css/style.css')}}">-->
+    {% if return_msg and return_msg['msg'] %}
+    <div class="alert alert-{{ return_msg['type'] }}" role="alert">
+      {{ return_msg['msg'] }}
+    </div>
+    {% endif %}
+    <div class="app">
+      <header>
+        
+      </header>
+      <!-- place form-->
+        <div class="lists">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-3">
+                <div class="card">
+                  <h5 class="card-header">Magasins restent à livrer le: {{date_tour}}</h5>
+                  <div class="card-body">
+                <div class="list" style=" max-height: 100vh; overflow-y: scroll; ">
+                  {% for mag in L_magasinNonAffect: %}
+
+                    <div id="list_mag" class="list-item" draggable="true" data-heure="{{ mag[4] | replace(':','') }}">
+                      <ul id="code_mag_ul" class="p-0 m-0">
+                        <li>   
+                            <div class="input-group">
+                              <input type="text"  value= "{{  mag[0]  }}" name="mag_id" class="form-control" hidden>
+                              <input type="text"  style="cursor: pointer;" id="{{ mag[0] }}" value= "{{  mag[1]  }}" name="code_mag" class="form-control w-50" data-toggle="tooltip" data-placement="top" title="{{ mag[4] }}" required>
+                              <!-- <input type="text"  value= "{{  mag[4]  }}" name="heur_liv_mag" class="form-control">---->
+                              <input type="text"  style="cursor: pointer;" value= "{{  mag[2]  }}" id="vlm_rolls" name="vlm_rolls" class="form-control" data-toggle="tooltip" data-placement="top" title="ROLLS" required>   
+                              <input type="text" style="cursor: pointer;" value= "{{  mag[3]  }}" id="vlm_pal" name="vlm_pal" class="form-control" data-toggle="tooltip" data-placement="top" title="PALETTE" required>
+                              <!--<input type="text"  value= "{{  mag[3]  }}" id="vlm_box" name="vlm_box" class="form-control"> --->
+                            </div>
+                           </span> 
+                         </li>
+                      </ul>
+                    </div>  
+                  {% endfor %}
+                  {% for mag in range(magPlus): %}
+
+                        <div id="list_mag" class="list-item" draggable="true" data-heure="{{ mag[4] | replace(':','') }}">
+                          <ul id="code_mag_ul" class="p-0 m-0">
+                            <li>   
+                                <div class="input-group">
+                                  <select id="{{ mag }}" class="custom-select form-control w-50" name="mag_id">
+                                    {% for mag in L_magains: %}
+                                      <option value="{{mag[0]}}"> {{mag[1]}} </option>
+                                      
+                                    {% endfor %}
+                                  </select>
+                                  <!--<input type="text"  style="cursor: pointer;" id="{{ mag }}" value= "" name="code_mag" class="form-control w-50" data-toggle="tooltip" data-placement="top" title="Code Magasin" required>
+                                   <input type="text"  value= "{{  mag[4]  }}" name="heur_liv_mag" class="form-control">---->
+                                  <input type="text"  style="cursor: pointer;"  id="vlm_rolls" name="vlm_rolls" class="form-control" data-toggle="tooltip" data-placement="top" title="Nombre ROLLS" required>   
+                                  <input type="text" style="cursor: pointer;"  id="vlm_pal" name="vlm_pal" class="form-control" data-toggle="tooltip" data-placement="top" title="Nombre PALETTE" required>
+                                  <!--<input type="text"  value= "{{  mag[3]  }}" id="vlm_box" name="vlm_box" class="form-control"> --->
+                                </div>
+                                <!--</span> -->
+                            </li>
+                          </ul>
+                        </div>  
+                      {% endfor %}
+                </div>
+              </div>
+            </div>
+          </div> 
+              <div class="col-9 ">
+                <form method="POST" ACTION="{{ url_for('enregistrer_tournee') }}"  >     
+                  <div class="row justify-content-around">
+                    {% set ns = namespace(found=false) %}
+                    {% set ns.cptCam=0 %}  
+                    {% for chaufCam in L_chaufCam: %}
+                      <div class="col-md-3 mb-3" id="cam_num_{{loop.index0}}">
+                        <div class="row">
+                          <div class="card ">
+                              <div id="entete_camion_{{loop.index0}}" class="card-header mb-3">
+                                <div class="row">
+                                  <!--<div class="col-md-6">-->
+                                     <!--<i class="fas fa-truck-moving text-primary"></i>-->&nbsp;&nbsp;Immat: {{ chaufCam[3] }} 
+                                  <!--</div>-->
+                                  <!--<div class="col-md-6">-->
+                                    &nbsp;&nbsp;Capacité: {{ chaufCam[4] }}
+                                  <!--</div>-->
+                                  <div class="input-group mt-2 w-100">
+                                    <select class="custom-select" name="nom_chauf">
+                                        {% for chaufLC in L_chaufComplete: %}
+                                            {% if chaufLC[2]==chaufCam[0]  %}
+                                                <option value="{{chaufLC[2]}}" selected="selected"> {{chaufLC[0]}}--{{chaufLC[1]}} </option>
+                                            {% else %}
+                                                <option value="{{chaufLC[2]}}"> {{chaufLC[0]}}--{{chaufLC[1]}} </option>
+                                            {% endif %}    
+                                        {% endfor %}
+                                    </select>
+                                  </div>
+                                </div>
+                              </div>
+                            <div class="card-body">
+                              <input  name="camion" value="{{ chaufCam[1] }}" type="text" hidden>  
+                              <input id="capMax_{{loop.index0}}" value="{{ chaufCam[4] }}" type="text" hidden>
+                              <input id="nbre_mag_cam_{{loop.index0}}" name="Tnbre_mag_cam" type="text" hidden>
+                              <div id="box_mag" class="list">
+                                {% for mag in L_magasin[ns.cptCam]: %}
+                                    <div id="list_mag" class="list-item" draggable="true" data-heure="{{ mag[4] | replace(':','') }}">
+                                        <ul id="code_mag_ul" class="p-0 m-0">
+                                          <li>   
+                                              <div class="input-group">
+                                                  <input type="text"  value= "{{  mag[0]  }}" name="mag_id" class="form-control" hidden>
+                                                  <input type="text"  style="cursor: pointer;" id="{{ mag[0] }}" value= "{{  mag[1]  }}" name="code_mag" class="form-control w-50" data-toggle="tooltip" data-placement="top" title="{{ mag[4] }}" required>
+                                                  <!-- <input type="text"  value= "{{  mag[4]  }}" name="heur_liv_mag" class="form-control">---->
+                                                  <input type="text"  style="cursor: pointer;" value= "{{  mag[2]  }}" id="vlm_rolls" name="vlm_rolls" class="form-control" data-toggle="tooltip" data-placement="top" title="ROLLS" required>   
+                                                  <input type="text" style="cursor: pointer;" value= "{{  mag[3]  }}" id="vlm_pal" name="vlm_pal" class="form-control" data-toggle="tooltip" data-placement="top" title="PALETTE" required>
+                                                  <!--<input type="text"  value= "{{  mag[3]  }}" id="vlm_box" name="vlm_box" class="form-control"> --->
+                                              </div>
+                                              
+                                          </li>
+                                        </ul>
+                                    </div> 
+                                {% endfor %}
+                                {% set ns.cptCam= ns.cptCam+1 %}
+                              </div>
+                            </div>
+                            <div class="card-footer text-muted">
+                                <div class="input-group">
+                                  <div class="input-group-prepend">
+                                    <span class="input-group-text">Total</span>
+                                  </div>
+                                    <input type="text" id="nbr_tot_rol_{{loop.index0}}" class="form-control" value="0"  data-toggle="tooltip" data-placement="top" title="ROLLS">
+                                    <input type="text" id="nbr_tot_pal_{{loop.index0}}" class="form-control" value="0"  data-toggle="tooltip" data-placement="top" title="PALETTE">
+                                    <!--<input type="text" id="nbr_tot_box_{{loop.index0}}" class="form-control" value="0" placeholder="Box">--->
+                                    <input type="text" id="pourcRempl_{{loop.index0}}" class="form-control" data-toggle="tooltip" data-placement="top" title="Taux de remplissage" placeholder="%Remplissage">
+                                </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    {%endfor%}
+                  </div>  
+                  <div class="row justify-content-around">
+                       
+                    {% for cpt in range(camionPlus): %}
+                      <div class="col-md-3 mb-3" id="cam_ajout_{{loop.index0}}">
+                        <div class="row">
+                          <div class="card border-primary mb-3" >
+                              <div id="entete_camionAjt_{{loop.index0}}"  class="card-header" >
+                                <div class="row">
+                                  <div class="input-group mt-2 w-100">
+                                    <select class="custom-select" name="cam_mat_ajout">
+                                      {% set ns = namespace(found=false) %}
+                                      {% set ns.cap=0 %}
+                                      {% for camion in list_camion_mat: %}
+                                        <option value="{{camion[3]}}"> {{camion[0]}}--{{camion[2]}} </option>
+                                        {% set ns.cap=camion[2]%}
+                                      {% endfor %}
+                                    </select>
+                                    <input  id="cap_cam_ajt_{{loop.index0}}" name="cap_cam_ajt" value="{{ ns.cap }}" type="text"  hidden> 
+                                  </div>
+                                  <div class="input-group mt-2 w-100">
+                                    <select class="custom-select" name="nom_chauf_ajout">
+                                      {% for chauf in L_chaufComplete: %}
+                                        <option value="{{chauf[2]}}"> {{chauf[0]}}--{{chauf[1]}} </option>
+                                        
+                                      {% endfor %}
+                                    </select>
+                                  </div>
+                                </div>
+                              </div>
+                            <div class="card-body">
+                              <input id="nbre_mag_camPlus_{{loop.index0}}" name="Tnbre_mag_cam" type="text" hidden>
+                              <div class="list"></div>
+                            </div>
+                            <div class="card-footer text-muted">
+                                <div class="input-group">
+                                  <div class="input-group-prepend">
+                                    <span class="input-group-text">Total</span>
+                                  </div>
+                                    <input type="text" id="tot_rol_mag_ajout_{{loop.index0}}" class="form-control" value="0"  data-toggle="tooltip" data-placement="top" title="ROLLS">
+                                    <input type="text" id="tot_pal_mag_ajout_{{loop.index0}}" class="form-control" value="0"  data-toggle="tooltip" data-placement="top" title="PALETTE">
+                                    <!--<input type="text" id="nbr_tot_box_{{loop.index0}}" class="form-control" value="0" placeholder="Box">--->
+                                    <input type="text" id="mag_ajout_pourcRempl_{{loop.index0}}" class="form-control" data-toggle="tooltip" data-placement="top" title="Taux de remplissage" placeholder="%Remplissage">
+                                </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    {%endfor%}
+                    <input  name="date_fin" value="{{date_tour}}" type="text" hidden>
+                    <input  name="date_debut" value="{{date_tour}}" type="text" hidden>
+                    <button type="submit" class="btn btn-info btn-block">Valider les modifications des tournées</button>
+                  </div> 
+                </form>
+              </div>
+             </div>
+        </div>
+    </div>
+                
+
+    <script>
+
+      //function TriMagHor(){
+      //$('div[id^="cam_ajout_"]').each(function(i,e) {
+      //var camActifID = e.id.split('_').pop()
+      //var magHor = $("#"+e.target.id+" #list_mag");
+      //$("#cam_ajout_"+camActifID+" #list_mag").each(function(){
+      //magHor.sort(function(a, b){ 
+      //return $(a).data("heure")-$(b).data("heure")});
+      //$(e.target).html(magHor);
+          
+       
+        //var magHor = $("#"+e.target.id+" #list_mag");
+            //magHor.sort(function(a, b){ 
+            //return $(a).data("heure")-$(b).data("heure")});
+            //$(e.target).html(magHor);
+      //});
+     //});
+    //}
+
+      function TotRolCamAjout(){
+        $('div[id^="cam_ajout_"]').each(function(i,e) {
+          var camActifID = e.id.split('_').pop()
+          var sum=0;
+          $("#cam_ajout_"+camActifID+" #vlm_rolls").each(function(){
+            if(!isNaN(parseFloat(this.value))){
+              sum=sum+(parseFloat(this.value,10));
+            }
+          });
+        $('#tot_rol_mag_ajout_'+camActifID).val(sum)
+        });
+      }
+      function TotPalCamAjout(){
+        $('div[id^="cam_ajout_"]').each(function(i,e) {
+          var camActifID = e.id.split('_').pop()
+          var sum=0;
+          $("#cam_ajout_"+camActifID+" #vlm_pal").each(function(){
+            if(!isNaN(parseFloat(this.value))){
+              sum=sum+(parseFloat(this.value,10));
+            }
+          });
+        $('#tot_pal_mag_ajout_'+camActifID).val(sum)
+        });
+      }
+
+      function pourcentageCamAjt(){
+        $('div[id^="cam_ajout_"]').each(function(i,e) {
+          var camActifID = e.id.split('_').pop()
+          var cap_cam=parseFloat($('#cap_cam_ajt_'+camActifID).val(),10)
+          var nbr_rol=parseFloat($('#tot_rol_mag_ajout_'+camActifID).val(), 10)
+          var nbr_pal=parseFloat($('#tot_pal_mag_ajout_'+camActifID).val(), 10)
+          
+          var totalPourc=Math.round(((nbr_pal*1.6+nbr_rol)*100)/cap_cam)
+          
+          //console.log("total: "+totalPourc)
+          $('#mag_ajout_pourcRempl_'+camActifID).val(totalPourc+"%")
+          if (parseInt(totalPourc)>100){
+            
+            if (!$("#entete_camionAjt_"+camActifID).hasClass("bg-danger")){
+              
+              $("#entete_camionAjt_"+camActifID).addClass("bg-danger");
+            }
+          }
+          else{
+            if ($("#entete_camionAjt_"+camActifID).hasClass("bg-danger")){
+              $("#entete_camionAjt_"+camActifID).removeClass("bg-danger");
+            } 
+          }
+    
+        });
+      }
+
+      function pourcentage(){
+        $('div[id^="cam_num_"]').each(function(i,e) {
+          var camActifID = e.id.split('_').pop()
+          var cap_cam=parseFloat($('#capMax_'+camActifID).val(),10)
+          var nbr_rol=parseFloat($('#nbr_tot_rol_'+camActifID).val(), 10)
+          var nbr_pal=parseFloat($('#nbr_tot_pal_'+camActifID).val(), 10)
+          
+          var totalPourc=Math.round(((nbr_pal*1.6+nbr_rol)*100)/cap_cam)
+          //console.log("total: "+totalPourc)
+          $('#pourcRempl_'+camActifID).val(totalPourc+"%")
+          if (parseInt(totalPourc)>100){
+            
+            if (!$("#entete_camion_"+camActifID).hasClass("bg-danger")){
+              
+              $("#entete_camion_"+camActifID).addClass("bg-danger");
+            }
+          }
+          else{
+            if ($("#entete_camion_"+camActifID).hasClass("bg-danger")){
+              $("#entete_camion_"+camActifID).removeClass("bg-danger");
+            } 
+          }
+
+    
+        });
+      }
+
+      function TotRol(){
+        $('div[id^="cam_num_"]').each(function(i,e) {
+          var camActifID = e.id.split('_').pop()
+          var sum=0;
+          $("#cam_num_"+camActifID+" #vlm_rolls").each(function(){
+            if(!isNaN(parseFloat(this.value))){
+              sum=sum+(parseFloat(this.value,10));
+            }
+          });
+        $('#nbr_tot_rol_'+camActifID).val(sum)
+        });
+      }
+      function TotPal(){
+        $('div[id^="cam_num_"]').each(function(i,e) {
+          var camActifID = e.id.split('_').pop()
+          var sum=0;
+          $("#cam_num_"+camActifID+" #vlm_pal").each(function(){
+            if(!isNaN(parseFloat(this.value))){
+              sum=sum+(parseFloat(this.value,10));
+            }
+          });
+        $('#nbr_tot_pal_'+camActifID).val(sum)
+        });
+      }
+      
+
+      
+      //$('select[id^=cam_mat_ajout_]').change(function(){
+        //           if ($(this).is(":selected"))
+          //              {
+            //        alert ("hiiiiiiiiiiiiiiiiiiiii");
+              //          } 
+                //    else 
+                  //      {
+                    //        alert ("bye");
+                      //  }
+                //})
+
+      function compterEnseignesCamion(){
+        $('div[id^="cam_num_"]').each(function(i,e) {
+          var camActifID = e.id.split('_').pop()
+          var NbMag = $("#cam_num_"+camActifID+" #code_mag_ul").length
+          $('#nbre_mag_cam_'+camActifID).val(NbMag)
+        });
+      }
+      function compterEnseignesCamionPlus(){
+        $('div[id^="cam_ajout_"]').each(function(i,e) {
+          var camActifID = e.id.split('_').pop()
+          var NbMag = $("#cam_ajout_"+camActifID+" #code_mag_ul").length
+          $('#nbre_mag_camPlus_'+camActifID).val(NbMag)
+        });
+      }
+
+      const list_items = document.querySelectorAll('.list-item');
+      var draggedItem = null;
+
+      for (let i = 0; i < list_items.length; i++) {
+        const item = list_items[i];
+
+        item.addEventListener('dragstart', function () {
+          draggedItem = item;
+          setTimeout(function () {
+            item.style.display = 'none';
+          }, 0)
+        });
+
+        item.addEventListener('dragend', function () {
+          setTimeout(function () {
+            draggedItem.style.display = 'block';
+            draggedItem = null;
+          }, 0);
+        })
+
+      }
+
+      const lists = document.querySelectorAll('.list');
+
+      for (let j = 0; j < lists.length; j ++) {
+        const list = lists[j];
+
+        list.addEventListener('dragover', function (e) {
+          e.preventDefault();
+        });
+        
+        list.addEventListener('dragenter', function (e) {
+          e.preventDefault();
+          this.style.backgroundColor = 'rgba(0, 0, 0, 0.2)';
+        });
+
+        list.addEventListener('dragleave', function (e) {
+          this.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+        });
+
+        list.addEventListener('drop', function (e) {
+          this.append(draggedItem);
+          this.style.backgroundColor = 'rgba(0, 0, 0, 0.1)';
+
+          compterEnseignesCamion();
+          compterEnseignesCamionPlus()
+          TotRol();
+          TotRolCamAjout()
+          TotPalCamAjout()
+          pourcentageCamAjt()
+          TotPal();
+          pourcentage();
+
+          var magHor = $(this).find("#list_mag");
+          magHor.sort(function(a, b){ 
+          return $(a).data("heure")-$(b).data("heure")});
+          $(this).html(magHor);
+        });
+
+        
+      }
+      
+
+      $(document).on('change keyup','#code_mag_ul input',function(e){
+        compterEnseignesCamion();
+        compterEnseignesCamionPlus()
+        TotRol();
+        TotRolCamAjout()
+        TotPalCamAjout()
+        pourcentageCamAjt()
+        TotPal();
+        pourcentage();
+      })
+    </script>
+{% endblock %}    

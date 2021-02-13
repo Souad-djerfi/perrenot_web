@@ -8,18 +8,20 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
     {% if test==1%}
     <div class="row">
-        <div class="col-3"></div>
-        <form ACTION="{{ url_for('facturation_journaliere') }}" method='post' >
-            <button type="submit"  class="btn btn-lg btn-danger" data-bs-toggle="popover" title="facturation distribution" data-bs-content="And here's some amazing content. It's very engaging. Right?">Imprimer Facturation Détaillée</button>
-            <input type="text" class="form-control" id="inputEmail3"  name="date_tour" value="{{date_tour}}" hidden >
-        </form>
-        <div class="col-1"></div>
-        <form ACTION="{{ url_for('feuille_route') }}" method='post' >
-             <button type="submit"  class="btn btn-lg btn-danger" data-bs-toggle="popover" title="Feuille de route" data-bs-content="And here's some amazing content. It's very engaging. Right?">Imprimer Feuille de Route</button>
-          
-            <input type="text" class="form-control" id="inputEmail3"  name="date_tour" value="{{date_tour}}" hidden >
-        </form>
-          
+        <div class="col-12">
+            <div class="input-group mb-3">
+                <form ACTION="{{ url_for('facturation_journaliere') }}" method='post' >
+                    <button type="submit"  class="btn btn-lg btn-danger" data-bs-toggle="popover" title="facturation distribution" data-bs-content="And here's some amazing content. It's very engaging. Right?">Imprimer Facturation Détaillée</button>
+                    <input type="text" class="form-control" id="inputEmail3"  name="date_tour" value="{{date_tour}}" hidden >
+                </form>
+                
+                <form ACTION="{{ url_for('feuille_route') }}" method='post' >
+                    <button type="submit"  class="btn btn-lg btn-danger" data-bs-toggle="popover" title="Feuille de route" data-bs-content="And here's some amazing content. It's very engaging. Right?">Imprimer Feuille de Route</button>
+                
+                    <input type="text" class="form-control" id="inputEmail3"  name="date_tour" value="{{date_tour}}" hidden >
+                </form>
+            </div>  
+        </div>    
     </div>   
     <div class="row">
     
