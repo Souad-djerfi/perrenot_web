@@ -13,7 +13,7 @@
         {% include 'layouts/shared/_menu-chauf.html'%}
       </div>
       <div class="col-md-10">
-        <div id="loginbox" class="mainbox col-md-10 col-md-offset-3 col-sm-6 col-sm-offset-3"> 
+        <div id="loginbox" class="mainbox col-md-12 col-md-offset-3 col-sm-6 col-sm-offset-3"> 
           <div class="card">
             
             <h5 class="card-header card text-center d-inline"> <i class="fas fa-user-edit"></i> Modification/Suppression Chauffeur: </h5>
@@ -35,12 +35,13 @@
                       <thead>
                         <tr>
                           <th scope="col">#</th>
-                          <th scope="col" style="width:18%;">Nom</th>
-                          <th scope="col" style="width:20%;">Prénom</th>
-                          <th scope="col" style="width:15%;">Cout horaire</th>
-                          <th scope="col" style="width:15%;">Panier matin</th>
-                          <th scope="col" style="width:15%;">Panier midi</th>
-                          <th scope="col" style="width:15%;">Panier soir</th>
+                          <th scope="col" style="width:16%;">Nom</th>
+                          <th scope="col" style="width:16%;">Prénom</th>
+                          <th scope="col" style="width:14%;">Groupe</th>
+                          <th scope="col" style="width:14%;">Cout horaire</th>
+                          <th scope="col" style="width:14%;">Panier matin</th>
+                          <th scope="col" style="width:14%;">Panier midi</th>
+                          <th scope="col" style="width:14%;">Panier soir</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -54,6 +55,8 @@
                             <td id="table_chauf_id" hidden>{{chauf[6]}}</td>
                             <td id="table_nom">{{chauf[0]}}</td>
                             <td id="table_prenom">{{chauf[1]}}</td>
+                            <td id="table_groupe_id" hidden>{{chauf[7]}}</td>
+                            <td id="table_groupe">{{chauf[8]}}</td>
                             <td id="table_horaire">{{chauf[2]}}</td>
                             <td id="table_panier_matin">{{chauf[3]}}</td>
                             <td id="table_panier_midi">{{chauf[4]}}</td>
@@ -117,6 +120,13 @@
             <input type="text" class="form-control" id="edit_nom" name="nom" >
             <label for="prenom" class="col-form-label">Prenom:</label>
             <input type="text" class="form-control" id="edit_prenom" name="prenom">
+            <label for="statut" class="col-form-label">Groupe:</label>
+              <!--<input type="text" class="form-control" id="edit_statut" name= "statut">-->
+              <select name="modal_liste_groupe" class="custom-select" required>
+                  {% for grp in liste_groupe %}
+                      <option id="edit_groupe" value="{{ grp[0] }}" >  {{ grp[1] }} </option>
+                  {% endfor %}
+              </select>
             <label for="horaire" class="col-form-label">Coût Horaire:</label>
             <input type="text" class="form-control" id="edit_horaire" name="horaire">
             <label for="horaire" class="col-form-label">Panier Matin:</label>
@@ -146,6 +156,7 @@
     $('#edit_chauf_id').val(row_selected.children("#table_chauf_id").text())
     $('#edit_nom').val(row_selected.children("#table_nom").text())
     $('#edit_prenom').val(row_selected.children("#table_prenom").text())
+    $('select[name="modal_liste_groupe"]').val(row_selected.children("#table_groupe_id").text()).attr("selected", "selected")
     $('#edit_horaire').val(row_selected.children("#table_horaire").text())
     $('#edit_panier1').val(row_selected.children("#table_panier_matin").text())
     $('#edit_panier2').val(row_selected.children("#table_panier_midi").text())

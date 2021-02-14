@@ -18,6 +18,7 @@
                     <div class="card-body">
                         <div class="border border_secondary rounded-sm">
                             <form ACTION="{{ url_for('ajouter_chauf') }}" name="ajout_util" id="form" class="form-horizontal " enctype="multipart/form-data" method="POST" >
+                                
                                 <div class="form-group row">
                                     <div class="col-sm-1">
                                     </div>  
@@ -41,6 +42,21 @@
                                 <div class="form-group row">
                                     <div class="col-sm-1">
                                     </div>  
+                                    <label  class="col-sm-4 col-form-label"><strong>Groupe:</strong></label>
+                                    <div class="col-sm-6">
+                                        <select name="liste_groupe" class="custom-select" required>
+                                            <option value="" disabled selected>  Choisissez un groupe</option>
+                                            {% for grp in liste_groupe %}
+                                                <option value="{{ grp[0] }}" >  {{ grp[1] }} </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-1">
+                                    </div>  
+                                </div> 
+                                <div class="form-group row">
+                                    <div class="col-sm-1">
+                                    </div>  
                                     <label  class="col-sm-4 col-form-label"><strong>Type Contrat:</strong></label>
                                     <div class="col-sm-6">
                                         <select name="liste_contrat" class="custom-select" required>
@@ -52,7 +68,8 @@
                                     </div>
                                     <div class="col-sm-1">
                                     </div>  
-                                </div>    
+                                </div>   
+                                  
                                 <div class="form-group row">
                                     <div class="col-sm-1">
                                     </div>  

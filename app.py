@@ -153,6 +153,10 @@ def feuille_route():
         flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
         return redirect(url_for('home'))
     date=request.form['date_tour']  
+    date_test=con.execute(text("select date from camion_magasin where date=:date"),{'date':date}).fetchall()
+    if len(date_test)==0:
+        flash("Pas de tournées enregistrées à cette date",'danger')
+        return redirect(url_for('identification'))
     L_chauf_cam=con.execute(text("select chauffeur_camion.chauf_id, chauf_nom, chauf_prenom, ligne ,chauffeur_camion.camion_id, camion_mat  from chauffeur join chauffeur_camion on chauffeur_camion.chauf_id=chauffeur.chauf_id and chauffeur_camion.date =:date join camion on camion.camion_id=chauffeur_camion.camion_id group by chauffeur_camion.chauf_id,chauffeur_camion.camion_id,chauffeur_camion.ligne"),{'date':date}).fetchall()
     path_wkhtmltopdf = r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe'
     config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
@@ -897,15 +901,24 @@ def ajouter_chauf():
         flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
         return redirect(url_for('home'))
     liste_contrat=con.execute(text("select contrat_id, contrat_intitule from contrat")).fetchall()
-    data={ 'liste_contrat':liste_contrat}
+    liste_groupe=con.execute(text("select groupe_id, intitulé_groupe from groupe")).fetchall()
+    data={ 'liste_contrat':liste_contrat,
+            'liste_groupe':liste_groupe}
     if request.method=='POST':
         nom=request.form['nom']
         prenom=request.form['prenom']
+        groupe=request.form.getlist('liste_groupe')
+        contrat=request.form.getlist('liste_contrat')
+        date_debut_contrat=request.form['date_D']
+        date_fin_contrat=request.form['date_fin']
         cout=request.form['horaire']
         panier1=request.form['panier1']
         panier2=request.form['panier2']
         panier3=request.form['panier3']
-        #con.execute(text(insert into chauffeur ))
+        con.execute(text("insert into chauffeur (chauf_nom,chauf_prenom,groupe_id, chauf_cout_horaire,chauff_panier1,chauff_panier2,chauff_panier3) values (:nom,:prenom,:groupe,:cout,:panier1,:panier2,:panier3)"),{'nom':nom,'prenom':prenom,'groupe':groupe,'contrat':contrat,'date_D':date_debut_contrat,'date_fin':date_fin_contrat,'cout':cout,'panier1':panier1,'panier2':panier2,'panier3':panier3})
+        chauf_id=con.execute(text("select max(chauf_id ) from chauffeur where chauf_nom=:nom and chauf_prenom=:prenom and groupe_id=:groupe"),{'nom':nom, 'prenom':prenom,'groupe':groupe}).fetchone()
+        con.execute(text("insert into chauffeur_contrat (contrat_id,chauf_id, date_debut, date_fin) values (:contrat,:chauf_id,:date_D, :date_fin)"),{"contrat":contrat,'chauf_id':chauf_id[0],'date_D':date_debut_contrat,'date_fin':date_fin_contrat})
+        flash("Le chauffeur a été bien ajouté!",'success')
     return render_template('pages/ajouter_chauf.html',**data)
 
     #***************************************************************************************************************************Ajouter Contrat à un chauffeur**********************************************************
@@ -1171,18 +1184,20 @@ def modifier_chauffeur():
     rech_chauf=''
     chauf_select=''
     chauf_info=[ '' for i in range(9)]
-    liste_chauf= con.execute(text("select chauf_nom, chauf_prenom, chauf_cout_horaire, chauff_panier1, chauff_panier2, chauff_panier3, chauf_id  from chauffeur  where chauf_actif=1")).fetchall()
+    liste_groupe=con.execute(text("select groupe_id, intitulé_groupe from groupe")).fetchall()
+    liste_chauf= con.execute(text("select chauf_nom, chauf_prenom, chauf_cout_horaire, chauff_panier1, chauff_panier2, chauff_panier3, chauf_id, chauffeur.groupe_id,intitulé_groupe from chauffeur  join groupe on groupe.groupe_id=chauffeur.groupe_id and chauf_actif=1")).fetchall()
     data={ 'liste_chauf': liste_chauf,
             'rech_chauf':rech_chauf, 
             'chauf_info':chauf_info,
-            'test':'bonjour'
+            'test':'bonjour',
+            'liste_groupe':liste_groupe
          }
        
     if request.method=='POST':
         # Si l utilisateur a tapé un nom dans la bare de recherche:
         if request.form['rech_chauf']:
             rech_chauf=request.form['rech_chauf']
-            liste_chauf_rech=con.execute(text("select chauf_nom, chauf_prenom, chauf_cout_horaire, chauff_panier1, chauff_panier2, chauff_panier3, chauf_id   from chauffeur  where  (chauf_nom LIKE :chauf or chauf_prenom LIKE :chauf)  and chauf_actif=1 "), {'chauf': rech_chauf +'%'}).fetchall()
+            liste_chauf_rech=con.execute(text("select chauf_nom, chauf_prenom, chauf_cout_horaire, chauff_panier1, chauff_panier2, chauff_panier3, chauf_id, chauffeur.groupe_id,intitulé_groupe   from chauffeur  join groupe on groupe.groupe_id=chauffeur.groupe_id  where  (chauf_nom LIKE :chauf or chauf_prenom LIKE :chauf)  and chauf_actif=1 "), {'chauf': rech_chauf +'%'}).fetchall()
             if liste_chauf_rech:
                 data['liste_chauf']=liste_chauf_rech
             else:
@@ -1193,7 +1208,7 @@ def modifier_chauffeur():
             
         if request.form['chauf_select']!='':
             chauf_select=request.form['chauf_select']
-            chauf_info=con.execute(text("select chauf_nom, chauf_prenom, chauf_cout_horaire, chauff_panier1, chauff_panier2, chauff_panier3, chauf_id from chauffeur  where chauf_id=:chauf_select and  chauf_actif=1"), {'chauf_select':chauf_select}).fetchone()
+            chauf_info=con.execute(text("select chauf_nom, chauf_prenom, chauf_cout_horaire, chauff_panier1, chauff_panier2, chauff_panier3, chauf_id, chauffeur.groupe_id,intitulé_groupe from chauffeur join groupe on groupe.groupe_id=chauffeur.groupe_id where chauf_id=:chauf_select and  chauf_actif=1"), {'chauf_select':chauf_select}).fetchone()
             data['chauf_info']=chauf_info
             #return render_template('pages/modifier_chauf.html', **data)
         
@@ -1208,7 +1223,14 @@ def chauffeur_modifie():
     chauf_id=request.form['chauf_id']
     nom=request.form['nom'] 
     prenom=request.form['prenom']
-    return render_template('pages/modifier_chauf.html')   
+    groupe=request.form.getlist('modal_liste_groupe')
+    horaire=request.form['horaire']
+    panier1=request.form['panier1']
+    panier2=request.form['panier2']
+    panier3=request.form['panier3']
+    con.execute(text("update chauffeur set chauf_nom=:nom, chauf_prenom=:prenom, groupe_id=:groupe, chauf_cout_horaire=:horaire,chauff_panier1=:panier1,chauff_panier2=:panier2, chauff_panier3=:panier3 where chauf_id=:chauf_id"),{'nom':nom,'prenom':prenom,'groupe':groupe[0],'horaire':horaire,'panier1':panier1,'panier2':panier2,'panier3':panier3,'chauf_id':chauf_id})
+    flash("Les modifications ont bien été prise en compte!",'success')
+    return redirect(url_for('modifier_chauffeur'))   
     
 #***********************************************************************************************************************Ajouter un utilisateur*********************************************************************
 
@@ -1643,7 +1665,10 @@ def modifier_tournees():
 @app.route('/facturation_journalière', methods=['get','post']) 
 def facturation_journaliere():
     date_tour=request.form['date_tour']
-    
+    date_test=con.execute(text("select date from camion_magasin where date=:date_tour"),{'date_tour':date_tour}).fetchall()
+    if len(date_test)==0:
+        flash("Pas de tournées enregistrées à cette date!",'danger')
+        return redirect(url_for('identification'))    
     #requeteLivraison = pd.read_sql_query('SELECT m.magasin_code, magasin_tarif_rolls, nbre_rolls, magasin_tarif_palette, nbre_palette, magasin_tarif_boxe, nbre_box FROM camion_magasin cm join camion on camion.camion_id=cm.camion_id and camion.camion_type<>"VL" join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where e.enseigne_intitulé ="CASINO" AND date ="%s" ;'%(date_tour), engine)
     requeteLivraison = con.execute(text('SELECT m.magasin_code, magasin_tarif_rolls, nbre_rolls, magasin_tarif_palette, nbre_palette, magasin_tarif_boxe, nbre_box FROM camion_magasin cm join camion on camion.camion_id=cm.camion_id and camion.camion_type<>"VL" join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where e.enseigne_intitulé ="CASINO" AND date =:date_tour'),{'date_tour':date_tour}).fetchall()
     L_tarif=con.execute(text("select distinct magasin_tarif_rolls, magasin_tarif_palette from magasin join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne_intitulé='CASINO'  join camion_magasin on camion_magasin.magasin_id=magasin.magasin_id and date=:date_tour join camion on camion.camion_id=camion_magasin.camion_id and camion_type<>'VL' "),{'date_tour':date_tour}).fetchall()
