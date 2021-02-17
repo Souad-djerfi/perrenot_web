@@ -38,10 +38,12 @@
                           <th scope="col" style="width:16%;">Nom</th>
                           <th scope="col" style="width:16%;">Prénom</th>
                           <th scope="col" style="width:14%;">Groupe</th>
-                          <th scope="col" style="width:14%;">Cout horaire</th>
+                          <th scope="col" style="width:12%;">S.RC</th>
+                          <th scope="col" style="width:12%;">S.CP</th>
+                          <th scope="col" style="width:12%;">C.horaire</th>
                           <th scope="col" style="width:14%;">Panier matin</th>
-                          <th scope="col" style="width:14%;">Panier midi</th>
-                          <th scope="col" style="width:14%;">Panier soir</th>
+                          <th scope="col" style="width:14%;">P.midi</th>
+                          <th scope="col" style="width:14%;">P.soir</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -57,6 +59,8 @@
                             <td id="table_prenom">{{chauf[1]}}</td>
                             <td id="table_groupe_id" hidden>{{chauf[7]}}</td>
                             <td id="table_groupe">{{chauf[8]}}</td>
+                            <td id="table_RC">{{chauf[9]}}</td>
+                            <td id="table_CP">{{chauf[10]}}</td>
                             <td id="table_horaire">{{chauf[2]}}</td>
                             <td id="table_panier_matin">{{chauf[3]}}</td>
                             <td id="table_panier_midi">{{chauf[4]}}</td>
@@ -116,25 +120,66 @@
         <div class="modal-body">
           <div class="form-group">
             <input type="text" class="form-control" id="edit_chauf_id" name="chauf_id" hidden>
-            <label for="nom" class="col-form-label">Nom:</label>
-            <input type="text" class="form-control" id="edit_nom" name="nom" >
-            <label for="prenom" class="col-form-label">Prenom:</label>
-            <input type="text" class="form-control" id="edit_prenom" name="prenom">
-            <label for="statut" class="col-form-label">Groupe:</label>
+            <div class="form-group row">
+              <label for="nom" class="col-sm-4 col-form-label"><strong>Nom:</strong></label>
+              <div class="col-sm-8">  
+                <input type="text" class="form-control" id="edit_nom" name="nom" >
+              </div>  
+            </div>  
+            <div class="form-group row">
+              <label for="prenom" class="col-sm-4 col-form-label"><strong>Prenom:</strong></label>
+              <div class="col-sm-8">
+                <input type="text" class="form-control" id="edit_prenom" name="prenom">
+              </div>  
+            </div>  
+            <div class="form-group row">
+            <label for="statut" class="col-sm-4 col-form-label"><strong>Groupe:</strong></label>
               <!--<input type="text" class="form-control" id="edit_statut" name= "statut">-->
+              <div class="col-sm-8">
               <select name="modal_liste_groupe" class="custom-select" required>
                   {% for grp in liste_groupe %}
                       <option id="edit_groupe" value="{{ grp[0] }}" >  {{ grp[1] }} </option>
                   {% endfor %}
               </select>
-            <label for="horaire" class="col-form-label">Coût Horaire:</label>
-            <input type="text" class="form-control" id="edit_horaire" name="horaire">
-            <label for="horaire" class="col-form-label">Panier Matin:</label>
-            <input type="number" class="form-control" id="edit_panier1" name="panier1">
-            <label for="horaire" class="col-form-label">Panier Midi:</label>
-            <input type="number" class="form-control" id="edit_panier2" name= "panier2">
-            <label for="panier3" class="col-form-label">Panier Soir:</label>
-            <input type="number" class="form-control" id="edit_panier3" name= "panier3">
+            </div>
+            </div>  
+            <div class="form-group row">
+              <label for="edit_RC" class="col-sm-4 col-form-label"><strong>Solde_RC:</strong></label>
+              <div class="col-sm-8">
+                <input type="text" class="form-control" id="edit_RC" name="RC"> 
+              </div>
+            </div> 
+            <div class="form-group row">
+            <label for="edit_CP" class="col-sm-4 col-form-label"><strong>Solde_CP:</strong></label>
+              <div class="col-sm-8">
+                <input type="text" class="form-control" id="edit_CP" name="CP">  
+              </div>  
+            </div>
+            <div class="form-group row">
+              <label for="horaire" class="col-sm-4 col-form-label"><strong>Coût Horaire:</strong></label>
+              <div class="col-sm-8">
+                <input type="text" class="form-control" id="edit_horaire" name="horaire">
+              </div>  
+            </div>
+            <div class="form-group row">
+              <label for="horaire" class="col-sm-4 col-form-label"><strong>Panier Matin:</strong></label>
+              <div class="col-sm-8">
+                <input type="number" class="form-control" id="edit_panier1" name="panier1">
+              </div>  
+            </div>
+
+            <div class="form-group row">
+              <label for="horaire" class="col-sm-4 col-form-label"><strong>Panier Midi:</strong></label>
+              <div class="col-sm-8">
+                <input type="number" class="form-control" id="edit_panier2" name= "panier2">
+              </div>  
+          </div>
+            <div class="form-group row">
+              <label for="panier3" class="col-sm-4 col-form-label"><strong>Panier Soir:</strong></label>
+              <div class="col-sm-8">
+                <input type="number" class="form-control" id="edit_panier3" name= "panier3">
+              </div>  
+            </div>
           </div> 
         </div>
         <div class="modal-footer">
@@ -157,6 +202,8 @@
     $('#edit_nom').val(row_selected.children("#table_nom").text())
     $('#edit_prenom').val(row_selected.children("#table_prenom").text())
     $('select[name="modal_liste_groupe"]').val(row_selected.children("#table_groupe_id").text()).attr("selected", "selected")
+    $('#edit_RC').val(row_selected.children("#table_RC").text())
+    $('#edit_CP').val(row_selected.children("#table_CP").text())
     $('#edit_horaire').val(row_selected.children("#table_horaire").text())
     $('#edit_panier1').val(row_selected.children("#table_panier_matin").text())
     $('#edit_panier2').val(row_selected.children("#table_panier_midi").text())

@@ -18,7 +18,7 @@
                     {% set ns.total_rolls=0%}
                     {% set ns.total_pal=0%}
                     <table class="table">
-                        <thead class="thead-light">
+                        <thead class="table-warning">
                             <tr>
                                 <th rowspan=2 class="align-middle">Code Magasin</th>
                                 <th>Tarif Rolls</th>
@@ -80,14 +80,12 @@
                             {% endif %}    
                         </tr>
                         {% endfor %}
-                    </tbody>
-                    <tfoot class="table-active">
-                        <tr>
+                        <tr class="table-active">
                             <td>Total</td>
                             <td>{{ ns.totale_rolls_trinome|round(2) }}</td>
                             <td>{{ ns.totale_pal_trinome|round(2) }}</td>
                         </tr>
-                    </tfoot>
+                    </tbody>
                 </table>
                 <table class="table">
                     <thead class="thead-light">
