@@ -20,6 +20,7 @@ from pandas.tseries.holiday import USFederalHolidayCalendar
 from pandas.tseries.offsets import CustomBusinessDay
 import numpy as np
 import calendar
+from datetime import *
 
 #Définition de la variable d'Application Flask
 app = Flask(__name__)
@@ -36,6 +37,21 @@ def nbreJourSemaine(date1,date2):
     us_bd = CustomBusinessDay(calendar=USFederalHolidayCalendar())
     return len(pd.bdate_range(start=date1,end=date2))
 
+#Fonction qui calcule nombre de jour ouvrable entre deux dates 
+def jourOuvrable(date1,date2) :
+    datedif=con.execute(text("select datediff(:date2,:date1)"),{'date1':date1,'date2':date2})  .fetchone()
+    datediff=datedif[0]+1
+    tmp=date1
+    tmp=datetime.strptime(tmp,"%Y-%m-%d")
+    date2=datetime.strptime(date2,"%Y-%m-%d")
+    while tmp<date2:
+        MJ=con.execute(text("select month(:tmp),day(:tmp)"),{'tmp':tmp}).fetchone()
+        if tmp.weekday()==6:
+            datediff=datediff-1
+        elif str(MJ[0])+'-'+str(MJ[1]) in ("1-1","4-13","5-1","5-8","5-21","6-1","7-14","8-15","11-1","11-11","12-25"):
+            datediff=datediff-1
+        tmp =tmp+ timedelta(days=1) #on incrémente d'un jour
+    return datediff       
 #Fonction pour calculer nombre de jours ouvrables par mois de chaque date d une période; sans dimanche et jours fériés    
 def nbreJourOuvrable(L_date_trinome):
     jour_ouvrable=[]
@@ -195,9 +211,9 @@ def impression_facturation():
         L_tot_rolls=con.execute(text("select distinct magasin_tarif_rolls from magasin where enseigne_id=:casino_ens_id and magasin_tarif_rolls<>0"),{'casino_ens_id':casino_ens_id[0]}).fetchall()
         L_tot_pal=con.execute(text("select distinct magasin_tarif_palette from magasin where enseigne_id=:casino_ens_id and magasin_tarif_palette<>0"),{'casino_ens_id':casino_ens_id[0]}).fetchall()
         L_date_distribution=con.execute(text("select distinct date, DATE_FORMAT(date, '%d%-%m%-%Y') from camion_magasin where date between :date_deb and :date_fin order by date"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
-        nbre_rolls_secteur=con.execute(text("select  magasin.magasin_tarif_rolls, camion_magasin.date, sum(nbre_rolls) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id join camion on camion.camion_id= camion_magasin.camion_id and camion_type <> 'CAISSE_MOBILE' and camion_type <> 'VL' join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_intitulé='CASINO' group by magasin.magasin_tarif_rolls, date having date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
-        nbre_pal_secteur=con.execute(text("select  magasin.magasin_tarif_palette, camion_magasin.date, sum(nbre_palette) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id join camion on camion.camion_id= camion_magasin.camion_id  and camion_type <> 'CAISSE_MOBILE' and camion_type <> 'VL' join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_intitulé='CASINO' group by magasin.magasin_tarif_palette, date having date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
-        nbre_rls_pal_trinome=con.execute(text(" select  date, sum(nbre_rolls+(nbre_palette*1.6)) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id AND date between :date_deb and :date_fin join camion on camion.camion_id= camion_magasin.camion_id and camion_type ='VL' join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_intitulé='CASINO'  group by date "), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+        nbre_rolls_secteur=con.execute(text("select  magasin.magasin_tarif_rolls, camion_magasin.date, sum(nbre_rolls) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id and magasin_facturé=1 join camion on camion.camion_id= camion_magasin.camion_id and camion_type <> 'CAISSE_MOBILE' and camion_type <> 'VL' join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_intitulé='CASINO' group by magasin.magasin_tarif_rolls, date having date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+        nbre_pal_secteur=con.execute(text("select  magasin.magasin_tarif_palette, camion_magasin.date, sum(nbre_palette) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id and magasin_facturé=1 join camion on camion.camion_id= camion_magasin.camion_id  and camion_type <> 'CAISSE_MOBILE' and camion_type <> 'VL' join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_intitulé='CASINO' group by magasin.magasin_tarif_palette, date having date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+        nbre_rls_pal_trinome=con.execute(text(" select  date, sum(nbre_rolls+(nbre_palette*1.6)) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id AND date between :date_deb and :date_fin and magasin_facturé=1 join camion on camion.camion_id= camion_magasin.camion_id and camion_type ='VL' join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_intitulé='CASINO'  group by date "), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
         #cout tri emballage
         cout_triEmb=con.execute(text("select tarif from info_tarification where type_tarif='tri_emb' and enseigne_id=:casino_ens_id"),{'casino_ens_id':casino_ens_id[0]}).fetchone()   
         #cout passage à quai
@@ -1081,6 +1097,8 @@ def chauffeur_statut_modifie():
     anc_date_deb=request.form['modal_anc_date_deb']
     nv_date_deb=request.form['modal_date_debut']
     nv_date_fin=request.form['modal_date_fin']
+    nv_RC=request.form['modal_RC']
+    nv_CP=request.form['modal_CP']
     if nv_date_deb>nv_date_fin:
             flash('la date fin doit être supperieure à la date début', 'danger')
     elif anc_statut_id =="None":
@@ -1096,6 +1114,23 @@ def chauffeur_statut_modifie():
             flash('Veuillez vérifier la date début, elle est comprise dans un autre statut pour ce chauffeur', 'danger') 
         else:   
             con.execute(text("update chauffeur_statut set chauff_id=:chauf_id, statut_id=:nv_statut_id, date_debut=:nv_date_deb, date_fin=:nv_date_fin where chauff_id=:chauf_id and statut_id=:anc_statut_id and date_debut=:anc_date_deb and date_fin= :anc_date_fin"),{'chauf_id':chauf_id, 'nv_statut_id':nv_statut_id,'nv_date_deb':nv_date_deb,'nv_date_fin':nv_date_fin, 'anc_statut_id':anc_statut_id , 'anc_date_deb':anc_date_deb ,'anc_date_fin': anc_date_fin})
+            CP_id=con.execute(text("select statut_id from statut where statut_intitule='Congé Payé'")).fetchone()
+            RC_id=con.execute(text("select statut_id from statut where statut_intitule='Repos Compensé'")).fetchone()
+            if int(anc_statut_id)==int(CP_id[0]):
+                anc_soldeCP=float(nv_CP)+  jourOuvrable(anc_date_deb,anc_date_fin)
+                con.execute(text("update chauffeur set solde_CP=:anc_soldeCP where chauf_id=:chauf_id "),{'anc_soldeCP':anc_soldeCP,'chauf_id':chauf_id})         
+            elif int(anc_statut_id)==int(RC_id[0]):
+                anc_soldeRC=float(nv_RC)+jourOuvrable(anc_date_deb,anc_date_fin)
+                con.execute(text("update chauffeur set solde_RC=:anc_soldeRC where chauf_id=:chauf_id "),{'anc_soldeRC':anc_soldeRC,'chauf_id':chauf_id})         
+            if int(nv_statut_id)==int(CP_id[0]):
+                nv_CP=con.execute(text("select solde_CP from chauffeur where chauf_id=:chauf_id"),{'chauf_id':chauf_id}).fetchone()
+                nv_soldeCP=float(nv_CP[0])-jourOuvrable(nv_date_deb,nv_date_fin)
+                con.execute(text("update chauffeur set solde_CP=:nv_soldeCP where chauf_id=:chauf_id "),{'nv_soldeCP':nv_soldeCP,'chauf_id':chauf_id})         
+            elif int(nv_statut_id)==int(RC_id[0]):
+                nv_RC=con.execute(text("select solde_RC from chauffeur where chauf_id=:chauf_id"),{'chauf_id':chauf_id}).fetchone()
+                nv_soldeRC=float(nv_RC[0])-jourOuvrable(nv_date_deb,nv_date_fin)
+                con.execute(text("update chauffeur set solde_RC=:nv_soldeRC where chauf_id=:chauf_id "),{'nv_soldeRC':nv_soldeRC,'chauf_id':chauf_id})         
+          
             flash('les modifications ont été bien prises en compte', 'success')
     return redirect(url_for('edit_staut_chauf'))
      
@@ -1110,7 +1145,7 @@ def edit_staut_chauf():
     rech_chauf=''
     chauf_select=''
     chauf_info=[ '' for i in range(9)]
-    liste_chauf= con.execute(text("select chauf_nom, chauf_prenom, statut_intitule, date_debut, date_fin, chauf_id , statut.statut_id  from chauffeur  left join  chauffeur_statut on chauffeur_statut.chauff_id= chauffeur.chauf_id and (date_fin>date(now()) or date_fin is null) left join statut on statut.statut_id = chauffeur_statut.statut_id where chauf_actif=1")).fetchall()
+    liste_chauf= con.execute(text("select chauf_nom, chauf_prenom, statut_intitule, date_debut, date_fin, chauf_id , statut.statut_id, solde_RC, solde_CP  from chauffeur  left join  chauffeur_statut on chauffeur_statut.chauff_id= chauffeur.chauf_id and (date_fin>date(now()) or date_fin is null) left join statut on statut.statut_id = chauffeur_statut.statut_id where chauf_actif=1")).fetchall()
     liste_statut=con.execute(text("select statut_id, statut_intitule from statut")).fetchall()
     data={ 'liste_chauf': liste_chauf,
             'rech_chauf':rech_chauf, 
@@ -1124,7 +1159,7 @@ def edit_staut_chauf():
         
         if request.form['rech_chauf']:
             rech_chauf=request.form['rech_chauf']
-            liste_chauf_rech=con.execute(text("select chauf_nom, chauf_prenom, statut_intitule, date_debut, date_fin, chauf_id , statut.statut_id   from chauffeur left join  chauffeur_statut on chauffeur_statut.chauff_id= chauffeur.chauf_id  and (date_fin>date(now()) or date_fin is null) left join statut on statut.statut_id = chauffeur_statut.statut_id where chauf_actif=1 and (chauf_nom LIKE :chauf or chauf_prenom LIKE :chauf_pr )"), {'chauf':rech_chauf +'%', 'chauf_pr':rech_chauf +'%'}).fetchall()
+            liste_chauf_rech=con.execute(text("select chauf_nom, chauf_prenom, statut_intitule, date_debut, date_fin, chauf_id , statut.statut_id, solde_RC, solde_CP   from chauffeur left join  chauffeur_statut on chauffeur_statut.chauff_id= chauffeur.chauf_id  and (date_fin>date(now()) or date_fin is null) left join statut on statut.statut_id = chauffeur_statut.statut_id where chauf_actif=1 and (chauf_nom LIKE :chauf or chauf_prenom LIKE :chauf_pr )"), {'chauf':rech_chauf +'%', 'chauf_pr':rech_chauf +'%'}).fetchall()
             if liste_chauf_rech:
                 data['liste_chauf']=liste_chauf_rech
             else:
@@ -1134,7 +1169,7 @@ def edit_staut_chauf():
                    
         if request.form['chauf_select']!='':
             chauf_select=request.form['chauf_select']
-            chauf_info=con.execute(text("select chauf_nom, chauf_prenom, statut_intitule, date_debut, date_fin, chauf_id, statut.statut_id   from chauffeur left join  chauffeur_statut on chauffeur_statut.chauff_id= chauffeur.chauf_id and (date_fin>date(now()) or date_fin is null) left join statut on statut.statut_id = chauffeur_statut.statut_id where chauf_id=:chauf_select and chauf_actif=1 "), {'chauf_select':chauf_select}).fetchone()
+            chauf_info=con.execute(text("select chauf_nom, chauf_prenom, statut_intitule, date_debut, date_fin, chauf_id, statut.statut_id, solde_RC, solde_CP   from chauffeur left join  chauffeur_statut on chauffeur_statut.chauff_id= chauffeur.chauf_id and (date_fin>date(now()) or date_fin is null) left join statut on statut.statut_id = chauffeur_statut.statut_id where chauf_id=:chauf_select and chauf_actif=1 "), {'chauf_select':chauf_select}).fetchone()
             data['chauf_info']=chauf_info
             #return render_template('pages/edit_statut_chauf.html', **data)
        
@@ -1146,7 +1181,7 @@ def ajouter_statut_chauf():
         flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
         return redirect(url_for('home'))
     #liste chauffeurs
-    requete_chauf="select chauf_id, chauf_nom, chauf_prenom, concat(chauf_nom,'---' ,chauf_prenom) as NP from chauffeur where chauf_actif=1"
+    requete_chauf="select chauf_id, chauf_nom, chauf_prenom, concat(chauf_nom,'---' ,chauf_prenom) as NP, solde_CP, solde_RC from chauffeur where chauf_actif=1"
     liste_chauf=con.execute(text(requete_chauf)).fetchall()
     
      #liste statuts
@@ -1162,8 +1197,8 @@ def ajouter_statut_chauf():
         statut_id=request.form['liste_statut']
         date_debut=request.form['date_D']
         date_fin=request.form['date_F']
-        requete_date_fin=' select chauff_id, date_fin from chauffeur_statut where chauff_id=:chauf_id and (date_fin > :date_debut) '  
-        ver_date_fin=con.execute(text(requete_date_fin), {'chauf_id':chauf_id , 'date_debut':date_debut}).fetchall()
+        requete_date_fin=' select chauff_id, date_fin, date_debut from chauffeur_statut where chauff_id=:chauf_id and ( (:date_debut between date_debut and date_fin) or  (:date_fin between date_debut and date_fin) ) '  
+        ver_date_fin=con.execute(text(requete_date_fin), {'chauf_id':chauf_id , 'date_debut':date_debut, 'date_fin':date_fin}).fetchall()
         
         if date_debut>date_fin:
             flash('la date fin doit être supperieure à la date début', 'danger')
@@ -1171,6 +1206,15 @@ def ajouter_statut_chauf():
             flash('ce chauffeur a déjà un statut pour cette date', 'danger') 
         else:
             con.execute(text('insert into chauffeur_statut (chauff_id, statut_id, date_debut, date_fin) values (:chauf_id, :statut_id, :date_debut, :date_fin)'), {'chauf_id':chauf_id, 'statut_id':statut_id, 'date_debut': date_debut, 'date_fin': date_fin})    
+            CP_id=con.execute(text("select statut_id from statut where statut_intitule='Congé Payé'")).fetchone()
+            RC_id=con.execute(text("select statut_id from statut where statut_intitule='Repos Compensé'")).fetchone()
+            solde=con.execute(text("select solde_CP,solde_RC from chauffeur where chauf_id=:chauf_id"),{'chauf_id':chauf_id}).fetchone()
+            if int(statut_id)==int(CP_id[0]):
+                nv_CP=float(solde[0])-jourOuvrable(date_debut,date_fin)
+                con.execute(text("update chauffeur set solde_CP=:nv_soldeCP where chauf_id=:chauf_id "),{'nv_soldeCP':nv_CP,'chauf_id':chauf_id})         
+            elif int(statut_id)==int(RC_id[0]):
+                nv_RC=float(solde[1])-jourOuvrable(date_debut,date_fin)
+                con.execute(text("update chauffeur set solde_RC=:nv_soldeRC where chauf_id=:chauf_id "),{'nv_soldeRC':nv_RC,'chauf_id':chauf_id})         
             flash('ce statut a été ajouté avec succès à ce chauffeur', 'success') 
         
     return render_template('pages/ajouter_statut_chauf.jinja', **data)    
@@ -1185,7 +1229,7 @@ def modifier_chauffeur():
     chauf_select=''
     chauf_info=[ '' for i in range(9)]
     liste_groupe=con.execute(text("select groupe_id, intitulé_groupe from groupe")).fetchall()
-    liste_chauf= con.execute(text("select chauf_nom, chauf_prenom, chauf_cout_horaire, chauff_panier1, chauff_panier2, chauff_panier3, chauf_id, chauffeur.groupe_id,intitulé_groupe from chauffeur  join groupe on groupe.groupe_id=chauffeur.groupe_id and chauf_actif=1")).fetchall()
+    liste_chauf= con.execute(text("select chauf_nom, chauf_prenom, chauf_cout_horaire, chauff_panier1, chauff_panier2, chauff_panier3, chauf_id, chauffeur.groupe_id,intitulé_groupe, solde_RC,solde_CP from chauffeur  join groupe on groupe.groupe_id=chauffeur.groupe_id and chauf_actif=1")).fetchall()
     data={ 'liste_chauf': liste_chauf,
             'rech_chauf':rech_chauf, 
             'chauf_info':chauf_info,
@@ -1224,11 +1268,13 @@ def chauffeur_modifie():
     nom=request.form['nom'] 
     prenom=request.form['prenom']
     groupe=request.form.getlist('modal_liste_groupe')
+    solde_RC=request.form['RC']
+    solde_CP=request.form['CP']
     horaire=request.form['horaire']
     panier1=request.form['panier1']
     panier2=request.form['panier2']
     panier3=request.form['panier3']
-    con.execute(text("update chauffeur set chauf_nom=:nom, chauf_prenom=:prenom, groupe_id=:groupe, chauf_cout_horaire=:horaire,chauff_panier1=:panier1,chauff_panier2=:panier2, chauff_panier3=:panier3 where chauf_id=:chauf_id"),{'nom':nom,'prenom':prenom,'groupe':groupe[0],'horaire':horaire,'panier1':panier1,'panier2':panier2,'panier3':panier3,'chauf_id':chauf_id})
+    con.execute(text("update chauffeur set chauf_nom=:nom, chauf_prenom=:prenom, groupe_id=:groupe, solde_RC=:solde_RC, solde_CP=:solde_CP, chauf_cout_horaire=:horaire,chauff_panier1=:panier1,chauff_panier2=:panier2, chauff_panier3=:panier3 where chauf_id=:chauf_id"),{'nom':nom,'prenom':prenom,'groupe':groupe[0],'solde_RC':solde_RC,'solde_CP':solde_CP,'horaire':horaire,'panier1':panier1,'panier2':panier2,'panier3':panier3,'chauf_id':chauf_id})
     flash("Les modifications ont bien été prise en compte!",'success')
     return redirect(url_for('modifier_chauffeur'))   
     
@@ -1455,11 +1501,13 @@ def magasin_modifie():
     tarif_pal=request.form['tarif_pal']
     anc_code_mag=request.form['anc_code_mag']
     nv_ens_id=request.form.getlist('modal_ensNv')
+    mag_facturé=request.form.getlist('modal_mag_facturé')
+    print("mag facturééééééééééééééééééééééééééé",mag_facturé)
     test_mag_id=con.execute(text("select magasin_id from magasin where magasin_code=:mag_code and enseigne_id=:ens_id and magasin_code<>:anc_code_mag"),{'mag_code':mag_code, 'ens_id': nv_ens_id, 'anc_code_mag':anc_code_mag }).fetchone()
     if test_mag_id:
         flash('Ce code magsin existe déjà pour cette enesigne, veuillez le modifier', 'danger')
     else :
-        con.execute(text("update magasin set magasin_code=:mag_code,magasin_adresse=:adresse,magasin_heure_livr=:heure_livraison,magasin_tarif_rolls=:tarif_rolls,magasin_tarif_palette=:tarif_pal,enseigne_id=:nv_ens_id where enseigne_id=:anc_ens_id and magasin_code=:anc_code_mag"),{'mag_code':mag_code, 'adresse':adresse,'heure_livraison':heure_livraison,'tarif_rolls':tarif_rolls, 'tarif_pal':tarif_pal , 'nv_ens_id':nv_ens_id ,'anc_ens_id': anc_ens_id, 'anc_code_mag':anc_code_mag})
+        con.execute(text("update magasin set magasin_code=:mag_code,magasin_adresse=:adresse,magasin_heure_livr=:heure_livraison,magasin_tarif_rolls=:tarif_rolls,magasin_tarif_palette=:tarif_pal,enseigne_id=:nv_ens_id, magasin_facturé=:mag_factur where enseigne_id=:anc_ens_id and magasin_code=:anc_code_mag"),{'mag_code':mag_code, 'adresse':adresse,'heure_livraison':heure_livraison,'tarif_rolls':tarif_rolls, 'tarif_pal':tarif_pal , 'nv_ens_id':nv_ens_id ,'anc_ens_id': anc_ens_id, 'anc_code_mag':anc_code_mag,'mag_factur':mag_facturé})
         flash('les modifications ont été bien prises en compte', 'success')
         
     return redirect(url_for('editer_magasin'))
@@ -1474,7 +1522,7 @@ def editer_magasin():
     mag_select=''
     mag_info=[ '' for i in range(9)]
     liste_enseigne=con.execute(text("select enseigne_id, enseigne_intitulé from enseigne ")).fetchall()
-    liste_magasin= con.execute(text("select magasin_id, magasin_code, magasin_adresse, magasin_heure_livr, magasin_tarif_rolls, magasin_tarif_palette, enseigne_intitulé, magasin.enseigne_id    from magasin join enseigne on enseigne.enseigne_id=magasin.enseigne_id  where magasin_actif=1")).fetchall()
+    liste_magasin= con.execute(text("select magasin_id, magasin_code, magasin_adresse, magasin_heure_livr, magasin_tarif_rolls, magasin_tarif_palette, enseigne_intitulé, magasin.enseigne_id, magasin_facturé   from magasin join enseigne on enseigne.enseigne_id=magasin.enseigne_id  where magasin_actif=1")).fetchall()
     data={ 'liste_magasin': liste_magasin,
             'rech_mag':rech_mag, 
             'mag_info':mag_info,
@@ -1486,7 +1534,7 @@ def editer_magasin():
         # Si l utilisateur a tapé un nom dans la bare de recherche:
         if request.form['rech_mag']:
             rech_mag=request.form['rech_mag']
-            liste_mag_rech=con.execute(text("select magasin_id, magasin_code, magasin_adresse, magasin_heure_livr, magasin_tarif_rolls, magasin_tarif_palette, enseigne_intitulé, magasin.enseigne_id from magasin join enseigne on enseigne.enseigne_id=magasin.enseigne_id  where magasin_actif=1 and  (magasin_code LIKE :magC or enseigne.enseigne_intitulé LIKE :magC )  and magasin_actif=1 "), {'magC': rech_mag +'%'}).fetchall()
+            liste_mag_rech=con.execute(text("select magasin_id, magasin_code, magasin_adresse, magasin_heure_livr, magasin_tarif_rolls, magasin_tarif_palette, enseigne_intitulé, magasin.enseigne_id, magasin_facturé from magasin join enseigne on enseigne.enseigne_id=magasin.enseigne_id  where magasin_actif=1 and  (magasin_code LIKE :magC or enseigne.enseigne_intitulé LIKE :magC )  and magasin_actif=1 "), {'magC': rech_mag +'%'}).fetchall()
             if liste_mag_rech:
                 data['liste_magasin']=liste_mag_rech
             else:
@@ -1498,7 +1546,7 @@ def editer_magasin():
             
         if request.form['mag_select']!='':
             mag_select=request.form['mag_select']
-            mag_info=con.execute(text("select magasin_id, magasin_code, magasin_adresse, magasin_heure_livr, magasin_tarif_rolls, magasin_tarif_palette, enseigne_intitulé, magasin.enseigne_id  from magasin join enseigne on enseigne.enseigne_id=magasin.enseigne_id where magasin.magasin_id=:mag_select and  magasin_actif=1"), {'mag_select':mag_select}).fetchone()
+            mag_info=con.execute(text("select magasin_id, magasin_code, magasin_adresse, magasin_heure_livr, magasin_tarif_rolls, magasin_tarif_palette, enseigne_intitulé, magasin.enseigne_id, magasin_facturé  from magasin join enseigne on enseigne.enseigne_id=magasin.enseigne_id where magasin.magasin_id=:mag_select and  magasin_actif=1"), {'mag_select':mag_select}).fetchone()
             #liste_mag_rech=con.execute(text("select magasin_id, magasin_code, magasin_adresse, magasin_heure_livr, magasin_tarif_rolls, magasin_tarif_palette, enseigne_intitulé    from magasin join enseigne on enseigne.enseigne_id=magasin.enseigne_id  where magasin_actif=1 and  (magasin_code LIKE :magC )  and magasin_actif=1 "), {'magC': rech_mag +'%'}).fetchall()
            
             data['mag_info']=mag_info
@@ -1670,10 +1718,10 @@ def facturation_journaliere():
         flash("Pas de tournées enregistrées à cette date!",'danger')
         return redirect(url_for('identification'))    
     #requeteLivraison = pd.read_sql_query('SELECT m.magasin_code, magasin_tarif_rolls, nbre_rolls, magasin_tarif_palette, nbre_palette, magasin_tarif_boxe, nbre_box FROM camion_magasin cm join camion on camion.camion_id=cm.camion_id and camion.camion_type<>"VL" join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where e.enseigne_intitulé ="CASINO" AND date ="%s" ;'%(date_tour), engine)
-    requeteLivraison = con.execute(text('SELECT m.magasin_code, magasin_tarif_rolls, nbre_rolls, magasin_tarif_palette, nbre_palette, magasin_tarif_boxe, nbre_box FROM camion_magasin cm join camion on camion.camion_id=cm.camion_id and camion.camion_type<>"VL" join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where e.enseigne_intitulé ="CASINO" AND date =:date_tour'),{'date_tour':date_tour}).fetchall()
+    requeteLivraison = con.execute(text('SELECT m.magasin_code, magasin_tarif_rolls, nbre_rolls, magasin_tarif_palette, nbre_palette, magasin_tarif_boxe, nbre_box FROM camion_magasin cm join camion on camion.camion_id=cm.camion_id and camion.camion_type<>"VL" join magasin as m on m.magasin_id = cm.magasin_id and magasin_facturé=1 join enseigne as e on e.enseigne_id = m.enseigne_id where e.enseigne_intitulé ="CASINO" AND date =:date_tour'),{'date_tour':date_tour}).fetchall()
     L_tarif=con.execute(text("select distinct magasin_tarif_rolls, magasin_tarif_palette from magasin join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne_intitulé='CASINO'  join camion_magasin on camion_magasin.magasin_id=magasin.magasin_id and date=:date_tour join camion on camion.camion_id=camion_magasin.camion_id and camion_type<>'VL' "),{'date_tour':date_tour}).fetchall()
     #requeteInfoTarif = pd.read_sql_query('SELECT intitule_tarif, tarif FROM info_tarification JOIN enseigne ON info_tarification.enseigne_id = enseigne.enseigne_id WHERE enseigne.enseigne_intitulé = "CASINO";', engine)
-    L_trinome=con.execute(text("select magasin_code,magasin_tarif_rolls,nbre_rolls, magasin_tarif_palette, nbre_palette from camion_magasin join camion on camion.camion_id=camion_magasin.camion_id and camion_type='VL' and date=:date_tour join magasin on magasin.magasin_id=camion_magasin.magasin_id join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne_intitulé='CASINO'"),{'date_tour':date_tour}).fetchall()
+    L_trinome=con.execute(text("select magasin_code,magasin_tarif_rolls,nbre_rolls, magasin_tarif_palette, nbre_palette from camion_magasin join camion on camion.camion_id=camion_magasin.camion_id and camion_type='VL' and date=:date_tour join magasin on magasin.magasin_id=camion_magasin.magasin_id and magasin_facturé=1 join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne_intitulé='CASINO'"),{'date_tour':date_tour}).fetchall()
     dateTourConvert=datetime.strptime(date_tour, "%Y-%m-%d").strftime("%d-%m-%Y")
     data = {
             'L_magasin': requeteLivraison,
