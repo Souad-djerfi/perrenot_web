@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Facture Casino</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <meta name="pdfkit-page-size" content="Legal"/>
+    <meta name="pdfkit-orientation" content="Landscape"/>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Planning des Chauffeurs CP RC </h1>
+        <h2 class="text-center">Entre {{dateDebConvert}} et {{dateFinConvert}}:</h2>
+        
+        <div class="row">
+            {% set ns = namespace(found=false) %}
+            {% set ns.testStatut=0%}
+            <table class="table table-bordered ">
+                <thead >
+                        
+                    <tr>
+                        <th>  </th>
+                        <th colspan=2></th>
+                        {%for ms in mois%}
+                                                               
+                                {%if ms[0]==1%}
+                                    <th class="table-secondary " colspan={{cptJourMois[loop.index0]|int}} >JANVIER {{ms[1]}}</th>
+                                {%elif ms[0]==2%}   
+                                    <th class="table-secondary" colspan={{cptJourMois[loop.index0]|int}}>FEVRIER {{ms[1]}}</th>  
+                                {%elif ms[0]==3%}
+                                    <th class="table-secondary" colspan={{cptJourMois[loop.index0]|int}}>MARS {{ms[1]}}</th>
+                                {%elif ms[0]==4%}
+                                    <th class="table-secondary" colspan={{cptJourMois[loop.index0]|int}}>AVRIL {{ms[1]}}</th>
+                                {%elif ms[0]==5%}
+                                    <th class="table-secondary" colspan={{cptJourMois[loop.index0]|int}}>MAI {{ms[1]}}</th>
+                                {%elif ms[0]==6%}
+                                    <th class="table-secondary" colspan={{cptJourMois[loop.index0]|int}}>JUIN {{ms[1]}}</th>    
+                                {%elif ms[0]==7%}
+                                    <th class="table-secondary" colspan={{cptJourMois[loop.index0]|int}}>JUILLET {{ms[1]}}</th>
+                                {%elif ms[0]==8%}
+                                    <th class="table-secondary" colspan={{cptJourMois[loop.index0]|int}}>Aout {{ms[1]}}</th>  
+                                {%elif ms[0]==9%}
+                                    <th class="table-secondary" colspan={{cptJourMois[loop.index0]|int}}>SEPTEMBRE {{ms[1]}}</th> 
+                                {%elif ms[0]==10%}
+                                    <th class="table-secondary" colspan={{cptJourMois[loop.index0]|int}}>OCTOBRE {{ms[1]}}</th>
+                                {%elif ms[0]==11%}
+                                    <th class="table-secondary" colspan={{cptJourMois[loop.index0]|int}}>NOVEMBRE {{ms[1]}}</th>
+                                {%elif ms[0]==12%}
+                                    <th class="table-secondary" colspan={{cptJourMois[loop.index0]|int}}>DECEMBRE {{ms[1]}}</th>
+                                {%endif%}
+                                {%if loop.index<nbre_mois|int%}
+                                    <th bgcolor="#CC6666" rowspan=3></th>
+                                {%endif%}
+                        {% endfor %}  
+                    </tr>  
+                    <tr >
+                        <th class="table-active" rowspan=2>Nom</th>
+                        <th bgcolor="#99CCCC" rowspan=2>RC</th>
+                        <th bgcolor="#99CC66" rowspan=2>CP  </th>
+                        
+                        {%for ms in mois%}
+                           {% for jr in  L_jour_select if jr[1]==ms[0]%}
+                                {%if jr[0]=='D' %}
+                                     <th bgcolor="yellow"> {{jr[0]}}</th>
+                                {%else%}
+                                    <th bgcolor="red"> {{jr[0]}}</th>
+                                {%endif%}    
+                            {% endfor %}
+                            
+                        {%endfor%}
+                    </tr>
+                    <tr >
+
+                        {% for jr in  jour%}
+                            {%if jr[1]==6%}
+                                <th bgcolor="yellow"> {{jr[0]}}</th>
+                            {%else%}
+                                <th bgcolor="red"> {{jr[0]}}</th>
+                            {%endif%}    
+                        {% endfor %}
+                       
+                        
+                    </tr>
+                </thead>
+                <tbody >
+                    {%for grp in intitulé_groupe%}
+                        <tr class="table-danger"> 
+                            <th  colspan={{nbreCaseVide|int+1}}>  {{grp[1]}}</th>
+                        </tr>
+                        {% for chauf in L_chauf[loop.index0] %}
+                            <tr>
+                                <td class="table-active"> {{chauf[1]}} </td>
+                                <td bgcolor="#99CCCC"> {{chauf[3]}} </td>
+                                <td bgcolor="#99CC66"> {{chauf[4]}} </td>
+                               
+                                {%for ms in mois%}
+                                    {% for date in L_date if date[1]==ms[0]%}
+                                        {% set ns.testStatut=0%}
+                                        {%for statut in L_chauf_statut if statut[0]==chauf[0] and (date[0].date()>=statut[3] and date[0].date() <= statut[4]) %}
+                                            {% set ns.testStatut=1%}
+                                            {%if statut[2]=='RC'%}
+                                                <td bgcolor="#99CCCC"> {{statut[2]}} </td>
+                                            {%elif statut[2]=='CP'%}
+                                                <td bgcolor="#99CC66"> {{statut[2]}} </td>
+                                            {%else%}    
+                                            <td class="table-secondary"> {{statut[2]}} </td>
+                                            {%endif%}
+                                        {%endfor%}
+                                        {%if ns.testStatut==0%}
+                                            {%if date[2]==6%}
+                                                <td bgcolor="yellow">  </td>
+                                            {%else%}
+                                                <td >  </td>
+                                            {%endif%}
+                                        {%endif%}
+                                    {%endfor%}
+                                    {%if loop.index<nbre_mois%}
+                                        <td bgcolor="#CC6666">  </td>
+                                    {%endif%}    
+                                {%endfor%}    
+                            </tr>
+                        {% endfor %}
+                    {%endfor%}    
+                    
+                                    
+                </tbody>               
+            </table> 
+
+            
+        </div>
+        
+    </div>
+<body>

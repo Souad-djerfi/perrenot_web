@@ -107,7 +107,6 @@ def identification():
             'pseudo':pseudo
         }
     if request.method== 'POST':
-        
         mot_de_pass=request.form['mdp']
         pseudo=request.form['pseudo']
         data['pseudo']=str(pseudo)
@@ -131,36 +130,6 @@ def identification():
          
     return render_template('pages/accueil_admin.html',**data)       
 
-#*********************************************************************************************************************AJOUTER CAMION***************************************************************************
-@app.route('/Ajouter_Camion', methods=['GET','post'])
-def ajout_camion():
-    if not session.get('connexion'):
-        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
-        return redirect(url_for('home'))
-    if request.method=='POST':
-        Immatriculation=request.form['immatriculation']
-        capacite=request.form['capacite']
-        type_cam=request.form.getlist('liste_type')
-        tonnage=request.form['tonnage']
-        fonction=request.form.getlist('liste_fonction')
-        assurance=request.form['assurance']
-        loyer=request.form['loyer']
-        entretient=request.form['entretient']
-        pneu=request.form['pneu']
-        consommation=request.form['consommation']
-        test_matActif=con.execute(text("select camion_mat from camion where camion_mat=:mat_cam and camion_actif=1" ),{'mat_cam':Immatriculation}).fetchone()
-        test_matNonActif= con.execute(text("select camion_mat from camion where camion_mat=:mat_cam and camion_actif=0"),{'mat_cam':Immatriculation}).fetchone()
-        if test_matActif:
-           flash('Ce matricule existe déjà, Veuillez le changer', 'danger')
-        elif  test_matNonActif: 
-            flash('Ce camion existait déjà a été récupéré', 'success')
-            con.execute(text("update camion set camion_actif=1 where camion_mat=:mat_cam and camion_actif=0"),{'mat_cam':Immatriculation})
-        else:
-            con.execute(text("insert into camion (camion_mat,camion_cap,camion_type,camion_tonnage,camion_fonction, camion_assurance, camion_loyer, camion_entretien, camion_pneus, camion_conso) values(:cam_mat, :cam_cap,:cam_type, :cam_tonnage,:cam_fonc, :cam_assur,:cam_loyer, :cam_entret, :cam_pneu, :cam_cons)"), {'cam_mat':Immatriculation,'cam_cap':capacite, 'cam_type':type_cam[0] , 'cam_tonnage': tonnage ,'cam_fonc':fonction[0] , 'cam_assur': assurance,'cam_loyer': loyer, 'cam_entret': entretient, 'cam_pneu':pneu ,'cam_cons':consommation   })      
-            flash('Ce camion a été bien ajouté', 'success')
-        return render_template('pages/ajouter_camion.html')
-
-    return render_template('pages/ajouter_camion.html')
     #*************************************************************************************************************************FEUILLE DE ROUTE*****************************************
 
 @app.route('/Feuille-de-route', methods=['GET','post'])
@@ -194,92 +163,121 @@ def feuille_route():
     
 #************************************************************************************************************************IMPRESSION FACTURATION*****************************************
 
-@app.route('/impresion_facturation', methods=['GET','post'])
+@app.route('/impresion_facturation_recap', methods=['GET','post'])
 def impression_facturation():
     if not session.get('connexion'):
         flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
         return redirect(url_for('home'))
+    L_ens=con.execute(text("select enseigne_id, enseigne_intitulé from enseigne where enseigne_actif=1")).fetchall()
+    data={'L_ens':L_ens}    
     if request.method=='POST':
         date_deb=request.form.getlist('date_debut') 
         date_fin=request.form.getlist('date_fin')
-        #facturation navette
-        L_tot_navette_csn=con.execute(text("SELECT info_tarification_id, intitule_tarif, type_tarif, tarif FROM info_tarification join enseigne on enseigne.enseigne_id = info_tarification.enseigne_id where type_tarif ='navette' and enseigne.enseigne_intitulé = 'CASINO'")).fetchall()
-        L_date_facturation=con.execute(text("select distinct date(date),DATE_FORMAT(date, '%d%-%m%-%Y') from tarification where date between :date_deb and :date_fin order by date"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
-        L_navette_csn=con.execute(text("select tarification.info_tarification_id, intitule_tarif, date(date), valeur from info_tarification join tarification on tarification.info_tarification_id=info_tarification.info_tarification_id join enseigne on enseigne.enseigne_id=info_tarification.enseigne_id  where date between :date_deb and :date_fin and type_tarif='navette' and enseigne.enseigne_intitulé = 'CASINO'"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+        enseigne_select=request.form.getlist('liste_ens')
         casino_ens_id=con.execute(text("select enseigne_id from enseigne where enseigne_intitulé='CASINO'")).fetchone()
-        #facturation distribution
-        L_tot_rolls=con.execute(text("select distinct magasin_tarif_rolls from magasin where enseigne_id=:casino_ens_id and magasin_tarif_rolls<>0"),{'casino_ens_id':casino_ens_id[0]}).fetchall()
-        L_tot_pal=con.execute(text("select distinct magasin_tarif_palette from magasin where enseigne_id=:casino_ens_id and magasin_tarif_palette<>0"),{'casino_ens_id':casino_ens_id[0]}).fetchall()
-        L_date_distribution=con.execute(text("select distinct date, DATE_FORMAT(date, '%d%-%m%-%Y') from camion_magasin where date between :date_deb and :date_fin order by date"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
-        nbre_rolls_secteur=con.execute(text("select  magasin.magasin_tarif_rolls, camion_magasin.date, sum(nbre_rolls) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id and magasin_facturé=1 join camion on camion.camion_id= camion_magasin.camion_id and camion_type <> 'CAISSE_MOBILE' and camion_type <> 'VL' join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_intitulé='CASINO' group by magasin.magasin_tarif_rolls, date having date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
-        nbre_pal_secteur=con.execute(text("select  magasin.magasin_tarif_palette, camion_magasin.date, sum(nbre_palette) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id and magasin_facturé=1 join camion on camion.camion_id= camion_magasin.camion_id  and camion_type <> 'CAISSE_MOBILE' and camion_type <> 'VL' join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_intitulé='CASINO' group by magasin.magasin_tarif_palette, date having date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
-        nbre_rls_pal_trinome=con.execute(text(" select  date, sum(nbre_rolls+(nbre_palette*1.6)) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id AND date between :date_deb and :date_fin and magasin_facturé=1 join camion on camion.camion_id= camion_magasin.camion_id and camion_type ='VL' join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_intitulé='CASINO'  group by date "), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
-        #cout tri emballage
-        cout_triEmb=con.execute(text("select tarif from info_tarification where type_tarif='tri_emb' and enseigne_id=:casino_ens_id"),{'casino_ens_id':casino_ens_id[0]}).fetchone()   
-        #cout passage à quai
-        cout_PàQ=con.execute(text("select tarif from info_tarification where type_tarif='passage_a_quai'and enseigne_id=:casino_ens_id "),{'casino_ens_id':casino_ens_id[0]}).fetchone()
-        # cout trinome
-        L_date_trinome=con.execute(text("select distinct date,day(last_day(date)),MONTH(date), YEAR(date),DAYOFWEEK(date) from tarification join camion on camion.camion_id = tarification.camion_id and camion.camion_type='VL'where date between :date_deb and :date_fin order by date"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
-        jour_ouvrable=nbreJourOuvrable(L_date_trinome)
-        
-        L_tot_vl=con.execute(text("select distinct tarification.camion_id, camion_mat, camion.camion_loyer from tarification join camion on camion.camion_id=tarification.camion_id and camion.camion_type='VL' where date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
-        km_trinome=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='km' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
-        heure_trinome=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='heure' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
-        maj_heure_nuit_trinome=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='maj_heure_nuit' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
-        nbre_km_trinome=con.execute(text("select tarification.camion_id, date, sum(valeur) from tarification join camion on camion.camion_id=tarification.camion_id and camion_type='VL' where tarification.info_tarification_id=:km_trinome and date between :date_deb and :date_fin group by tarification.camion_id, date"),{'date_deb':date_deb[0], 'date_fin':date_fin[0], 'km_trinome':km_trinome[1] }).fetchall()
-        nbre_heure_trinome=con.execute(text("select tarification.camion_id, date, sum(valeur) from tarification join camion on camion.camion_id=tarification.camion_id and camion_type='VL' where tarification.info_tarification_id=:heure_trinome and date between :date_deb and :date_fin group by tarification.camion_id, date"),{'date_deb':date_deb[0], 'date_fin':date_fin[0], 'heure_trinome':heure_trinome[1] }).fetchall()
-        nbre_maj_hN_trinome=con.execute(text("select tarification.camion_id, date, sum(valeur) from tarification join camion on camion.camion_id=tarification.camion_id and camion_type='VL' where tarification.info_tarification_id=:maj_heure_nuit_trinome and date between :date_deb and :date_fin group by tarification.camion_id, date"),{'date_deb':date_deb[0], 'date_fin':date_fin[0], 'maj_heure_nuit_trinome':maj_heure_nuit_trinome[1] }).fetchall()
-        # TK
-        L_date_TK= con.execute(text("select distinct date, DATE_FORMAT(date, '%d%-%m%-%Y') from tarification join camion on camion.camion_id = tarification.camion_id and camion.camion_type='CAISSE_MOBILE'where date between :date_deb and :date_fin order by date"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
-        km_TK=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='TK' and intitule_tarif='km' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
-        km_trc_TK=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='TK' and intitule_tarif='traction' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
-        
-        traction_TK=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='TK' and intitule_tarif='traction' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
-        L_tot_CM=con.execute(text("select distinct tarification.camion_id, camion_mat, camion.camion_loyer from tarification join camion on camion.camion_id=tarification.camion_id and camion.camion_type='CAISSE_MOBILE' where date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
-        nbre_km_TK= con.execute(text("select tarification.camion_id, date, sum(valeur) from tarification join camion on camion.camion_id=tarification.camion_id and camion_type='CAISSE_MOBILE' where tarification.info_tarification_id=:km_TK and date between :date_deb and :date_fin group by tarification.camion_id, date"),{'date_deb':date_deb[0], 'date_fin':date_fin[0], 'km_TK':km_TK[1] }).fetchall()
-        nbre_kmTrc_TK=con.execute(text("select date, valeur from tarification where tarification.info_tarification_id=:km_trc_TK and date between :date_deb and :date_fin order by date"),{'date_deb':date_deb[0], 'date_fin':date_fin[0], 'km_trc_TK':km_trc_TK[1] }).fetchall()
-        date_traction=con.execute(text("select distinct date from tarification where tarification.info_tarification_id=:km_trc_TK and date between :date_deb and :date_fin order by date"),{'date_deb':date_deb[0], 'date_fin':date_fin[0], 'km_trc_TK':km_trc_TK[1] }).fetchall()
-        tot_traction=[0 for i in range(len(L_tot_CM)//2)]
-        for date in date_traction:
-            compteur=0
-            for trc in nbre_kmTrc_TK:
-                if trc[0]==date[0]:
-                    tot_traction[compteur]=tot_traction[compteur]+trc[1]
-                    compteur+=1
+        #facturation navette pour toutes les enseignes
+        L_tot_navette=con.execute(text("SELECT info_tarification_id, intitule_tarif, type_tarif, tarif FROM info_tarification join enseigne on enseigne.enseigne_id = info_tarification.enseigne_id and enseigne.enseigne_id =:enseigne_select where type_tarif ='navette' "),{'enseigne_select':enseigne_select[0]}).fetchall()
+        L_date_facturation=con.execute(text("select distinct date(date),DATE_FORMAT(date, '%d%-%m%-%Y') from tarification where date between :date_deb and :date_fin order by date"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+        L_navette=con.execute(text("select tarification.info_tarification_id, intitule_tarif, date(date), valeur from info_tarification join tarification on tarification.info_tarification_id=info_tarification.info_tarification_id join enseigne on enseigne.enseigne_id=info_tarification.enseigne_id and enseigne.enseigne_id =:enseigne_select where date between :date_deb and :date_fin and type_tarif='navette'"), {'date_deb':date_deb[0], 'date_fin':date_fin[0],'enseigne_select':enseigne_select[0]}).fetchall()
         dateDebConvert=datetime.strptime(date_deb[0], "%Y-%m-%d").strftime("%d-%m-%Y")
         dateFinConvert=datetime.strptime(date_fin[0], "%Y-%m-%d").strftime("%d-%m-%Y")
-        data={'L_tot_navette_csn':L_tot_navette_csn,
-        'L_date_facturation':L_date_facturation,
-        'L_navette_csn':L_navette_csn,
-        'date_debut': dateDebConvert,
-        'date_fin':dateFinConvert,
-        'L_tot_rolls':L_tot_rolls, 
-        'L_tot_pal':L_tot_pal,
-        'nbre_rolls_secteur':nbre_rolls_secteur,
-        'nbre_pal_secteur':nbre_pal_secteur,
-        'L_date_distribution':L_date_distribution,
-        'cout_PàQ':cout_PàQ[0],
-        'nbre_rls_pal_trinome':nbre_rls_pal_trinome,
-        'L_tot_vl':L_tot_vl, 
-        'jour_ouvrable':jour_ouvrable,
-        'km_trinome':km_trinome,
-        'heure_trinome':heure_trinome,
-        'maj_hN_trinome':maj_heure_nuit_trinome,
-        'L_date_trinome': L_date_trinome,
-        'nbre_km_trinome':nbre_km_trinome,
-        'nbre_heure_trinome':nbre_heure_trinome,
-        'nbre_maj_hN_trinome':nbre_maj_hN_trinome,
-        'L_date_TK':L_date_TK,
-        'km_TK':km_TK,
-        'traction_TK':traction_TK,
-        'L_tot_CM':L_tot_CM,
-        'tot_traction':tot_traction,
-        'nbre_km_TK':nbre_km_TK,
-        'nbre_kmTrc_TK':nbre_kmTrc_TK,
-        'nbre_tot_CM':len(L_tot_CM),
-        'km_trc_TK':km_trc_TK,
-        'cout_triEmb':cout_triEmb[0]
-        }
+            
+        if int(enseigne_select[0])==int(casino_ens_id[0]):
+            test_enseigne='casino'
+            #facturation distribution
+            L_tot_rolls=con.execute(text("select distinct magasin_tarif_rolls from magasin where enseigne_id=:enseigne_select and magasin_tarif_rolls<>0 and magasin_actif=1"),{'enseigne_select':enseigne_select[0]}).fetchall()
+            L_tot_pal=con.execute(text("select distinct magasin_tarif_palette from magasin where enseigne_id=:enseigne_select and magasin_tarif_palette<>0 and magasin_actif=1"),{'enseigne_select':enseigne_select[0]}).fetchall()
+            L_date_distribution=con.execute(text("select distinct date, DATE_FORMAT(date, '%d%-%m%-%Y') from camion_magasin where date between :date_deb and :date_fin order by date"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+            nbre_rolls_secteur=con.execute(text("select  magasin.magasin_tarif_rolls, camion_magasin.date, sum(nbre_rolls) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id and magasin_facturé=1 join camion on camion.camion_id= camion_magasin.camion_id and camion_type <> 'CAISSE_MOBILE' and camion_type <> 'VL' join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_id =:enseigne_select group by magasin.magasin_tarif_rolls, date having date between :date_deb and :date_fin"), {'enseigne_select':enseigne_select[0],'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+            nbre_pal_secteur=con.execute(text("select  magasin.magasin_tarif_palette, camion_magasin.date, sum(nbre_palette) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id and magasin_facturé=1 join camion on camion.camion_id= camion_magasin.camion_id  and camion_type <> 'CAISSE_MOBILE' and camion_type <> 'VL' join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_id =:enseigne_select group by magasin.magasin_tarif_palette, date having date between :date_deb and :date_fin"), {'enseigne_select':enseigne_select[0],'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+            nbre_rls_pal_trinome=con.execute(text(" select  date, sum(nbre_rolls+(nbre_palette)) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id AND date between :date_deb and :date_fin and magasin_facturé=1 join camion on camion.camion_id= camion_magasin.camion_id and camion_type ='VL' join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_intitulé='CASINO'  group by date "), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+            #cout tri emballage
+            cout_triEmb=con.execute(text("select tarif from info_tarification where type_tarif='tri_emb' and enseigne_id=:casino_ens_id"),{'casino_ens_id':casino_ens_id[0]}).fetchone()   
+            #cout passage à quai
+            cout_PàQ=con.execute(text("select tarif from info_tarification where type_tarif='passage_a_quai'and enseigne_id=:casino_ens_id "),{'casino_ens_id':casino_ens_id[0]}).fetchone()
+            # cout trinome
+            L_date_trinome=con.execute(text("select distinct date,day(last_day(date)),MONTH(date), YEAR(date),DAYOFWEEK(date) from tarification join camion on camion.camion_id = tarification.camion_id and camion.camion_type='VL'where date between :date_deb and :date_fin order by date"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+            jour_ouvrable=nbreJourOuvrable(L_date_trinome)
+            
+            L_tot_vl=con.execute(text("select distinct tarification.camion_id, camion_mat, camion.camion_loyer from tarification join camion on camion.camion_id=tarification.camion_id and camion.camion_type='VL' where date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+            km_trinome=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='km' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
+            heure_trinome=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='heure' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
+            maj_heure_nuit_trinome=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='trinome' and intitule_tarif='maj_heure_nuit' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
+            nbre_km_trinome=con.execute(text("select tarification.camion_id, date, sum(valeur) from tarification join camion on camion.camion_id=tarification.camion_id and camion_type='VL' where tarification.info_tarification_id=:km_trinome and date between :date_deb and :date_fin group by tarification.camion_id, date"),{'date_deb':date_deb[0], 'date_fin':date_fin[0], 'km_trinome':km_trinome[1] }).fetchall()
+            nbre_heure_trinome=con.execute(text("select tarification.camion_id, date, sum(valeur) from tarification join camion on camion.camion_id=tarification.camion_id and camion_type='VL' where tarification.info_tarification_id=:heure_trinome and date between :date_deb and :date_fin group by tarification.camion_id, date"),{'date_deb':date_deb[0], 'date_fin':date_fin[0], 'heure_trinome':heure_trinome[1] }).fetchall()
+            nbre_maj_hN_trinome=con.execute(text("select tarification.camion_id, date, sum(valeur) from tarification join camion on camion.camion_id=tarification.camion_id and camion_type='VL' where tarification.info_tarification_id=:maj_heure_nuit_trinome and date between :date_deb and :date_fin group by tarification.camion_id, date"),{'date_deb':date_deb[0], 'date_fin':date_fin[0], 'maj_heure_nuit_trinome':maj_heure_nuit_trinome[1] }).fetchall()
+            # TK
+            L_date_TK= con.execute(text("select distinct date, DATE_FORMAT(date, '%d%-%m%-%Y') from tarification join camion on camion.camion_id = tarification.camion_id and camion.camion_type='CAISSE_MOBILE'where date between :date_deb and :date_fin order by date"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+            km_TK=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='TK' and intitule_tarif='km' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
+            km_trc_TK=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='TK' and intitule_tarif='traction' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
+            
+            traction_TK=con.execute(text("select tarif, info_tarification_id from info_tarification where type_tarif='TK' and intitule_tarif='traction' and enseigne_id= :casino_ens_id  "), {'casino_ens_id':casino_ens_id[0]}).fetchone()
+            L_tot_CM=con.execute(text("select distinct tarification.camion_id, camion_mat, camion.camion_loyer from tarification join camion on camion.camion_id=tarification.camion_id and camion.camion_type='CAISSE_MOBILE' where date between :date_deb and :date_fin"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+            nbre_km_TK= con.execute(text("select tarification.camion_id, date, sum(valeur) from tarification join camion on camion.camion_id=tarification.camion_id and camion_type='CAISSE_MOBILE' where tarification.info_tarification_id=:km_TK and date between :date_deb and :date_fin group by tarification.camion_id, date"),{'date_deb':date_deb[0], 'date_fin':date_fin[0], 'km_TK':km_TK[1] }).fetchall()
+            nbre_kmTrc_TK=con.execute(text("select date, valeur from tarification where tarification.info_tarification_id=:km_trc_TK and date between :date_deb and :date_fin order by date"),{'date_deb':date_deb[0], 'date_fin':date_fin[0], 'km_trc_TK':km_trc_TK[1] }).fetchall()
+            date_traction=con.execute(text("select distinct date from tarification where tarification.info_tarification_id=:km_trc_TK and date between :date_deb and :date_fin order by date"),{'date_deb':date_deb[0], 'date_fin':date_fin[0], 'km_trc_TK':km_trc_TK[1] }).fetchall()
+            tot_traction=[0 for i in range(len(L_tot_CM)//2)]
+            for date in date_traction:
+                compteur=0
+                for trc in nbre_kmTrc_TK:
+                    if trc[0]==date[0]:
+                        tot_traction[compteur]=tot_traction[compteur]+trc[1]
+                        compteur+=1
+            data={'L_tot_navette':L_tot_navette,
+            'L_date_facturation':L_date_facturation,
+            'L_navette':L_navette,
+            'date_debut': dateDebConvert,
+            'date_fin':dateFinConvert,
+            'L_tot_rolls':L_tot_rolls, 
+            'L_tot_pal':L_tot_pal,
+            'nbre_rolls_secteur':nbre_rolls_secteur,
+            'nbre_pal_secteur':nbre_pal_secteur,
+            'L_date_distribution':L_date_distribution,
+            'cout_PàQ':cout_PàQ[0],
+            'nbre_rls_pal_trinome':nbre_rls_pal_trinome,
+            'L_tot_vl':L_tot_vl, 
+            'jour_ouvrable':jour_ouvrable,
+            'km_trinome':km_trinome,
+            'heure_trinome':heure_trinome,
+            'maj_hN_trinome':maj_heure_nuit_trinome,
+            'L_date_trinome': L_date_trinome,
+            'nbre_km_trinome':nbre_km_trinome,
+            'nbre_heure_trinome':nbre_heure_trinome,
+            'nbre_maj_hN_trinome':nbre_maj_hN_trinome,
+            'L_date_TK':L_date_TK,
+            'km_TK':km_TK,
+            'traction_TK':traction_TK,
+            'L_tot_CM':L_tot_CM,
+            'tot_traction':tot_traction,
+            'nbre_km_TK':nbre_km_TK,
+            'nbre_kmTrc_TK':nbre_kmTrc_TK,
+            'nbre_tot_CM':len(L_tot_CM),
+            'km_trc_TK':km_trc_TK,
+            'cout_triEmb':cout_triEmb[0],
+            'test_ens':test_enseigne
+            }
+        else:
+            test_enseigne='autre'
+            enseigne_intitulé=con.execute(text("select enseigne_intitulé from enseigne where enseigne_id=:ens"),{'ens':enseigne_select}).fetchone()
+            #facturation distribution
+            L_tot_rolls=con.execute(text("select distinct magasin_tarif_rolls from magasin where enseigne_id=:enseigne_select and magasin_tarif_rolls<>0 and magasin_actif=1"),{'enseigne_select':enseigne_select[0]}).fetchall()
+            L_tot_pal=con.execute(text("select distinct magasin_tarif_palette from magasin where enseigne_id=:enseigne_select and magasin_tarif_palette<>0 and magasin_actif=1"),{'enseigne_select':enseigne_select[0]}).fetchall()
+            L_date_distribution=con.execute(text("select distinct date, DATE_FORMAT(date, '%d%-%m%-%Y') from camion_magasin where date between :date_deb and :date_fin order by date"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+            nbre_rolls_secteur=con.execute(text("select  magasin.magasin_tarif_rolls, camion_magasin.date, sum(nbre_rolls) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id and magasin_facturé=1 join  enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_id =:enseigne_select group by magasin.magasin_tarif_rolls, date having date between :date_deb and :date_fin"), {'enseigne_select':enseigne_select[0],'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+            nbre_pal_secteur=con.execute(text("select  magasin.magasin_tarif_palette, camion_magasin.date, sum(nbre_palette) from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id and magasin_facturé=1 join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne.enseigne_id =:enseigne_select group by magasin.magasin_tarif_palette, date having date between :date_deb and :date_fin"), {'enseigne_select':enseigne_select[0],'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+            data={'L_tot_rolls':L_tot_rolls,
+                  'L_tot_pal':L_tot_pal,
+                  'L_date_distribution':L_date_distribution,
+                  'nbre_rolls_secteur':nbre_rolls_secteur,
+                  'nbre_pal_secteur':nbre_pal_secteur,
+                  'L_tot_navette':L_tot_navette,
+                  'L_date_facturation':L_date_facturation,
+                  'L_navette':L_navette,
+                  'test_ens':test_enseigne,
+                  'date_debut': dateDebConvert,
+                  'date_fin':dateFinConvert,
+                  'enseigne_intitulé':enseigne_intitulé[0]
+            }
         #crréation pdf
         path_wkhtmltopdf = r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe'
         config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
@@ -291,6 +289,9 @@ def impression_facturation():
         response.headers['Content-Type']='application/pdf'
         response.headers['Content-Disposition']='attachment; filename=Facturation_casino.pdf'
         return response
+    return render_template('pages/formulaire_facturation_recap.html', **data)       
+            
+               
     #*************************************************************************************************************************FORMULAIRE FACTURATION*****************************************
 
 @app.route('/facturation', methods=['GET','post'])
@@ -428,48 +429,6 @@ def enregistrer_facturation():
               }
         flash("le formualaire de la facturation a été bien enregistré",'success')
         return render_template('pages/accueil_admin.html', **data)
-#*************************************************************************************************************************AJOUTER NAVETTE************************************************
-@app.route('/ajout_navette',methods=['GET','POST'])    
-def ajouter_navette():
-    if not session.get('connexion'):
-        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
-        return redirect(url_for('home'))
-    navette, tarif='', ''
-    requete_ens="select enseigne_id, enseigne_intitulé from enseigne where enseigne_actif=1"
-    enseigne=con.execute(text(requete_ens)).fetchall()
-    data={
-                'navette':navette,
-                'tarif':tarif,
-                'enseigne':enseigne
-         }
-    if request.method =='POST':
-        navette=request.form['navette']
-        tarif=request.form['tarif']
-        enseigne=request.form['liste_ens']
-        test_navette=con.execute(text("select intitule_tarif from info_tarification where enseigne_id=:ens_id and type_tarif='navette' and intitule_tarif=:navette"),{'ens_id':enseigne,'navette':navette}).fetchone()
-        
-        if test_navette:
-            flash('cet intitulé de navette existe déjà pour cette enseigne, veuillez le changer!', 'danger')
-            if request.form['test_ens']!="":
-                return render_template('pages/mag_nvt_nvl_ens.html', **data)
-
-        else:
-            requete_ajout="INSERT INTO info_tarification (intitule_tarif, type_tarif, tarif, enseigne_id) VALUES (:navette, 'navette', :tarif, :ens_id)"
-            con.execute(text(requete_ajout),{'navette': navette, 'tarif':tarif, 'ens_id':enseigne})
-            flash("la navette a été bien enregistrée", 'success')
-            navette,tarif='',''
-            if request.form['test_ens']!="": # revoyer le template nouveau magasin et navette cas ajout nouvelle enseigne
-                data['navette']=navette
-                data['tarif']  =tarif 
-                data['ens_intitulé']=request.form['enseigne_intitule']
-                data['nvl_ens_id']=enseigne
-                data['test_ajout_mag']=0
-                return render_template('pages/mag_nvt_nvl_ens.html', **data)
-            return redirect(url_for('ajouter_navette'))
-        data['navette']=navette
-        data['tarif']  =tarif 
-    return render_template('pages/ajouter_navette.html', **data)   
-
  #*************************************************************************************************************************AJOUTER NAVETTE************************************************
 @app.route('/editer_tarif_casino',methods=['GET','POST'])    
 def editer_tarif_casino():
@@ -516,7 +475,50 @@ def editer_tarif_casino():
         flash('Les modifications ont été bien enregistrées','success')
         data['km_trinome'],data['heure_trinome'],data['MAJ_HN_trinome'],data['km_TK'],data['traction_TK'],data['tri_emb_casino'],data['passage_a_quai_casino']='','','','','','',''
     return render_template('pages/edit_tarif_casino.html', **data)     
+            
+#*************************************************************************************************************************AJOUTER NAVETTE************************************************
+@app.route('/ajout_navette',methods=['GET','POST'])    
+def ajouter_navette():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
+    navette, tarif='', ''
+    requete_ens="select enseigne_id, enseigne_intitulé from enseigne where enseigne_actif=1"
+    enseigne=con.execute(text(requete_ens)).fetchall()
+    data={
+                'navette':navette,
+                'tarif':tarif,
+                'enseigne':enseigne
+         }
+    if request.method =='POST':
+        navette=request.form['navette']
+        tarif=request.form['tarif']
+        enseigne=request.form['liste_ens']
+        test_navette=con.execute(text("select intitule_tarif from info_tarification where enseigne_id=:ens_id and type_tarif='navette' and intitule_tarif=:navette"),{'ens_id':enseigne,'navette':navette}).fetchone()
         
+        if test_navette:
+            flash('cet intitulé de navette existe déjà pour cette enseigne, veuillez le changer!', 'danger')
+            if request.form['test_ens']!="":
+                return render_template('pages/mag_nvt_nvl_ens.html', **data)
+
+        else:
+            requete_ajout="INSERT INTO info_tarification (intitule_tarif, type_tarif, tarif, enseigne_id) VALUES (:navette, 'navette', :tarif, :ens_id)"
+            con.execute(text(requete_ajout),{'navette': navette, 'tarif':tarif, 'ens_id':enseigne})
+            flash("la navette a été bien enregistrée", 'success')
+            navette,tarif='',''
+            if request.form['test_ens']!="": # revoyer le template nouveau magasin et navette cas ajout nouvelle enseigne
+                data['navette']=navette
+                data['tarif']  =tarif 
+                data['ens_intitulé']=request.form['enseigne_intitule']
+                data['nvl_ens_id']=enseigne
+                data['test_ajout_mag']=0
+                return render_template('pages/mag_nvt_nvl_ens.html', **data)
+            return redirect(url_for('ajouter_navette'))
+        data['navette']=navette
+        data['tarif']  =tarif 
+    return render_template('pages/ajouter_navette.html', **data)   
+
+    
  #************************************************************************************************************************EDITER NAVETTE********************************************************************************************************************************************
 @app.route('/modification_navette', methods=['GET','post'])
 def edit_navette():
@@ -554,7 +556,7 @@ def edit_navette():
             data['nvt_info']=nvt_info
             
     return render_template('pages/edit_navette.html', **data)             
- #**************************************************************************************************************VALIDER SUPPRESSION CONTRAT CHAUFFEUR**********************************************************************
+ #**************************************************************************************************************VALIDER SUPPRESSION NAVETTE**********************************************************************
 @app.route('/navette_supprimée', methods=['GET','post'])
 def navette_supprimée():
     if not session.get('connexion'):
@@ -565,6 +567,38 @@ def navette_supprimée():
     con.execute(text("update info_tarification set tarification_actif=0 where info_tarification_id=:tarif_id"),{'tarif_id':info_tarif_id})
     flash('Cette Navette a été bien suppirmée pour cette Enseigne', 'success')
     return redirect(url_for('edit_navette'))
+
+#*********************************************************************************************************************AJOUTER CAMION***************************************************************************
+@app.route('/Ajouter_Camion', methods=['GET','post'])
+def ajout_camion():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
+    if request.method=='POST':
+        Immatriculation=request.form['immatriculation']
+        capacite=request.form['capacite']
+        type_cam=request.form.getlist('liste_type')
+        tonnage=request.form['tonnage']
+        fonction=request.form.getlist('liste_fonction')
+        assurance=request.form['assurance']
+        loyer=request.form['loyer']
+        entretient=request.form['entretient']
+        pneu=request.form['pneu']
+        consommation=request.form['consommation']
+        test_matActif=con.execute(text("select camion_mat from camion where camion_mat=:mat_cam and camion_actif=1" ),{'mat_cam':Immatriculation}).fetchone()
+        test_matNonActif= con.execute(text("select camion_mat from camion where camion_mat=:mat_cam and camion_actif=0"),{'mat_cam':Immatriculation}).fetchone()
+        if test_matActif:
+           flash('Ce matricule existe déjà, Veuillez le changer', 'danger')
+        elif  test_matNonActif: 
+            flash('Ce camion existait déjà a été récupéré', 'success')
+            con.execute(text("update camion set camion_actif=1 where camion_mat=:mat_cam and camion_actif=0"),{'mat_cam':Immatriculation})
+        else:
+            con.execute(text("insert into camion (camion_mat,camion_cap,camion_type,camion_tonnage,camion_fonction, camion_assurance, camion_loyer, camion_entretien, camion_pneus, camion_conso) values(:cam_mat, :cam_cap,:cam_type, :cam_tonnage,:cam_fonc, :cam_assur,:cam_loyer, :cam_entret, :cam_pneu, :cam_cons)"), {'cam_mat':Immatriculation,'cam_cap':capacite, 'cam_type':type_cam[0] , 'cam_tonnage': tonnage ,'cam_fonc':fonction[0] , 'cam_assur': assurance,'cam_loyer': loyer, 'cam_entret': entretient, 'cam_pneu':pneu ,'cam_cons':consommation   })      
+            flash('Ce camion a été bien ajouté', 'success')
+        return render_template('pages/ajouter_camion.html')
+
+    return render_template('pages/ajouter_camion.html')
+
    #************************************************************************************************************************EDITER CAMION********************************************************************
 @app.route('/modification_camion', methods=['GET','post'])
 def edit_camion():
@@ -599,7 +633,7 @@ def edit_camion():
             
         
     return render_template('pages/edit_camion.html', **data) 
-    #*************************************************************************************************************VALIDER MODIFICATION CHAUFFEUR*****************************************************************
+    #*************************************************************************************************************VALIDER MODIFICATION CAMION*****************************************************************
 
 @app.route('/camion_supprimé', methods=['GET','post'])
 def camion_supprime():
@@ -612,7 +646,7 @@ def camion_supprime():
      
     return redirect(url_for('edit_camion'))  
 
-#***************************************************************************************************************VALIDER MODIFICATION CHAUFFEUR*****************************************************************
+#***************************************************************************************************************VALIDER MODIFICATION CAMION*****************************************************************
 
 @app.route('/camion_modifié', methods=['GET','post'])
 def camion_modifie():
@@ -641,185 +675,6 @@ def camion_modifie():
      
     return redirect(url_for('edit_camion'))  
     
-#***************************************************************************************************************************ESPACE CHAUFFEUR********************************************************************
-
-@app.route('/chauffeur', methods=['GET','post'])
-def espace_chauf():
-    if not session.get('connexion'):
-        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
-        return redirect(url_for('home'))
-     
-    return render_template('pages/espace_chauf.html')
-#***************************************************************************************************************************DIAGRAMMES********************************************************************************
-@app.route('/Diagrammes', methods=['GET','post'])
-def diagramme_aprs_tournees():
-    if not session.get('connexion'):
-        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
-        return redirect(url_for('home'))
-    date_debut=request.form['date_debut']
-    date_fin=request.form['date_fin']
-    
-    requeteLivraison = pd.read_sql_query('SELECT e.enseigne_intitulé AS enseigne, m.magasin_id, magasin_tarif_rolls, magasin_tarif_palette, magasin_tarif_boxe FROM camion_magasin cm join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where date between "%s" and "%s"' %(date_debut,date_fin), engine)
-    dataLivraison = pd.DataFrame(requeteLivraison)
-    ens=dataLivraison["enseigne"].value_counts()
-    ens=ens.reset_index()
-    ens=ens.rename(columns={'enseigne':'Nbre_mag_livrés', 'index':'enseigne'})
-    # afficher diagramme circulaire pour distribution par enseigne  llll
-    data = [go.Pie(labels=ens.enseigne, values=ens.Nbre_mag_livrés, textposition='inside', textinfo='percent+label')] 
-    layoutPieEns=go.Layout(title="3. Répartition des magasins livrés par Enseigne", )
-    figPieEns=go.Figure(data=data, layout=layoutPieEns)
-    graphJSON1 = json.dumps(figPieEns, cls=plotly.utils.PlotlyJSONEncoder)
-
-    # afficher diagramme a bar pour les camion utilisé a cette période
-    requeteCamion = pd.read_sql_query('select camion_mat, count(camion_mat) As nbre_cam from camion join chauffeur_camion on chauffeur_camion.camion_id=camion.camion_id and date between "%s" and "%s" group by camion_mat' %(date_debut,date_fin), engine)
-    traceFRQCamBar=     go.Bar(x=requeteCamion.camion_mat,y=requeteCamion.nbre_cam)
-    layoutFRQCamBar=go.Layout(title="5. Fréquence d'utilisation Des Camions", xaxis=dict(title="Immatriculations des camions "), yaxis=dict(title="Nombre d'utilisations "),)
-    dataCamFRQBar=[traceFRQCamBar]
-    figBarChauf=go.Figure(data=dataCamFRQBar, layout=layoutFRQCamBar)
-    graphJSONCam = json.dumps(figBarChauf, cls=plotly.utils.PlotlyJSONEncoder)
-
-
-    #Afficher diagramme circulaire repartition des tarifs rolls pour toutes les enseignes
-    #dataLivraisonRolls = dataLivraison[dataLivraison.magasin_tarif_rolls.notna()]
-   # graphique_rolls_ens=px.sunburst(dataLivraisonRolls, path=["enseigne", "magasin_tarif_rolls"], color="enseigne", width=800, title="Répartition des tarifs rolls pour les livraisons entre le 2020-12-01 au 2020-12-15")
-    #graphique_rolls_ens = [go.Sunburst(labels=ens.enseigne, values=ens.Nbre_mag_livrés, textposition='inside', textinfo='percent+label', title='Répartition des magasins livrés par enseigne')] 
-   
-    #graphJSON_ensRolls = json.dumps(graphique_rolls_ens, cls=plotly.utils.PlotlyJSONEncoder)
-
-    #afficher diagramme a bar camion location ou non utilisé à cette période
-    requetCamLoc=pd.read_sql_query("select date, count(camion_mat) as nbre_loc from camion join chauffeur_camion on chauffeur_camion.camion_id=camion.camion_id and date between '%s' and '%s' where camion_type ='LOCATION' group by date"%(date_debut,date_fin), engine)
-    requetCamNotLoc=pd.read_sql_query("select date, count(camion_mat) as nbre_notLoc from camion join chauffeur_camion on chauffeur_camion.camion_id=camion.camion_id and date between '%s' and '%s' where camion_type <>'LOCATION' group by date"%(date_debut,date_fin), engine)
-    requetCamType=pd.read_sql_query("select camion_type as type, count(camion_mat)  nbre_cam from camion join chauffeur_camion on chauffeur_camion.camion_id=camion.camion_id and date between '%s' and '%s' group by camion_type"%(date_debut,date_fin), engine)
-      
-    trace_loc=go.Bar(x=requetCamLoc.date, y=requetCamLoc.nbre_loc, name='Camion Location', marker=dict(color='#e73f22'))
-    trace_notLoc=go.Bar(x=requetCamNotLoc.date, y=requetCamNotLoc.nbre_notLoc, name='Camion PERRENOT', marker=dict(color='#f6cb16'))
-    layoutCamLoc=go.Layout(title="6. Utilisation camion de Location et Camion PERRENOT", xaxis=dict(title="Date des Tournées "), yaxis=dict(title="Nombre d'Utilisations "),)
-    
-
-    datacamLoc = [trace_loc, trace_notLoc]
-    figcamLoc=go.Figure(data=datacamLoc, layout=layoutCamLoc)
-    graphJSONcamLoc = json.dumps(figcamLoc, cls=plotly.utils.PlotlyJSONEncoder)
-
-    dataCamType = [go.Pie(labels=requetCamType.type, values=requetCamType.nbre_cam, textposition='inside', textinfo='percent+label', title='')] 
-    layoutPieCam=go.Layout(title="7. Répartition Camions de Livraison par Type ", )
-    figPieCam=go.Figure(data=dataCamType, layout=layoutPieCam)
-    graphJSONCamType = json.dumps(figPieCam, cls=plotly.utils.PlotlyJSONEncoder)
-
-    
-    
-
-    #afficher diagrammes par type de contrat Chauffeur
-    requeteChaufCDI = pd.read_sql_query("select chauffeur_camion.date,  count(chauffeur_camion.chauf_id) as nbre_chauf from chauffeur_camion join chauffeur on chauffeur.chauf_id = chauffeur_camion.chauf_id and chauffeur_camion.date between '%s' and '%s' join chauffeur_contrat on chauffeur_contrat.chauf_id=chauffeur.chauf_id and chauffeur_contrat.date_fin>date(now()) join contrat on contrat.contrat_id=chauffeur_contrat.contrat_id and contrat_intitule='CDI' group by chauffeur_camion.date" %(date_debut,date_fin), engine)
-    requeteChaufCDD = pd.read_sql_query("select chauffeur_camion.date,  count(chauffeur_camion.chauf_id) as nbre_chauf  from chauffeur_camion join chauffeur on chauffeur.chauf_id = chauffeur_camion.chauf_id and chauffeur_camion.date between '%s' and '%s' join chauffeur_contrat on chauffeur_contrat.chauf_id=chauffeur.chauf_id and chauffeur_contrat.date_fin>date(now()) join contrat on contrat.contrat_id=chauffeur_contrat.contrat_id and contrat_intitule='CDD' group by chauffeur_camion.date" %(date_debut,date_fin), engine)
-    requeteChaufInterim = pd.read_sql_query("select chauffeur_camion.date,  count(chauffeur_camion.chauf_id) as nbre_chauf from chauffeur_camion join chauffeur on chauffeur.chauf_id = chauffeur_camion.chauf_id and chauffeur_camion.date between '%s' and '%s' join chauffeur_contrat on chauffeur_contrat.chauf_id=chauffeur.chauf_id and chauffeur_contrat.date_fin>date(now()) join contrat on contrat.contrat_id=chauffeur_contrat.contrat_id and contrat_intitule='INTERIMAIRE' group by chauffeur_camion.date" %(date_debut,date_fin), engine)
-    requeteChaufContratGlobal = pd.read_sql_query("select contrat_intitule as intitul,  count(chauffeur_camion.chauf_id) as nbre_chauf from chauffeur_camion join chauffeur on chauffeur.chauf_id = chauffeur_camion.chauf_id and chauffeur_camion.date between '%s' and '%s' join chauffeur_contrat on chauffeur_contrat.chauf_id=chauffeur.chauf_id and chauffeur_contrat.date_fin>date(now()) join contrat on contrat.contrat_id=chauffeur_contrat.contrat_id group by contrat_intitule" %(date_debut,date_fin), engine)
-    
-    trace_chaufCDI=     go.Bar(x=requeteChaufCDI.date, y=requeteChaufCDI.nbre_chauf, name='CDI', marker=dict(color='#450d57'))
-    trace_chaufCDD=     go.Bar(x=requeteChaufCDD.date, y=requeteChaufCDD.nbre_chauf, name='CDD', marker=dict(color='#666699'))
-    trace_chaufInterim=     go.Bar(x=requeteChaufInterim.date, y=requeteChaufInterim.nbre_chauf, name='INTERIMAIRE', marker=dict(color='#993366'))
-    layoutChaufBar=go.Layout(title="8. Nombre de Chauffeurs par Type de Contrat", xaxis=dict(title="Date"), yaxis=dict(title="Nombre Chauffeur"),)
-    
-    dataChaufContrat=[trace_chaufCDI, trace_chaufCDD, trace_chaufInterim]
-    figBarChauf=go.Figure(data=dataChaufContrat, layout=layoutChaufBar)
-    graphJSONchaufContrat = json.dumps(figBarChauf, cls=plotly.utils.PlotlyJSONEncoder)
-
-    # diagramme circulaire chauffeur contrat global 
-    dataChaufContratGlobal = [go.Pie(labels=requeteChaufContratGlobal.intitul, values=requeteChaufContratGlobal.nbre_chauf, textposition='inside', textinfo='percent+label', )] 
-    layoutPieCam=go.Layout(title='9. Répartition des Chauffeurs par Type de Contrat ', )
-    figPieCam=go.Figure(data=dataChaufContratGlobal, layout=layoutPieCam)
-    graphJSONChaufContratGlobal = json.dumps(figPieCam, cls=plotly.utils.PlotlyJSONEncoder)
-    requeteCasino = pd.read_sql_query("select magasin_tarif_rolls, sum(nbre_rolls) as Nbre_rol from magasin join camion_magasin on camion_magasin.magasin_id=magasin.magasin_id and date between '%s' and '%s' and magasin_tarif_rolls<>-1 and magasin_tarif_rolls<>0 join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne_intitulé='CASINO' group by magasin_tarif_rolls" %(date_debut,date_fin), engine)
-    data1 = [go.Pie(labels=requeteCasino.magasin_tarif_rolls, values=requeteCasino.Nbre_rol, textposition='inside',text=['€'], textinfo='percent+label+text',) ] 
-    layoutPieRolls=go.Layout(title='4. Répartition Tarif Rolls pour Casino', )
-    figPieCam=go.Figure(data=data1, layout=layoutPieRolls)
-    graphJSON2 = json.dumps(figPieCam, cls=plotly.utils.PlotlyJSONEncoder)
-
-    #diagramme chiffre d'affaire 
-    casino_id=pd.read_sql_query("select enseigne_id as ens_id from enseigne where enseigne_intitulé='CASINO'", engine)['ens_id']
-    requetCamLoyer=pd.read_sql_query("select date,day(last_day(date)) ,MONTH(date), YEAR(date),DAYOFWEEK(date), sum(camion_loyer) from tarification  join info_tarification on info_tarification.info_tarification_id=tarification.info_tarification_id and type_tarif='trinome' and intitule_tarif='km' and enseigne_id=%s and date between '%s' and '%s'  join camion on camion.camion_id = tarification.camion_id  group by date order by date"%(casino_id[0],date_debut,date_fin), engine)
-    L_loyerCam_date=con.execute(text("select date,day(last_day(date)) ,MONTH(date), YEAR(date),DAYOFWEEK(date), sum(camion_loyer) from tarification  join info_tarification on info_tarification.info_tarification_id=tarification.info_tarification_id and type_tarif='trinome' and intitule_tarif='km' and enseigne_id=:casino_id and date between :date_deb and :date_fin  join camion on camion.camion_id = tarification.camion_id  group by date order by date "),{'casino_id':int(casino_id[0]),'date_deb':date_debut,'date_fin':date_fin}).fetchall()
-    jour_ouvrable=nbreJourOuvrable(L_loyerCam_date)
-    jour_ouvrable=pd.DataFrame(jour_ouvrable)
-    for element in range(jour_ouvrable.shape[0]):
-        jour_ouvrable.iloc[element,1]=requetCamLoyer.iloc[element,5]/jour_ouvrable.iloc[element,1]
-    jour_ouvrable.rename(columns={0:'date', 1:'jour'}, inplace=True)    
-    requetTkCasino=pd.read_sql_query("select date,  sum(tarif*valeur ) from tarification  join info_tarification on info_tarification.info_tarification_id=tarification.info_tarification_id and type_tarif='TK' and enseigne_id=%s and date between '%s' and '%s'  join camion on camion.camion_id = tarification.camion_id  group by date order by date"%(casino_id[0],date_debut,date_fin), engine)
-    requetTrinomeCasino=pd.read_sql_query("select date,  sum(tarif*valeur ) as cout_trinome from tarification  join info_tarification on info_tarification.info_tarification_id=tarification.info_tarification_id and type_tarif='trinome' and enseigne_id=%s and date between '%s' and '%s'  join camion on camion.camion_id = tarification.camion_id  group by date order by date"%(casino_id[0],date_debut,date_fin), engine)
-    requetDistrCasino=pd.read_sql_query("select date, sum(nbre_rolls*magasin_tarif_rolls + nbre_palette*magasin_tarif_palette) as cout_distribution  from camion_magasin  join magasin on magasin.magasin_id=camion_magasin.magasin_id join camion on camion.camion_id=camion_magasin.camion_id and camion_type<>'VL' and camion_type<>'CAISSE_MOBILE' join enseigne on enseigne.enseigne_id = magasin.enseigne_id and enseigne_intitulé='CASINO' where date between '%s' and '%s' group by date order by date"%(date_debut,date_fin), engine)
-    cout_paq=pd.read_sql_query("select tarif from info_tarification  where intitule_tarif='passage_a_quai' and enseigne_id=%s"%(casino_id[0]), engine)['tarif']
-    cout_tri_emb=pd.read_sql_query("select tarif from info_tarification  where intitule_tarif='tri_emb' and enseigne_id=%s"%(casino_id[0]), engine).tarif
-    requetPaQCasino=pd.read_sql_query("select date,  sum(nbre_rolls+nbre_palette)*(%s) as cout_paq from camion_magasin join camion on camion.camion_id=camion_magasin.camion_id and camion_type<>'CAISSE_MOBILE'  join magasin on magasin.magasin_id=camion_magasin.magasin_id  join enseigne on enseigne.enseigne_id = magasin.enseigne_id and enseigne_intitulé='CASINO' where date between '%s' and '%s' group by date order by date"%(cout_paq[0],date_debut,date_fin), engine)
-    requetTriEmb=pd.read_sql_query("select date,  sum(nbre_rolls+nbre_palette)*(%s) as cout_tri_emb from camion_magasin join camion on camion.camion_id=camion_magasin.camion_id and camion_type<>'CAISSE_MOBILE' join magasin on magasin.magasin_id=camion_magasin.magasin_id  join enseigne on enseigne.enseigne_id = magasin.enseigne_id and enseigne_intitulé='CASINO' where date between '%s' and '%s'  group by date order by date"%(cout_tri_emb[0],date_debut,date_fin), engine)
-    requeteNvtCasino=pd.read_sql_query("select tarification.date, sum(tarif*valeur)from tarification join info_tarification on info_tarification.info_tarification_id=tarification.info_tarification_id and type_tarif='navette' and enseigne_id=%s and date between '%s' and '%s'group by date order by date"%(casino_id[0],date_debut,date_fin),engine)
-    requetTrinomeCasino=pd.merge(requetTrinomeCasino,jour_ouvrable.iloc[:,0:2],  how='outer')
-    CA_casino=pd.merge(requetDistrCasino,requetTrinomeCasino,  how='outer')
-    CA_casino=pd.merge(CA_casino,requeteNvtCasino,  how='outer')
-    CA_casino=pd.merge(CA_casino,requetPaQCasino,  how='outer')
-    CA_casino=pd.merge(CA_casino,requetTkCasino,  how='outer')
-    CA_casino=pd.merge(CA_casino,requetTriEmb,  how='outer')
-    CA_casino=CA_casino.fillna(0)
-    sumCaCasino=CA_casino.iloc[:,1:].sum(axis = 1)
-    #tracer la ligne
-    CA_casino_line = pd.DataFrame({'date': CA_casino['date'],'CA_casino': sumCaCasino}, columns = ['date', 'CA_casino'])
-    casinoLine=go.Scatter( x=CA_casino_line.date, y=CA_casino_line.CA_casino, mode = 'lines+markers', name='CASINO')
-    dataLine=[casinoLine]
-   
-    L_ens=pd.read_sql_query("select enseigne_id, enseigne_intitulé from enseigne where enseigne_actif=1 and enseigne_intitulé<>'CASINO'",engine)
-    
-    for cpt in range(L_ens.shape[0]):
-        requet_ens=pd.read_sql_query("select date, sum(nbre_rolls*magasin_tarif_rolls + nbre_palette*magasin_tarif_palette) as cout_distribution  from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id join enseigne on enseigne.enseigne_id = magasin.enseigne_id and enseigne_intitulé='%s' where date between '%s' and '%s' group by date order by date "%(L_ens.iloc[cpt][1],date_debut,date_fin),engine)
-        requeteNvt_ens=pd.read_sql_query("select tarification.date as date, sum(tarif*valeur) as cout_navette from tarification join info_tarification on info_tarification.info_tarification_id=tarification.info_tarification_id and type_tarif='navette' and enseigne_id=%s and date between '%s' and '%s'group by date order by date"%(L_ens.iloc[cpt][0],date_debut,date_fin),engine)
-        if not requet_ens.empty and not requeteNvt_ens.empty:
-            requet_ens=pd.merge(requet_ens,requeteNvt_ens, how='outer')
-            requet_ens_sum=requet_ens.iloc[:,1:].sum(axis = 1)
-            
-            requet_ens_final = pd.DataFrame({'date': requet_ens.date,'CA_ens': requet_ens_sum}, columns = ['date', 'CA_ens'])
-            requet_ens_final = requet_ens_final.sort_values(by="date")
-            ens_Line=go.Scatter( x=requet_ens_final.date, y=requet_ens_final.CA_ens, mode = 'lines+markers',  name=L_ens.iloc[cpt][1])
-            dataLine.append(ens_Line)
-            
-        """elif not requet_ens.empty and requeteNvt_ens.empty:
-            ens_Line=go.Scatter( x=requet_ens['date'], y=requet_ens['cout_distribution'], mode = 'lines+markers', name=L_ens.iloc[cpt][1])
-            dataLine.append(ens_Line)
-        elif  requet_ens.empty and not requeteNvt_ens.empty:    
-            ens_Line=go.Scatter( x=requeteNvt_ens['date'], y=requeteNvt_ens['cout_navette'], mode = 'lines+markers', name=L_ens.iloc[cpt][1])
-            dataLine.append(ens_Line)"""
-
-    layoutline=go.Layout(title="2. Chiffre d'Affaire par Enseigne", xaxis=dict(title="Date"), yaxis=dict(title="Chiffre d'Affaire En Euro"),)
-    figCALine=go.Figure(data=dataLine, layout=layoutline)
-    graphJSONCA_ens = json.dumps(figCALine, cls=plotly.utils.PlotlyJSONEncoder)
-   
-    for cpt in range(L_ens.shape[0]):
-        requet_ens=pd.read_sql_query("select date, sum(nbre_rolls*magasin_tarif_rolls + nbre_palette*magasin_tarif_palette) as cout_distribution%s  from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id join enseigne on enseigne.enseigne_id = magasin.enseigne_id and enseigne_intitulé='%s' where date between '%s' and '%s' group by date order by 'date'"%(cpt,L_ens.iloc[cpt][1],date_debut,date_fin),engine)
-        requeteNvt_ens=pd.read_sql_query("select tarification.date, sum(tarif*valeur) as cout_navette%s from tarification join info_tarification on info_tarification.info_tarification_id=tarification.info_tarification_id and type_tarif='navette' and enseigne_id=%s and date between '%s' and '%s'group by date order by date"%(cpt,L_ens.iloc[cpt][0],date_debut,date_fin),engine)
-        if not requet_ens.empty:
-            CA_casino=pd.merge(CA_casino,requet_ens, how='outer')
-        if not requeteNvt_ens.empty:    
-            CA_casino=pd.merge(CA_casino,requeteNvt_ens, how='outer')
-            
-    sumCaCasino=CA_casino.iloc[:,1:].sum(axis = 1)
-    #tracer diagrammme a bar chiffre d affaire
-    CA_casino_final = pd.DataFrame({'date': CA_casino['date'],'CA_casino': sumCaCasino}, columns = ['date', 'CA_casino'])
-    traceBarCA=go.Bar(x=CA_casino_final.date,y=CA_casino_final.CA_casino, marker=dict(color='#D5D8DC'))
-    layoutBarCA=go.Layout(title="1. Chiffre d'affaire global", xaxis=dict(title="Date"), yaxis=dict(title="Chiffre d'Affaire en Euro"),)
-    dataBarCA = [traceBarCA]
-    figBarCA=go.Figure(data=dataBarCA, layout=layoutBarCA)
-    graphJSONCA = json.dumps(figBarCA, cls=plotly.utils.PlotlyJSONEncoder)
-    dateDebConvert=datetime.strptime(date_debut, "%Y-%m-%d").strftime("%d-%m-%Y")
-    dateFinConvert=datetime.strptime(date_fin, "%Y-%m-%d").strftime("%d-%m-%Y")   
-    data={'plot1': graphJSON1,
-          'plot2':graphJSON2,
-          'plotCam':graphJSONCam,
-          'plotCamLoc':graphJSONcamLoc,
-          'plotChaufContrat':graphJSONchaufContrat,
-          'plotChaufContratGlobal':graphJSONChaufContratGlobal,
-          'plotCamType':graphJSONCamType,
-          'plotCA':graphJSONCA,
-          'plotEnsLine':graphJSONCA_ens,
-          'date_debut': dateDebConvert,
-          'date_fin':dateFinConvert
-          }
-    return render_template('pages/diagram_apres_tournees.html',**data)
 
 #*************************************************************************************************Espace Enseigne***************************************************************
 #**********AJOUTER enseigne**********
@@ -907,7 +762,17 @@ def supp_enseigne():
     con.execute(text('update info_tarification set tarification_actif=0 where enseigne_id=:ens'),{'ens':ens_id[0]})
     flash('la suppression de l enseigne cochée a bien été prise en charge', 'success')
     
-    return redirect(url_for('modifier_enseigne'))        
+    return redirect(url_for('modifier_enseigne'))    
+#***************************************************************************************************************************ESPACE CHAUFFEUR********************************************************************
+
+@app.route('/chauffeur', methods=['GET','post'])
+def espace_chauf():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
+     
+    return render_template('pages/espace_chauf.html')
+
    
 #**************************************************************************************************************************AJOUTER CHAUFFEUR**********************************************************************
 #
@@ -1060,28 +925,15 @@ def chauffeur_supprime():#++++++++++++++++++++++++++++++++++++UPDATE ne marche p
         return redirect(url_for('home'))
     chauf_id=request.form['chauf_id']
     contra_date_fin=request.form['contra_date_fin']
-    contrat_encours=con.execute(text("select date_debut from chauffeur_contrat where chauf_id=:chauf_id and date_fin>:contra_date_fin "),{'chauf_id':chauf_id,'contra_date_fin':contra_date_fin}).fetchall()
-    if contrat_encours:
-        if len(contrat_encours)>1:
-            flash("il existe plus d'un contrat à cette date veuillez les supprimer sur edit contrat chauffeur ou vérifier bien la saisie de la date fin du contrat en cours", 'danger')    
-            return redirect(url_for('modifier_chauffeur'))
-        elif contrat_encours[0][0]> datetime.strptime(contra_date_fin, '%Y-%m-%d').date():
-            flash(" Veuillez vérifier la date fin du contrat, elle est inférieure à la date début du contrat en cours", 'danger')    
-            return redirect(url_for('modifier_chauffeur'))
+    test_contrat=con.execute(text("select max(date_fin),date_debut from chauffeur_contrat where chauf_id=:chauf_id "),{'chauf_id':chauf_id}).fetchone()
+    if test_contrat[1]> datetime.strptime(contra_date_fin, '%Y-%m-%d').date():
+        flash(" Veuillez vérifier la date fin du contrat, elle est inférieure à la date début du contrat en cours", 'danger')    
+        return redirect(url_for('edit_contrat_chauf'))
                 
-    statut_encours=con.execute(text("select date_debut from chauffeur_statut where chauff_id=:chauf_id and date_fin> :contra_date_fin"),{'chauf_id':chauf_id,'contra_date_fin':contra_date_fin}).fetchall()    
-    if statut_encours:
-        if len(statut_encours)>1:
-            flash("il existe plus d'un statut indisponible à cette date veuillez les supprimer sur edit statut chauffeur ou vérifier bien la saisie de la date fin du contrat en cours", 'danger')    
-            return redirect(url_for('modifier_chauffeur'))
-        elif statut_encours[0][0]> datetime.strptime(contra_date_fin, '%Y-%m-%d').date():
-            flash(" Veuillez vérifier la date fin du contrat, elle est inférieure à la date début d'un statut en cours", 'danger')    
-            return redirect(url_for('modifier_chauffeur'))
-       
-    #con.execute=(text("update chauffeur_statut set date_fin=:contra_date_fin where chauf_id=:chauf_id and date_fin> :contra_date_fin"),{'chauf_id':chauf_id, 'contra_date_fin':contra_date_fin})    
-    #con.execute=(text("update chauffeur_contrat set date_fin=:contra_date_fin where chauf_id=:chauf_id and date_fin> :contra_date_fin"),{'chauf_id':chauf_id, 'contra_date_fin':contra_date_fin})
-    #con.execute(text("update chauffeur set chauf_actif=0 where chauf_id=:chauf_id"),{'chauf_id':chauf_id})    
-    flash('Ce chauffeur a été bien supprimé', 'success')
+    con.execute(text("update chauffeur_statut set date_fin=:contra_date_fin where chauff_id=:chauf_id and date_fin>= :contra_date_fin"),{'chauf_id':chauf_id, 'contra_date_fin':contra_date_fin})    
+    con.execute(text("update chauffeur_contrat set date_fin=:contra_date_fin where chauf_id=:chauf_id and date_fin>= :contra_date_fin"),{'chauf_id':chauf_id, 'contra_date_fin':contra_date_fin})
+    con.execute(text("update chauffeur set chauf_actif='0' where (chauf_id=:chauf_id)"),{'chauf_id':chauf_id})    
+    flash('Ce chauffeur a été bien supprimé ainsi que son contrat en cours a été arrêté ', 'success')
     return redirect(url_for('modifier_chauffeur'))
 
  #*************************************************************************************************************VALIDER MODIFICATION STATUT CHAUFFEUR**************************************************************
@@ -1145,7 +997,7 @@ def edit_staut_chauf():
     rech_chauf=''
     chauf_select=''
     chauf_info=[ '' for i in range(9)]
-    liste_chauf= con.execute(text("select chauf_nom, chauf_prenom, statut_intitule, date_debut, date_fin, chauf_id , statut.statut_id, solde_RC, solde_CP  from chauffeur  left join  chauffeur_statut on chauffeur_statut.chauff_id= chauffeur.chauf_id and (date_fin>date(now()) or date_fin is null) left join statut on statut.statut_id = chauffeur_statut.statut_id where chauf_actif=1")).fetchall()
+    liste_chauf= con.execute(text("select chauf_nom, chauf_prenom, statut_intitule, date_debut, date_fin, chauf_id , statut.statut_id, chauffeur.solde_RC, chauffeur.solde_CP  from chauffeur  left join  chauffeur_statut on chauffeur_statut.chauff_id= chauffeur.chauf_id and (date_fin>date(now()) or date_fin is null) left join statut on statut.statut_id = chauffeur_statut.statut_id where chauf_actif=1")).fetchall()
     liste_statut=con.execute(text("select statut_id, statut_intitule from statut")).fetchall()
     data={ 'liste_chauf': liste_chauf,
             'rech_chauf':rech_chauf, 
@@ -1212,6 +1064,7 @@ def ajouter_statut_chauf():
             if int(statut_id)==int(CP_id[0]):
                 nv_CP=float(solde[0])-jourOuvrable(date_debut,date_fin)
                 con.execute(text("update chauffeur set solde_CP=:nv_soldeCP where chauf_id=:chauf_id "),{'nv_soldeCP':nv_CP,'chauf_id':chauf_id})         
+
             elif int(statut_id)==int(RC_id[0]):
                 nv_RC=float(solde[1])-jourOuvrable(date_debut,date_fin)
                 con.execute(text("update chauffeur set solde_RC=:nv_soldeRC where chauf_id=:chauf_id "),{'nv_soldeRC':nv_RC,'chauf_id':chauf_id})         
@@ -1277,7 +1130,103 @@ def chauffeur_modifie():
     con.execute(text("update chauffeur set chauf_nom=:nom, chauf_prenom=:prenom, groupe_id=:groupe, solde_RC=:solde_RC, solde_CP=:solde_CP, chauf_cout_horaire=:horaire,chauff_panier1=:panier1,chauff_panier2=:panier2, chauff_panier3=:panier3 where chauf_id=:chauf_id"),{'nom':nom,'prenom':prenom,'groupe':groupe[0],'solde_RC':solde_RC,'solde_CP':solde_CP,'horaire':horaire,'panier1':panier1,'panier2':panier2,'panier3':panier3,'chauf_id':chauf_id})
     flash("Les modifications ont bien été prise en compte!",'success')
     return redirect(url_for('modifier_chauffeur'))   
-    
+
+#************************************************************************************TABLEAU RECAP CHAUFFEUR***********************************************
+@app.route('/tableau_recap_chauffeur',methods=['GET','post']) 
+def tableau_recap_chauffeur():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
+    L_groupe=con.execute(text("select groupe_id, intitulé_groupe from groupe")).fetchall()
+    if request.method=='POST':
+        date_D=request.form['date_D']
+        date_fin=request.form['date_fin']
+        groupe_select=request.form.getlist('L_groupe') 
+        intitulé_groupe=con.execute(text("select groupe_id,intitulé_groupe from groupe where groupe_id in :groupe_select"),{'groupe_select':groupe_select}).fetchall()
+        L_chauf=[con.execute(text("select chauf_id,chauf_nom,chauf_prenom,solde_RC,solde_CP  from chauffeur join groupe on groupe.groupe_id=chauffeur.groupe_id where chauffeur.groupe_id = :groupe_id"),{'groupe_id':groupe}).fetchall() for groupe in groupe_select]
+        L_chauf_complete=con.execute(text("select chauf_id, chauf_nom, chauf_prenom, groupe_id from chauffeur where chauf_actif=1"))
+        L_chauf_statut=con.execute(text("select chauf_id, chauffeur_statut.statut_id,statut, date_debut,date_fin from chauffeur join groupe on groupe.groupe_id= chauffeur.groupe_id join chauffeur_statut on chauffeur_statut.chauff_id=chauffeur.chauf_id and date_debut>=:date_debut and date_fin<=:date_fin join statut on statut.statut_id=chauffeur_statut.statut_id"),{'date_debut':date_D,'date_fin':date_fin}).fetchall()
+        L_jour=['L','M','M','J','V','S','D']
+        jour1=datetime.strptime(date_D,"%Y-%m-%d").weekday()
+        nbre_jour=con.execute(text("select datediff(:date_fin,:date_D),month(:date_D),month(:date_fin)"),{'date_D':date_D,'date_fin':date_fin}).fetchone()
+        date=datetime.strptime(date_D,"%Y-%m-%d")
+        L_jour_select=[]
+        mois=[]
+        day=[]
+        L_date=[]
+        solde=[]
+        
+        for j in range(nbre_jour[0]):
+            moisJour=con.execute(text("select month(:date),day(:date),year(:date)"),{'date':date}).fetchone()
+            day.append((moisJour[1],date.weekday()))
+            if (moisJour[0],moisJour[2]) not in mois:
+                mois.append((moisJour[0],moisJour[2]))
+            
+            L_date.append((date,moisJour[0],date.weekday()))
+            date=date+timedelta(days=1)
+            if jour1>6:
+                jour1=0
+            L_jour_select.append((L_jour[jour1],moisJour[0],date))  
+            jour1+=1
+        jourD=con.execute(text("select month(:date_fin),day(:date_fin)"),{'date_fin':date_fin}).fetchone()
+        day.append((jourD[1],datetime.strptime(date_fin,"%Y-%m-%d").weekday()))   
+        L_date.append((datetime.strptime(date_fin,"%Y-%m-%d"),jourD[0],datetime.strptime(date_fin,"%Y-%m-%d").weekday()))
+        L_jour_select.append((L_jour[datetime.strptime(date_fin,"%Y-%m-%d").weekday()],jourD[0]))
+        for ms in mois:
+            if ms[0]==1:
+                solde.append(con.execute(text("select chauf_id,solde_RC,solde_CP, mois, année from solde where mois=12 and année=:année"),{'année':ms[1]-1}).fetchall())
+            else:
+                solde.append(con.execute(text("select chauf_id,solde_RC,solde_CP, mois, année from solde where mois=:mois and année=:année"),{'mois':ms[0]-1,'année':ms[1]}).fetchall())
+        cp=-1
+        #for mois in range(mois):
+            
+        cptJourMois=[]
+        nbreCaseVide=2
+        j=0
+        for ms in mois:
+            j+=1
+            cpt=0
+            for jr in L_jour_select:
+                if jr[1]==ms[0]:
+                    cpt+=1
+            nbreCaseVide+=cpt        
+            cptJourMois.append(cpt)
+        nbreCaseVide=nbreCaseVide+(j-1)
+
+        dateDebConvert=datetime.strptime(date_D, "%Y-%m-%d").strftime("%d-%m-%Y")
+        dateFinConvert=datetime.strptime(date_fin, "%Y-%m-%d").strftime("%d-%m-%Y")
+      
+        data={'intitulé_groupe':intitulé_groupe,
+          'nbreCaseVide':nbreCaseVide,
+          'cptJourMois':cptJourMois,
+          'nbre_groupe':len(L_groupe),
+          'groupe_select':groupe_select,
+          'L_chauf':L_chauf,
+          'L_chauf_statut':L_chauf_statut,
+          'L_chauf_complete':L_chauf_complete,
+          'L_jour_select':L_jour_select,
+          'nbre_jour':len(L_jour_select),
+          'dateDebConvert':dateDebConvert,
+          'dateFinConvert':dateFinConvert,
+           'mois':mois,
+          'nbre_mois':len(mois),
+          'jour':day,
+          'L_date':L_date,
+          'solde':solde,
+          'nbre_solde':len(solde)
+          
+        }      
+        path_wkhtmltopdf = r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe'
+        config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+        rendered=render_template('pages/tableau_recap_chauf.html',**data)
+        rendered=rendered
+        pdf =pdfkit.from_string(rendered, False, configuration=config)
+        response=make_response(pdf)
+        response.headers['Content-Type']='application/pdf'
+        response.headers['Content-Disposition']='attachment; filename=plannig_chauffeur.pdf'
+        return response    
+    data={'L_groupe':L_groupe} 
+    return render_template('pages/formulaire_recap_chauf.html',**data)
 #***********************************************************************************************************************Ajouter un utilisateur*********************************************************************
 
 @app.route('/ajout_utilisateur', methods=['GET','post'])
@@ -1502,7 +1451,6 @@ def magasin_modifie():
     anc_code_mag=request.form['anc_code_mag']
     nv_ens_id=request.form.getlist('modal_ensNv')
     mag_facturé=request.form.getlist('modal_mag_facturé')
-    print("mag facturééééééééééééééééééééééééééé",mag_facturé)
     test_mag_id=con.execute(text("select magasin_id from magasin where magasin_code=:mag_code and enseigne_id=:ens_id and magasin_code<>:anc_code_mag"),{'mag_code':mag_code, 'ens_id': nv_ens_id, 'anc_code_mag':anc_code_mag }).fetchone()
     if test_mag_id:
         flash('Ce code magsin existe déjà pour cette enesigne, veuillez le modifier', 'danger')
@@ -1554,18 +1502,7 @@ def editer_magasin():
         
     return render_template('pages/edit_magasin.html', **data)  
 
-    #*************************************************************************************************************************ENREGISTRER MODIFICATION TOURNEES*************
-@app.route('/enregistrement_modification_tournees', methods=['get','post']) #post de valider_tournée.html
-def enregistrer_modification_tournee():
-    if not session.get('connexion'):
-        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
-        return redirect(url_for('home'))
    
-    if request.method=='POST':     
-        mag_id=request.form.getlist('mag_id')
-        nbMag_par_camion=request.form.getlist('Tnbre_mag_cam')     
-        print("allez ca va marcheer InchaAllah",mag_id,nbMag_par_camion)
-    return "OK"
 #*******************************************************************************************************************************ENREGISTRER TOURNEES***********************************************************
 @app.route('/enregistrement_tournees', methods=['get','post']) #post de valider_tournée.html
 def enregistrer_tournee():
@@ -1577,7 +1514,6 @@ def enregistrer_tournee():
         nom_chauf=request.form.getlist('nom_chauf')
         nom_chauf_ajout=request.form.getlist('nom_chauf_ajout')
         cam_mat_ajout=request.form.getlist('cam_mat_ajout')
-        print("chaufeurs ajoutés et camions ajoutées",nom_chauf_ajout,cam_mat_ajout)
         vlm_rolls=request.form.getlist('vlm_rolls')
         vlm_pal=request.form.getlist('vlm_pal')
         #vlm_box=request.form.getlist('vlm_box')
@@ -1665,13 +1601,7 @@ def enregistrer_tournee():
           'date_tour':date_tour}
     return render_template('pages/diagram_apres_tournees.html',**data)                   
                
-    """for i in range(len(mag_code)):
-    print("volumes racuperes avec magasins",vlm_box[i], vlm_pal[i], vlm_rolls[i], mag_code[i])
-    for id, val in enumerate(nbMag_par_camion):
-    
-        print('camion',id, camion[id])
-        print(id+1, val)"""
-        #*******************************************************************************************************************************MODIFICATION TOURNEES***********************************************************
+    #*******************************************************************************************************************************MODIFICATION TOURNEES***********************************************************
 @app.route('/modification_tournees', methods=['get','post']) #post de valider_tournée.html
 def modifier_tournees():
     if not session.get('connexion'):
@@ -1688,7 +1618,7 @@ def modifier_tournees():
             return redirect(url_for('identification'))
         else:
             list_camion_mat=con.execute(text("call liste_camion()")).fetchall()
-            L_chaufComplete=con.execute(text('call liste_chauffeur()')).fetchall()
+            L_chaufComplete=con.execute(text('call liste_chauffeur(:date_tour)'),{'date_tour':date_tour}).fetchall()
             L_chaufCam=con.execute(text("select chauf_id, camion.camion_id, ligne, camion_mat, camion_cap from chauffeur_camion join camion on camion.camion_id=chauffeur_camion.camion_id where date=:date_tour"),{'date_tour':date_tour}).fetchall()
             L_magasinNonAffect=con.execute(text('select mag_id,magasin.magasin_code,nbre_rolls, nbre_pal, magasin_heure_livr from magasin_journalier join magasin on  magasin.magasin_id = magasin_journalier.mag_id where date=:date_tour '),{'date_tour':date_tour}).fetchall()
             L_camion=con.execute(text("select distinct camion_magasin.camion_id, camion_mat, camion_cap from camion_magasin join camion on camion.camion_id=camion_magasin.camion_id where date=:date_tour"),{'date_tour':date_tour}).fetchall()
@@ -1696,7 +1626,6 @@ def modifier_tournees():
             for camion in L_chaufCam:
                 mag=con.execute(text("select camion_magasin.magasin_id, magasin_code, nbre_rolls, nbre_palette, magasin_heure_livr, ligne from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id  where date=:date_tour and camion_id=:camion_id and ligne=:ligne order by magasin_heure_livr"),{'date_tour':date_tour,'camion_id':camion[1], 'ligne':camion[2]}).fetchall()
                 L_magasin.append(mag)
-            print(L_magasin)
             data={
                     'L_magasinNonAffect':L_magasinNonAffect,
                     'L_camion':L_camion,
@@ -1709,37 +1638,7 @@ def modifier_tournees():
                     'list_camion_mat':list_camion_mat
                  }
         return render_template('pages/modifier_tournées.html',**data)    
- #**********************************************************************************************************************************IMPRESSION FACTURATION JOURNALIERE APRES VALIDATION TOURNEES *******************************
-@app.route('/facturation_journalière', methods=['get','post']) 
-def facturation_journaliere():
-    date_tour=request.form['date_tour']
-    date_test=con.execute(text("select date from camion_magasin where date=:date_tour"),{'date_tour':date_tour}).fetchall()
-    if len(date_test)==0:
-        flash("Pas de tournées enregistrées à cette date!",'danger')
-        return redirect(url_for('identification'))    
-    #requeteLivraison = pd.read_sql_query('SELECT m.magasin_code, magasin_tarif_rolls, nbre_rolls, magasin_tarif_palette, nbre_palette, magasin_tarif_boxe, nbre_box FROM camion_magasin cm join camion on camion.camion_id=cm.camion_id and camion.camion_type<>"VL" join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where e.enseigne_intitulé ="CASINO" AND date ="%s" ;'%(date_tour), engine)
-    requeteLivraison = con.execute(text('SELECT m.magasin_code, magasin_tarif_rolls, nbre_rolls, magasin_tarif_palette, nbre_palette, magasin_tarif_boxe, nbre_box FROM camion_magasin cm join camion on camion.camion_id=cm.camion_id and camion.camion_type<>"VL" join magasin as m on m.magasin_id = cm.magasin_id and magasin_facturé=1 join enseigne as e on e.enseigne_id = m.enseigne_id where e.enseigne_intitulé ="CASINO" AND date =:date_tour'),{'date_tour':date_tour}).fetchall()
-    L_tarif=con.execute(text("select distinct magasin_tarif_rolls, magasin_tarif_palette from magasin join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne_intitulé='CASINO'  join camion_magasin on camion_magasin.magasin_id=magasin.magasin_id and date=:date_tour join camion on camion.camion_id=camion_magasin.camion_id and camion_type<>'VL' "),{'date_tour':date_tour}).fetchall()
-    #requeteInfoTarif = pd.read_sql_query('SELECT intitule_tarif, tarif FROM info_tarification JOIN enseigne ON info_tarification.enseigne_id = enseigne.enseigne_id WHERE enseigne.enseigne_intitulé = "CASINO";', engine)
-    L_trinome=con.execute(text("select magasin_code,magasin_tarif_rolls,nbre_rolls, magasin_tarif_palette, nbre_palette from camion_magasin join camion on camion.camion_id=camion_magasin.camion_id and camion_type='VL' and date=:date_tour join magasin on magasin.magasin_id=camion_magasin.magasin_id and magasin_facturé=1 join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne_intitulé='CASINO'"),{'date_tour':date_tour}).fetchall()
-    dateTourConvert=datetime.strptime(date_tour, "%Y-%m-%d").strftime("%d-%m-%Y")
-    data = {
-            'L_magasin': requeteLivraison,
-            'L_tarif':L_tarif,
-            'date_tour':dateTourConvert,
-            'L_trinome':L_trinome
-        }
-    #crréation pdf
-    path_wkhtmltopdf = r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe'
-    config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
-    rendered=render_template('pages/facturation_journaliere.html',**data)
-    rendered=rendered
-    pdf =pdfkit.from_string(rendered, False, configuration=config)
-    response=make_response(pdf)
-    response.headers['Content-Type']='application/pdf'
-    response.headers['Content-Disposition']='attachment; filename=facturation_journaliere.pdf'
-    return response
-    
+
 #**************************************************************************************************************************************************SELECTION MAGASINS***********************************************************
 
 @app.route('/selection_magasin', methods=['get','post'])
@@ -1900,8 +1799,7 @@ def valider_magasins():
     liste_camion=con.execute(text(requete_camion),{'camion':camion}).fetchall()
     #nbre_camion=len([row[0] for row in liste_camion])
     #récupérer la liste des chauffeurs dispo
-    #requete_chauffeur='call liste_chauffeur()'#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++test sur la date de livraison pas date d aujourdhui+++++++++++
-    chauffeur=con.execute(text('call liste_chauffeur()')).fetchall()
+    chauffeur=con.execute(text('call liste_chauffeur(:date)'),{'date':date}).fetchall()
     # liste des magasins existants
     L_magains=con.execute(text("select magasin_id, magasin_code, magasin_heure_livr from magasin where magasin_actif=1")).fetchall()
     # données à envoyer a la page valider_tournée
@@ -1927,8 +1825,208 @@ def valider_magasins():
         #return render_template('pages/valider_tournee.html', **data, return_msg={'msg':u'mag_nExist', 'type':u'danger'})
         return render_template('pages/valider_tournee.html', **data)
     
-   
+  #**********************************************************************************************************************************IMPRESSION FACTURATION JOURNALIERE APRES VALIDATION TOURNEES *******************************
+@app.route('/facturation_journalière', methods=['get','post']) 
+def facturation_journaliere():
+    date_tour=request.form['date_tour']
+    date_test=con.execute(text("select date from camion_magasin where date=:date_tour"),{'date_tour':date_tour}).fetchall()
+    if len(date_test)==0:
+        flash("Pas de tournées enregistrées à cette date!",'danger')
+        return redirect(url_for('identification'))    
+    #requeteLivraison = pd.read_sql_query('SELECT m.magasin_code, magasin_tarif_rolls, nbre_rolls, magasin_tarif_palette, nbre_palette, magasin_tarif_boxe, nbre_box FROM camion_magasin cm join camion on camion.camion_id=cm.camion_id and camion.camion_type<>"VL" join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where e.enseigne_intitulé ="CASINO" AND date ="%s" ;'%(date_tour), engine)
+    requeteLivraison = con.execute(text('SELECT m.magasin_code, magasin_tarif_rolls, nbre_rolls, magasin_tarif_palette, nbre_palette, magasin_tarif_boxe, nbre_box FROM camion_magasin cm join camion on camion.camion_id=cm.camion_id and camion.camion_type<>"VL" join magasin as m on m.magasin_id = cm.magasin_id and magasin_facturé=1 join enseigne as e on e.enseigne_id = m.enseigne_id where e.enseigne_intitulé ="CASINO" AND date =:date_tour'),{'date_tour':date_tour}).fetchall()
+    L_tarif=con.execute(text("select distinct magasin_tarif_rolls, magasin_tarif_palette from magasin join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne_intitulé='CASINO'  join camion_magasin on camion_magasin.magasin_id=magasin.magasin_id and date=:date_tour join camion on camion.camion_id=camion_magasin.camion_id and camion_type<>'VL' "),{'date_tour':date_tour}).fetchall()
+    #requeteInfoTarif = pd.read_sql_query('SELECT intitule_tarif, tarif FROM info_tarification JOIN enseigne ON info_tarification.enseigne_id = enseigne.enseigne_id WHERE enseigne.enseigne_intitulé = "CASINO";', engine)
+    L_trinome=con.execute(text("select magasin_code,magasin_tarif_rolls,nbre_rolls, magasin_tarif_palette, nbre_palette from camion_magasin join camion on camion.camion_id=camion_magasin.camion_id and camion_type='VL' and date=:date_tour join magasin on magasin.magasin_id=camion_magasin.magasin_id and magasin_facturé=1 join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne_intitulé='CASINO'"),{'date_tour':date_tour}).fetchall()
+    dateTourConvert=datetime.strptime(date_tour, "%Y-%m-%d").strftime("%d-%m-%Y")
+    data = {
+            'L_magasin': requeteLivraison,
+            'L_tarif':L_tarif,
+            'date_tour':dateTourConvert,
+            'L_trinome':L_trinome
+        }
+    #crréation pdf
+    path_wkhtmltopdf = r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe'
+    config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+    rendered=render_template('pages/facturation_journaliere.html',**data)
+    rendered=rendered
+    pdf =pdfkit.from_string(rendered, False, configuration=config)
+    response=make_response(pdf)
+    response.headers['Content-Type']='application/pdf'
+    response.headers['Content-Disposition']='attachment; filename=facturation_journaliere.pdf'
+    return response
+      
+ #***************************************************************************************************************************DIAGRAMMES********************************************************************************
+@app.route('/Diagrammes', methods=['GET','post'])
+def diagramme_aprs_tournees():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
+    date_debut=request.form['date_debut']
+    date_fin=request.form['date_fin']
     
+    requeteLivraison = pd.read_sql_query('SELECT e.enseigne_intitulé AS enseigne, m.magasin_id, magasin_tarif_rolls, magasin_tarif_palette, magasin_tarif_boxe FROM camion_magasin cm join magasin as m on m.magasin_id = cm.magasin_id join enseigne as e on e.enseigne_id = m.enseigne_id where date between "%s" and "%s"' %(date_debut,date_fin), engine)
+    dataLivraison = pd.DataFrame(requeteLivraison)
+    ens=dataLivraison["enseigne"].value_counts()
+    ens=ens.reset_index()
+    ens=ens.rename(columns={'enseigne':'Nbre_mag_livrés', 'index':'enseigne'})
+    # afficher diagramme circulaire pour distribution par enseigne  llll
+    data = [go.Pie(labels=ens.enseigne, values=ens.Nbre_mag_livrés, textposition='inside', textinfo='percent+label')] 
+    layoutPieEns=go.Layout(title="3. Répartition des magasins livrés par Enseigne", )
+    figPieEns=go.Figure(data=data, layout=layoutPieEns)
+    graphJSON1 = json.dumps(figPieEns, cls=plotly.utils.PlotlyJSONEncoder)
+
+    # afficher diagramme a bar pour les camion utilisé a cette période
+    requeteCamion = pd.read_sql_query('select camion_mat, count(camion_mat) As nbre_cam from camion join chauffeur_camion on chauffeur_camion.camion_id=camion.camion_id and date between "%s" and "%s" group by camion_mat' %(date_debut,date_fin), engine)
+    traceFRQCamBar=     go.Bar(x=requeteCamion.camion_mat,y=requeteCamion.nbre_cam)
+    layoutFRQCamBar=go.Layout(title="5. Fréquence d'utilisation Des Camions", xaxis=dict(title="Immatriculations des camions "), yaxis=dict(title="Nombre d'utilisations "),)
+    dataCamFRQBar=[traceFRQCamBar]
+    figBarChauf=go.Figure(data=dataCamFRQBar, layout=layoutFRQCamBar)
+    graphJSONCam = json.dumps(figBarChauf, cls=plotly.utils.PlotlyJSONEncoder)
+
+
+    #Afficher diagramme circulaire repartition des tarifs rolls pour toutes les enseignes
+    #dataLivraisonRolls = dataLivraison[dataLivraison.magasin_tarif_rolls.notna()]
+   # graphique_rolls_ens=px.sunburst(dataLivraisonRolls, path=["enseigne", "magasin_tarif_rolls"], color="enseigne", width=800, title="Répartition des tarifs rolls pour les livraisons entre le 2020-12-01 au 2020-12-15")
+    #graphique_rolls_ens = [go.Sunburst(labels=ens.enseigne, values=ens.Nbre_mag_livrés, textposition='inside', textinfo='percent+label', title='Répartition des magasins livrés par enseigne')] 
+   
+    #graphJSON_ensRolls = json.dumps(graphique_rolls_ens, cls=plotly.utils.PlotlyJSONEncoder)
+
+    #afficher diagramme a bar camion location ou non utilisé à cette période
+    requetCamLoc=pd.read_sql_query("select date, count(camion_mat) as nbre_loc from camion join chauffeur_camion on chauffeur_camion.camion_id=camion.camion_id and date between '%s' and '%s' where camion_type ='LOCATION' group by date"%(date_debut,date_fin), engine)
+    requetCamNotLoc=pd.read_sql_query("select date, count(camion_mat) as nbre_notLoc from camion join chauffeur_camion on chauffeur_camion.camion_id=camion.camion_id and date between '%s' and '%s' where camion_type <>'LOCATION' group by date"%(date_debut,date_fin), engine)
+    requetCamType=pd.read_sql_query("select camion_type as type, count(camion_mat)  nbre_cam from camion join chauffeur_camion on chauffeur_camion.camion_id=camion.camion_id and date between '%s' and '%s' group by camion_type"%(date_debut,date_fin), engine)
+      
+    trace_loc=go.Bar(x=requetCamLoc.date, y=requetCamLoc.nbre_loc, name='Camion Location', marker=dict(color='#e73f22'))
+    trace_notLoc=go.Bar(x=requetCamNotLoc.date, y=requetCamNotLoc.nbre_notLoc, name='Camion PERRENOT', marker=dict(color='#f6cb16'))
+    layoutCamLoc=go.Layout(title="6. Utilisation camion de Location et Camion PERRENOT", xaxis=dict(title="Date des Tournées "), yaxis=dict(title="Nombre d'Utilisations "),)
+    
+
+    datacamLoc = [trace_loc, trace_notLoc]
+    figcamLoc=go.Figure(data=datacamLoc, layout=layoutCamLoc)
+    graphJSONcamLoc = json.dumps(figcamLoc, cls=plotly.utils.PlotlyJSONEncoder)
+
+    dataCamType = [go.Pie(labels=requetCamType.type, values=requetCamType.nbre_cam, textposition='inside', textinfo='percent+label', title='')] 
+    layoutPieCam=go.Layout(title="7. Répartition Camions de Livraison par Type ", )
+    figPieCam=go.Figure(data=dataCamType, layout=layoutPieCam)
+    graphJSONCamType = json.dumps(figPieCam, cls=plotly.utils.PlotlyJSONEncoder)
+
+    
+    
+
+    #afficher diagrammes par type de contrat Chauffeur
+    requeteChaufCDI = pd.read_sql_query("select chauffeur_camion.date,  count(chauffeur_camion.chauf_id) as nbre_chauf from chauffeur_camion join chauffeur on chauffeur.chauf_id = chauffeur_camion.chauf_id and chauffeur_camion.date between '%s' and '%s' join chauffeur_contrat on chauffeur_contrat.chauf_id=chauffeur.chauf_id and chauffeur_contrat.date_fin>date(now()) join contrat on contrat.contrat_id=chauffeur_contrat.contrat_id and contrat_intitule='CDI' group by chauffeur_camion.date" %(date_debut,date_fin), engine)
+    requeteChaufCDD = pd.read_sql_query("select chauffeur_camion.date,  count(chauffeur_camion.chauf_id) as nbre_chauf  from chauffeur_camion join chauffeur on chauffeur.chauf_id = chauffeur_camion.chauf_id and chauffeur_camion.date between '%s' and '%s' join chauffeur_contrat on chauffeur_contrat.chauf_id=chauffeur.chauf_id and chauffeur_contrat.date_fin>date(now()) join contrat on contrat.contrat_id=chauffeur_contrat.contrat_id and contrat_intitule='CDD' group by chauffeur_camion.date" %(date_debut,date_fin), engine)
+    requeteChaufInterim = pd.read_sql_query("select chauffeur_camion.date,  count(chauffeur_camion.chauf_id) as nbre_chauf from chauffeur_camion join chauffeur on chauffeur.chauf_id = chauffeur_camion.chauf_id and chauffeur_camion.date between '%s' and '%s' join chauffeur_contrat on chauffeur_contrat.chauf_id=chauffeur.chauf_id and chauffeur_contrat.date_fin>date(now()) join contrat on contrat.contrat_id=chauffeur_contrat.contrat_id and contrat_intitule='INTERIMAIRE' group by chauffeur_camion.date" %(date_debut,date_fin), engine)
+    requeteChaufContratGlobal = pd.read_sql_query("select contrat_intitule as intitul,  count(chauffeur_camion.chauf_id) as nbre_chauf from chauffeur_camion join chauffeur on chauffeur.chauf_id = chauffeur_camion.chauf_id and chauffeur_camion.date between '%s' and '%s' join chauffeur_contrat on chauffeur_contrat.chauf_id=chauffeur.chauf_id and chauffeur_contrat.date_fin>date(now()) join contrat on contrat.contrat_id=chauffeur_contrat.contrat_id group by contrat_intitule" %(date_debut,date_fin), engine)
+    
+    trace_chaufCDI=     go.Bar(x=requeteChaufCDI.date, y=requeteChaufCDI.nbre_chauf, name='CDI', marker=dict(color='#450d57'))
+    trace_chaufCDD=     go.Bar(x=requeteChaufCDD.date, y=requeteChaufCDD.nbre_chauf, name='CDD', marker=dict(color='#666699'))
+    trace_chaufInterim=     go.Bar(x=requeteChaufInterim.date, y=requeteChaufInterim.nbre_chauf, name='INTERIMAIRE', marker=dict(color='#993366'))
+    layoutChaufBar=go.Layout(title="8. Nombre de Chauffeurs par Type de Contrat", xaxis=dict(title="Date"), yaxis=dict(title="Nombre Chauffeur"),)
+    
+    dataChaufContrat=[trace_chaufCDI, trace_chaufCDD, trace_chaufInterim]
+    figBarChauf=go.Figure(data=dataChaufContrat, layout=layoutChaufBar)
+    graphJSONchaufContrat = json.dumps(figBarChauf, cls=plotly.utils.PlotlyJSONEncoder)
+
+    # diagramme circulaire chauffeur contrat global 
+    dataChaufContratGlobal = [go.Pie(labels=requeteChaufContratGlobal.intitul, values=requeteChaufContratGlobal.nbre_chauf, textposition='inside', textinfo='percent+label', )] 
+    layoutPieCam=go.Layout(title='9. Répartition des Chauffeurs par Type de Contrat ', )
+    figPieCam=go.Figure(data=dataChaufContratGlobal, layout=layoutPieCam)
+    graphJSONChaufContratGlobal = json.dumps(figPieCam, cls=plotly.utils.PlotlyJSONEncoder)
+    requeteCasino = pd.read_sql_query("select magasin_tarif_rolls, sum(nbre_rolls) as Nbre_rol from magasin join camion_magasin on camion_magasin.magasin_id=magasin.magasin_id and date between '%s' and '%s' and magasin_tarif_rolls<>-1 and magasin_tarif_rolls<>0 join enseigne on enseigne.enseigne_id=magasin.enseigne_id and enseigne_intitulé='CASINO' group by magasin_tarif_rolls" %(date_debut,date_fin), engine)
+    data1 = [go.Pie(labels=requeteCasino.magasin_tarif_rolls, values=requeteCasino.Nbre_rol, textposition='inside',text=['€'], textinfo='percent+label+text',) ] 
+    layoutPieRolls=go.Layout(title='4. Répartition Tarif Rolls pour Casino', )
+    figPieCam=go.Figure(data=data1, layout=layoutPieRolls)
+    graphJSON2 = json.dumps(figPieCam, cls=plotly.utils.PlotlyJSONEncoder)
+
+    #diagramme chiffre d'affaire 
+    casino_id=pd.read_sql_query("select enseigne_id as ens_id from enseigne where enseigne_intitulé='CASINO'", engine)['ens_id']
+    requetCamLoyer=pd.read_sql_query("select date,day(last_day(date)) ,MONTH(date), YEAR(date),DAYOFWEEK(date), sum(camion_loyer) from tarification  join info_tarification on info_tarification.info_tarification_id=tarification.info_tarification_id and type_tarif='trinome' and intitule_tarif='km' and enseigne_id=%s and date between '%s' and '%s'  join camion on camion.camion_id = tarification.camion_id  group by date order by date"%(casino_id[0],date_debut,date_fin), engine)
+    L_loyerCam_date=con.execute(text("select date,day(last_day(date)) ,MONTH(date), YEAR(date),DAYOFWEEK(date), sum(camion_loyer) from tarification  join info_tarification on info_tarification.info_tarification_id=tarification.info_tarification_id and type_tarif='trinome' and intitule_tarif='km' and enseigne_id=:casino_id and date between :date_deb and :date_fin  join camion on camion.camion_id = tarification.camion_id  group by date order by date "),{'casino_id':int(casino_id[0]),'date_deb':date_debut,'date_fin':date_fin}).fetchall()
+    jour_ouvrable=nbreJourOuvrable(L_loyerCam_date)
+    jour_ouvrable=pd.DataFrame(jour_ouvrable)
+    for element in range(jour_ouvrable.shape[0]):
+        jour_ouvrable.iloc[element,1]=requetCamLoyer.iloc[element,5]/jour_ouvrable.iloc[element,1]
+    jour_ouvrable.rename(columns={0:'date', 1:'jour'}, inplace=True)    
+    requetTkCasino=pd.read_sql_query("select date,  sum(tarif*valeur ) from tarification  join info_tarification on info_tarification.info_tarification_id=tarification.info_tarification_id and type_tarif='TK' and enseigne_id=%s and date between '%s' and '%s'  join camion on camion.camion_id = tarification.camion_id  group by date order by date"%(casino_id[0],date_debut,date_fin), engine)
+    requetTrinomeCasino=pd.read_sql_query("select date,  sum(tarif*valeur ) as cout_trinome from tarification  join info_tarification on info_tarification.info_tarification_id=tarification.info_tarification_id and type_tarif='trinome' and enseigne_id=%s and date between '%s' and '%s'  join camion on camion.camion_id = tarification.camion_id  group by date order by date"%(casino_id[0],date_debut,date_fin), engine)
+    requetDistrCasino=pd.read_sql_query("select date, sum(nbre_rolls*magasin_tarif_rolls + nbre_palette*magasin_tarif_palette) as cout_distribution  from camion_magasin  join magasin on magasin.magasin_id=camion_magasin.magasin_id join camion on camion.camion_id=camion_magasin.camion_id and camion_type<>'VL' and camion_type<>'CAISSE_MOBILE' join enseigne on enseigne.enseigne_id = magasin.enseigne_id and enseigne_intitulé='CASINO' where date between '%s' and '%s' group by date order by date"%(date_debut,date_fin), engine)
+    cout_paq=pd.read_sql_query("select tarif from info_tarification  where intitule_tarif='passage_a_quai' and enseigne_id=%s"%(casino_id[0]), engine)['tarif']
+    cout_tri_emb=pd.read_sql_query("select tarif from info_tarification  where intitule_tarif='tri_emb' and enseigne_id=%s"%(casino_id[0]), engine).tarif
+    requetPaQCasino=pd.read_sql_query("select date,  sum(nbre_rolls+nbre_palette)*(%s) as cout_paq from camion_magasin join camion on camion.camion_id=camion_magasin.camion_id and camion_type<>'CAISSE_MOBILE'  join magasin on magasin.magasin_id=camion_magasin.magasin_id  join enseigne on enseigne.enseigne_id = magasin.enseigne_id and enseigne_intitulé='CASINO' where date between '%s' and '%s' group by date order by date"%(cout_paq[0],date_debut,date_fin), engine)
+    requetTriEmb=pd.read_sql_query("select date,  sum(nbre_rolls+nbre_palette)*(%s) as cout_tri_emb from camion_magasin join camion on camion.camion_id=camion_magasin.camion_id and camion_type<>'CAISSE_MOBILE' join magasin on magasin.magasin_id=camion_magasin.magasin_id  join enseigne on enseigne.enseigne_id = magasin.enseigne_id and enseigne_intitulé='CASINO' where date between '%s' and '%s'  group by date order by date"%(cout_tri_emb[0],date_debut,date_fin), engine)
+    requeteNvtCasino=pd.read_sql_query("select tarification.date, sum(tarif*valeur)from tarification join info_tarification on info_tarification.info_tarification_id=tarification.info_tarification_id and type_tarif='navette' and enseigne_id=%s and date between '%s' and '%s'group by date order by date"%(casino_id[0],date_debut,date_fin),engine)
+    requetTrinomeCasino=pd.merge(requetTrinomeCasino,jour_ouvrable.iloc[:,0:2],  how='outer')
+    CA_casino=pd.merge(requetDistrCasino,requetTrinomeCasino,  how='outer')
+    CA_casino=pd.merge(CA_casino,requeteNvtCasino,  how='outer')
+    CA_casino=pd.merge(CA_casino,requetPaQCasino,  how='outer')
+    CA_casino=pd.merge(CA_casino,requetTkCasino,  how='outer')
+    CA_casino=pd.merge(CA_casino,requetTriEmb,  how='outer')
+    CA_casino=CA_casino.fillna(0)
+    sumCaCasino=CA_casino.iloc[:,1:].sum(axis = 1)
+    #tracer la ligne
+    CA_casino_line = pd.DataFrame({'date': CA_casino['date'],'CA_casino': sumCaCasino}, columns = ['date', 'CA_casino'])
+    casinoLine=go.Scatter( x=CA_casino_line.date, y=CA_casino_line.CA_casino, mode = 'lines+markers', name='CASINO')
+    dataLine=[casinoLine]
+   
+    L_ens=pd.read_sql_query("select enseigne_id, enseigne_intitulé from enseigne where enseigne_actif=1 and enseigne_intitulé<>'CASINO'",engine)
+    
+    for cpt in range(L_ens.shape[0]):
+        requet_ens=pd.read_sql_query("select date, sum(nbre_rolls*magasin_tarif_rolls + nbre_palette*magasin_tarif_palette) as cout_distribution  from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id join enseigne on enseigne.enseigne_id = magasin.enseigne_id and enseigne_intitulé='%s' where date between '%s' and '%s' group by date order by date "%(L_ens.iloc[cpt][1],date_debut,date_fin),engine)
+        requeteNvt_ens=pd.read_sql_query("select tarification.date as date, sum(tarif*valeur) as cout_navette from tarification join info_tarification on info_tarification.info_tarification_id=tarification.info_tarification_id and type_tarif='navette' and enseigne_id=%s and date between '%s' and '%s'group by date order by date"%(L_ens.iloc[cpt][0],date_debut,date_fin),engine)
+        if not requet_ens.empty and not requeteNvt_ens.empty:
+            requet_ens=pd.merge(requet_ens,requeteNvt_ens, how='outer')
+            requet_ens_sum=requet_ens.iloc[:,1:].sum(axis = 1)
+            
+            requet_ens_final = pd.DataFrame({'date': requet_ens.date,'CA_ens': requet_ens_sum}, columns = ['date', 'CA_ens'])
+            requet_ens_final = requet_ens_final.sort_values(by="date")
+            ens_Line=go.Scatter( x=requet_ens_final.date, y=requet_ens_final.CA_ens, mode = 'lines+markers',  name=L_ens.iloc[cpt][1])
+            dataLine.append(ens_Line)
+            
+        """elif not requet_ens.empty and requeteNvt_ens.empty:
+            ens_Line=go.Scatter( x=requet_ens['date'], y=requet_ens['cout_distribution'], mode = 'lines+markers', name=L_ens.iloc[cpt][1])
+            dataLine.append(ens_Line)
+        elif  requet_ens.empty and not requeteNvt_ens.empty:    
+            ens_Line=go.Scatter( x=requeteNvt_ens['date'], y=requeteNvt_ens['cout_navette'], mode = 'lines+markers', name=L_ens.iloc[cpt][1])
+            dataLine.append(ens_Line)"""
+
+    layoutline=go.Layout(title="2. Chiffre d'Affaire par Enseigne", xaxis=dict(title="Date"), yaxis=dict(title="Chiffre d'Affaire En Euro"),)
+    figCALine=go.Figure(data=dataLine, layout=layoutline)
+    graphJSONCA_ens = json.dumps(figCALine, cls=plotly.utils.PlotlyJSONEncoder)
+   
+    for cpt in range(L_ens.shape[0]):
+        requet_ens=pd.read_sql_query("select date, sum(nbre_rolls*magasin_tarif_rolls + nbre_palette*magasin_tarif_palette) as cout_distribution%s  from camion_magasin join magasin on magasin.magasin_id=camion_magasin.magasin_id join enseigne on enseigne.enseigne_id = magasin.enseigne_id and enseigne_intitulé='%s' where date between '%s' and '%s' group by date order by 'date'"%(cpt,L_ens.iloc[cpt][1],date_debut,date_fin),engine)
+        requeteNvt_ens=pd.read_sql_query("select tarification.date, sum(tarif*valeur) as cout_navette%s from tarification join info_tarification on info_tarification.info_tarification_id=tarification.info_tarification_id and type_tarif='navette' and enseigne_id=%s and date between '%s' and '%s'group by date order by date"%(cpt,L_ens.iloc[cpt][0],date_debut,date_fin),engine)
+        if not requet_ens.empty:
+            CA_casino=pd.merge(CA_casino,requet_ens, how='outer')
+        if not requeteNvt_ens.empty:    
+            CA_casino=pd.merge(CA_casino,requeteNvt_ens, how='outer')
+            
+    sumCaCasino=CA_casino.iloc[:,1:].sum(axis = 1)
+    #tracer diagrammme a bar chiffre d affaire
+    CA_casino_final = pd.DataFrame({'date': CA_casino['date'],'CA_casino': sumCaCasino}, columns = ['date', 'CA_casino'])
+    traceBarCA=go.Bar(x=CA_casino_final.date,y=CA_casino_final.CA_casino, marker=dict(color='#D5D8DC'))
+    layoutBarCA=go.Layout(title="1. Chiffre d'affaire global", xaxis=dict(title="Date"), yaxis=dict(title="Chiffre d'Affaire en Euro"),)
+    dataBarCA = [traceBarCA]
+    figBarCA=go.Figure(data=dataBarCA, layout=layoutBarCA)
+    graphJSONCA = json.dumps(figBarCA, cls=plotly.utils.PlotlyJSONEncoder)
+    dateDebConvert=datetime.strptime(date_debut, "%Y-%m-%d").strftime("%d-%m-%Y")
+    dateFinConvert=datetime.strptime(date_fin, "%Y-%m-%d").strftime("%d-%m-%Y")   
+    data={'plot1': graphJSON1,
+          'plot2':graphJSON2,
+          'plotCam':graphJSONCam,
+          'plotCamLoc':graphJSONcamLoc,
+          'plotChaufContrat':graphJSONchaufContrat,
+          'plotChaufContratGlobal':graphJSONChaufContratGlobal,
+          'plotCamType':graphJSONCamType,
+          'plotCA':graphJSONCA,
+          'plotEnsLine':graphJSONCA_ens,
+          'date_debut': dateDebConvert,
+          'date_fin':dateFinConvert
+          }
+    return render_template('pages/diagram_apres_tournees.html',**data)
+   
      
  #**********************************************************************************SE DECONNECTER********************************************************************************      
 

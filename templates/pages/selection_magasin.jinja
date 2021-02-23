@@ -45,7 +45,6 @@
                                     {% for cam in camion: %}
                                         <div class="form-group col-md-2">
                                             <input class="custom-control-input" type="checkbox" name="liste_camion" id="{{ cam[0] }}" value="{{ cam[0] }}" >
-                                            {# <input class="form-check-input" type="checkbox" name="liste_camion" id="{{ camion[i][0] }}" value="{{ camion[i][0] }}"> #}
                                             <label class="custom-control-label" for="{{ cam[0] }}" data-toggle="tooltip" data-placement="top" title="{{ cam[4] }}"> {{ cam[0] }}  </label>
                                         </div>
                                     {% endfor %}

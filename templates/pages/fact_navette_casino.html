@@ -10,7 +10,11 @@
 </head>
 <body>
     <div class="container">
+        {%if test_ens=='casino'%}
         <h1 class="text-center">Facturation de Casino pour la période entre </h1>
+        {%else%}
+            <h1 class="text-center">Facturation de {{enseigne_intitulé}} pour la période entre </h1>
+        {%endif%}    
         <h2 class="text-center">{{date_debut}} et {{date_fin}}:</h2>
         <h3 class="text-left">1. NAVETTES:</h3>
         <div class="row">
@@ -19,13 +23,13 @@
                 <thead class="table-dark">
                     <tr>
                         <th rowspan=2> DATE </th>
-                        {% for nvt in  L_tot_navette_csn%}
+                        {% for nvt in  L_tot_navette%}
                             <th> {{nvt[1]}}</th>
                         {% endfor %}
                         <th rowspan=2>COUT</th>
                     </tr>
                     <tr >
-                        {% for nvt in  L_tot_navette_csn%}
+                        {% for nvt in  L_tot_navette%}
                             <th> {{nvt[3]}}€</th>
                         {% endfor %}
                         
@@ -36,9 +40,9 @@
                         {% set ns.cout=0 %}
                         <tr>
                             <td class="table-active"> {{date[1]}} </td>
-                            {% for nvt in L_tot_navette_csn %}
+                            {% for nvt in L_tot_navette %}
                                 {% set ns.test=1 %}
-                                {% for nvt_csn in L_navette_csn %}  
+                                {% for nvt_csn in L_navette %}  
                                     {% if nvt_csn[0] ==nvt[0] and nvt_csn[2]==date[0] %}
                                         {% set ns.test=0 %}
                                         {% set ns.cout =ns.cout+ nvt_csn[3]*nvt[3] %}
@@ -55,10 +59,10 @@
                     <tr >
                         <th class="table-dark" >Total</th>
                             {%set ns.cout_total=0%}
-                            {% for nvt in L_tot_navette_csn %}
+                            {% for nvt in L_tot_navette %}
                                 {%set ns.total=0%}
                                 {% for date in L_date_facturation %}
-                                    {% for nvt_csn in L_navette_csn %}  
+                                    {% for nvt_csn in L_navette %}  
                                         {% if nvt_csn[0] ==nvt[0] and nvt_csn[2]==date[0] %}
                                             {% set ns.total=ns.total+nvt_csn[3] %}
                                         {% endif %}
@@ -83,26 +87,36 @@
                             
                             <th> ROLLS A</th>
                         {% endfor %}
-                        <th >Z.Trinome</th>
+                        {%if test_ens=='casino'%}
+                            <th >Z.Trinome</th>
+                        {%endif%}    
                         {% for pal in  L_tot_pal%}
                             <th> PALETTE A</th>
                         {% endfor %}
-                        <th rowspan=2>T.hors VL</th>
+                        {%if test_ens=='casino'%}
+                            <th rowspan=2>T.hors VL</th>
+                        {%endif%}    
                         <th rowspan=2>Total</th>
                         <th rowspan=2>Cout Distribution</th>
-                        <th>Tri Emb</th>
-                        <th>Cout PàQ</th>
+                        {%if test_ens=='casino'%}
+                            <th>Tri Emb</th>
+                            <th>Cout PàQ</th>
+                        {%endif%}    
                     </tr>
                     <tr>
                         {% for rolls in  L_tot_rolls if rolls[0]|int !=-1%}
                             <th> {{rolls[0]}}€</th>
                         {% endfor %}
-                        <th> LOC</th>
+                        {%if test_ens=='casino'%}
+                            <th> LOC</th>
+                        {%endif%}
                         {% for pal in  L_tot_pal%}
                             <th>{{pal[0 | round(2)]}}€</th>
                         {% endfor %}
-                        <th>{{cout_triEmb }}€</th>
-                        <th>{{cout_PàQ }}€</th>
+                        {%if test_ens=='casino'%}
+                            <th>{{cout_triEmb }}€</th>
+                            <th>{{cout_PàQ }}€</th>
+                        {%endif%}    
                     </tr>
 
                 </thead>
@@ -129,17 +143,19 @@
                                         <td> 0</td>
                                 {% endif %}
                             {% endfor %}
-                            {% for trnm in nbre_rls_pal_trinome if trnm[0]==date[0]  %}
-                                {%set ns.VL =ns.VL+trnm[1]%} 
-                            {% endfor %} 
-                            <td>{{ns.VL | round(2)}}</td>                           
+                            {%if test_ens=='casino'%}
+                                {% for trnm in nbre_rls_pal_trinome if trnm[0]==date[0]  %}
+                                    {%set ns.VL =ns.VL+trnm[1]%} 
+                                {% endfor %} 
+                                <td>{{ns.VL | round(2)}}</td>   
+                            {%endif%}                            
                             {% for trf_pal in L_tot_pal %}
                                 {% set ns.test=1 %}
                                 {% for pal_sect in nbre_pal_secteur %}  
                                     {% if pal_sect[0] ==trf_pal[0] and pal_sect[1]==date[0] %}
                                         {% set ns.test=0 %}
                                         <td> {{ pal_sect[2] | round(2) }}</td>
-                                        {%set ns.tot_hors_vl= ns.tot_hors_vl+ 1.6*pal_sect[2]%}
+                                        {%set ns.tot_hors_vl= ns.tot_hors_vl+ pal_sect[2]%}
                                         {%set ns.cout_distr=ns.cout_distr+(pal_sect[2]*trf_pal[0])%}
                                     {% endif %}
                                 {% endfor %} 
@@ -147,11 +163,15 @@
                                     <td> 0</td>
                                 {% endif %}
                             {% endfor %}
-                            <td>{{ns.tot_hors_vl | round(2)}}</td>
+                            {%if test_ens=='casino'%}
+                                <td>{{ns.tot_hors_vl | round(2)}}</td>
+                            {%endif%}    
                             <td>{{(ns.tot_hors_vl+ns.VL) | round(2)}}</td>
                             <td>{{ns.cout_distr | round(2)}}€</td>
-                            <td>{{((ns.tot_hors_vl+ns.VL)*cout_triEmb )| round(2)}}€</td>
-                            <td>{{((ns.tot_hors_vl+ns.VL)*cout_PàQ )| round(2)}}€</td>
+                            {%if test_ens=='casino'%}
+                                <td>{{((ns.tot_hors_vl+ns.VL)*cout_triEmb )| round(2)}}€</td>
+                                <td>{{((ns.tot_hors_vl+ns.VL)*cout_PàQ )| round(2)}}€</td>
+                            {%endif%}
                         </tr>
                     {% endfor %}
                     <tr  >
@@ -169,10 +189,18 @@
                             <td class="table-dark"> {{ns.total_rolls | round(2)}}</td>
                             {% set ns.cout_total_distri=ns.cout_total_distri+(ns.total_rolls* trf_rolls[0]) %}
                         {% endfor %}
-                        {% for rolls_sect in nbre_rolls_secteur if rolls_sect[0]|int ==-1 %}  
+                        
+                        {#{% for rolls_sect in nbre_rolls_secteur if rolls_sect[0]|int ==-1 %}  
                             {% set ns.total_vl=ns.total_vl+rolls_sect[2] %}
-                        {% endfor %}
-                        <td class="table-dark"> {{ns.total_vl | round(2)}}</td>
+                        {% endfor %}#}
+                        {%if test_ens=='casino'%}
+                            {% for trnm in nbre_rls_pal_trinome   %}
+                               
+                             
+                                {% set ns.total_vl=ns.total_vl+trnm[1] %}
+                            {% endfor %} 
+                            <td class="table-dark"> {{ns.total_vl | round(2)}}</td>
+                        {%endif%}    
                             {% for trf_pal in L_tot_pal  %}
                                 {%set ns.total_pal=0%}
                                 {% for pal_sect in nbre_pal_secteur if  pal_sect[0] ==trf_pal[0]  %}  
@@ -182,15 +210,21 @@
                                 <td class="table-dark"> {{ns.total_pal | round(2)}}</td>
                                 {% set ns.cout_total_distri=ns.cout_total_distri+(ns.total_pal* trf_pal[0]) %}
                             {% endfor %}
-                            <td class="table-dark"> {{ns.total_hors_vl | round(2)}}</td>
-                            <td class="table-dark"> {{(ns.total_hors_vl + ns.total_vl) | round(2)}}</td>
+                            {%if test_ens=='casino'%}
+                                <td class="table-dark"> {{ns.total_hors_vl | round(2)}}</td>
+                            {%endif%}
+                                <td class="table-dark"> {{(ns.total_hors_vl + ns.total_vl) | round(2)}}</td>
+                            
                             <td class="table-dark">{{ns.cout_total_distri | round(2) }}€</td>
-                            <td class="table-dark">{{((ns.total_hors_vl + ns.total_vl)*cout_triEmb) | round(2)}}€</td>
-                            <td class="table-dark">{{((ns.total_hors_vl + ns.total_vl)*cout_PàQ) | round(2)}}€</td>
+                            {%if test_ens=='casino'%}
+                                <td class="table-dark">{{((ns.total_hors_vl + ns.total_vl)*cout_triEmb) | round(2)}}€</td>
+                                <td class="table-dark">{{((ns.total_hors_vl + ns.total_vl)*cout_PàQ) | round(2)}}€</td>
+                            {%endif%}    
                     </tr>
                 </tbody>
                 
             </table> 
+            {%if test_ens=='casino'%}
             <div style = "display:block; clear:both; page-break-after:always;"></div>
             <!--TRINOME-->
             <h3 class="text-left">3. TRINOME:</h3> 
@@ -369,6 +403,7 @@
                     </tr>
                 </tbody>    
             </table> 
+            {%endif%}
         </div>
         
     </div>

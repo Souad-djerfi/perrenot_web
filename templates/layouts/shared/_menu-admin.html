@@ -35,7 +35,7 @@
           </a>
           <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
             <a class="dropdown-item" href="#" data-toggle="modal" data-target="#facturation">Formulaire Facturation</a>
-            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#impression_facturation">Imprimer Tableaux Récapitulatifs</a>
+            <a class="dropdown-item" href="{{ url_for('impression_facturation') }}" >Imprimer Tableaux Récapitulatifs</a>
             <a class="dropdown-item" href="#" data-toggle="modal" data-target="#facturation_journaliere">Imprimer Facturation Journalière</a>
             <a class="dropdown-item" href="{{ url_for('ajouter_navette') }}">Ajouter/ Editer  Navette</a>
           </div>
@@ -257,16 +257,18 @@
               <input type="date" class="form-control" id="date" name= "date" required>  
             </div>
           </div>
+          
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
             <button type="submit" class="btn btn-primary">Visualiser Formulaire</button>
           </div>
+          
         </form>  
       </div>
     </div>
   </div>
   <!-- Modal diagramme-->
-  <div class="modal fade" id="afficher_diagramme" tabindex="-1" aria-labelledby="impression_facturation" aria-hidden="true">
+  <div class="modal fade" id="afficher_diagramme" tabindex="-1" aria-labelledby="afficher_diagramme" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
@@ -314,6 +316,15 @@
             <div class="form-group">
               <label for="date" class="col-form-label" >Au:</label>
               <input type="date" class="form-control" id="date" name= "date_fin" required>  
+            </div>
+            <div class="form-group">
+              <label for="date" class="col-form-label" >Enseigne:</label>
+              <select name="liste_ens" class="custom-select my-1 mr-sm-2" required>
+                <option value="" disabled selected>  Choisissez une enseigne</option>
+                {% for ens in L_ens %}
+                    <option value="{{ens[0]}}">  {{ens[1]}} </option>
+                {% endfor %}
+            </select>  
             </div>
           </div>
           <div class="modal-footer">
