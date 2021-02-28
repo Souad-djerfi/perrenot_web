@@ -67,7 +67,7 @@
                 </div>
               </div> 
               <div class="col-9 ">
-                <form method="POST" ACTION="{{ url_for('enregistrer_tournee') }}"  >     
+                <form method="POST" ACTION="{{ url_for('enregistrer_tournee') }}"  id="form_tournee" name="form_tournee">      
                   <div class="row justify-content-around">
                     {% for cam in liste_camion: %}
                       <div class="col-md-3 mb-3" id="cam_num_{{loop.index0}}">
@@ -113,7 +113,8 @@
                     {%endfor%}
                   </div>  
                   <div class="row justify-content-around">
-                       
+                     {% set ns = namespace(found=false) %}
+                                      {% set ns.cap=0 %}  
                     {% for cpt in range(camionPlus): %}
                       <div class="col-md-3 mb-3" id="cam_ajout_{{loop.index0}}">
                         <div class="row">
@@ -121,15 +122,18 @@
                               <div id="entete_camionAjt_{{loop.index0}}"  class="card-header" >
                                 <div class="row">
                                   <div class="input-group mt-2 w-100">
-                                    <select class="custom-select" name="cam_mat_ajout">
-                                      {% set ns = namespace(found=false) %}
-                                      {% set ns.cap=0 %}
+                                    
+                                    <select class="custom-select" name="cam_mat_ajout" onChange="form_tournee.cap_cam_ajt_{{loop.index0}}.value={{ns.cap}}">
+                                      
                                       {% for camion in list_camion_mat: %}
                                         <option value="{{camion[3]}}"> {{camion[0]}}--{{camion[2]}} </option>
                                         {% set ns.cap=camion[2]%}
                                       {% endfor %}
                                     </select>
-                                    <input  id="cap_cam_ajt_{{loop.index0}}" name="cap_cam_ajt" value="{{ ns.cap }}" type="text"  hidden> 
+                                    
+                                  </div>
+                                  <div class="input-group mt-2 w-100">
+                                    <input  class="form-control" id="cap_cam_ajt_{{loop.index0}}" name="cap_cam_ajt" placeholder="Capacité"  type="text" >
                                   </div>
                                   <div class="input-group mt-2 w-100">
                                     <select class="custom-select" name="nom_chauf_ajout">

@@ -10,7 +10,7 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="text-center">Planning des Chauffeurs CP RC </h1>
+        <h1 class="text-center">Planning des Congés </h1>
         <h2 class="text-center">Entre {{dateDebConvert}} et {{dateFinConvert}}:</h2>
         
         <div class="row">
@@ -25,9 +25,9 @@
                         {%for ms in mois%}
                                                                
                                 {%if ms[0]==1%}
-                                    <th class="table-secondary " colspan={{cptJourMois[loop.index0]|int}} >JANVIER {{ms[1]}}</th>
+                                    <th class="table-danger " colspan={{cptJourMois[loop.index0]|int}} >JANVIER {{ms[1]}}</th>
                                 {%elif ms[0]==2%}   
-                                    <th class="table-secondary" colspan={{cptJourMois[loop.index0]|int}}>FEVRIER {{ms[1]}}</th>  
+                                    <th class="table-danger" colspan={{cptJourMois[loop.index0]|int}}>FEVRIER {{ms[1]}}</th>  
                                 {%elif ms[0]==3%}
                                     <th class="table-secondary" colspan={{cptJourMois[loop.index0]|int}}>MARS {{ms[1]}}</th>
                                 {%elif ms[0]==4%}
@@ -50,21 +50,21 @@
                                     <th class="table-secondary" colspan={{cptJourMois[loop.index0]|int}}>DECEMBRE {{ms[1]}}</th>
                                 {%endif%}
                                 {%if loop.index<nbre_mois|int%}
-                                    <th bgcolor="#CC6666" rowspan=3></th>
+                                    {#<th bgcolor="#000000" rowspan=3></th>#}
                                 {%endif%}
                         {% endfor %}  
                     </tr>  
                     <tr >
                         <th class="table-active" rowspan=2>Nom</th>
-                        <th bgcolor="#99CCCC" rowspan=2>RC</th>
-                        <th bgcolor="#99CC66" rowspan=2>CP  </th>
+                        <th bgcolor="#F4FA58" rowspan=2>RC</th>
+                        <th bgcolor="#58FAF4" rowspan=2>CP  </th>
                         
                         {%for ms in mois%}
                            {% for jr in  L_jour_select if jr[1]==ms[0]%}
                                 {%if jr[0]=='D' %}
-                                     <th bgcolor="yellow"> {{jr[0]}}</th>
+                                     <th bgcolor="#A4A4A4"> {{jr[0]}}</th>
                                 {%else%}
-                                    <th bgcolor="red"> {{jr[0]}}</th>
+                                    <th bgcolor="#A9E2F3"> {{jr[0]}}</th>
                                 {%endif%}    
                             {% endfor %}
                             
@@ -74,9 +74,9 @@
 
                         {% for jr in  jour%}
                             {%if jr[1]==6%}
-                                <th bgcolor="yellow"> {{jr[0]}}</th>
+                                <th bgcolor="#A4A4A4"> {{jr[0]}}</th>
                             {%else%}
-                                <th bgcolor="red"> {{jr[0]}}</th>
+                                <th bgcolor="#81F79F"> {{jr[0]}}</th>
                             {%endif%}    
                         {% endfor %}
                        
@@ -91,8 +91,8 @@
                         {% for chauf in L_chauf[loop.index0] %}
                             <tr>
                                 <td class="table-active"> {{chauf[1]}} </td>
-                                <td bgcolor="#99CCCC"> {{chauf[3]}} </td>
-                                <td bgcolor="#99CC66"> {{chauf[4]}} </td>
+                                <td bgcolor="#F4FA58"> {{chauf[3]}} </td>
+                                <td bgcolor="#58FAF4"> {{chauf[4]}} </td>
                                
                                 {%for ms in mois%}
                                     {% for date in L_date if date[1]==ms[0]%}
@@ -100,24 +100,24 @@
                                         {%for statut in L_chauf_statut if statut[0]==chauf[0] and (date[0].date()>=statut[3] and date[0].date() <= statut[4]) %}
                                             {% set ns.testStatut=1%}
                                             {%if statut[2]=='RC'%}
-                                                <td bgcolor="#99CCCC"> {{statut[2]}} </td>
+                                                <td bgcolor="#F4FA58"> {{statut[2]}} </td>
                                             {%elif statut[2]=='CP'%}
-                                                <td bgcolor="#99CC66"> {{statut[2]}} </td>
+                                                <td bgcolor="#58FAF4"> {{statut[2]}} </td>
                                             {%else%}    
                                             <td class="table-secondary"> {{statut[2]}} </td>
                                             {%endif%}
                                         {%endfor%}
                                         {%if ns.testStatut==0%}
                                             {%if date[2]==6%}
-                                                <td bgcolor="yellow">  </td>
+                                                <td bgcolor="#A4A4A4">  </td>
                                             {%else%}
                                                 <td >  </td>
                                             {%endif%}
                                         {%endif%}
                                     {%endfor%}
-                                    {%if loop.index<nbre_mois%}
-                                        <td bgcolor="#CC6666">  </td>
-                                    {%endif%}    
+                                    {#{%if loop.index<nbre_mois%}
+                                        <td bgcolor="#000000">  </td>
+                                    {%endif%} #}   
                                 {%endfor%}    
                             </tr>
                         {% endfor %}

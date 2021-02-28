@@ -13,7 +13,7 @@
         <div id="loginbox" class="mainbox col-md-10 col-md-offset-3 col-sm-6 col-sm-offset-3"> 
           <div class="card">
             <i class="fa fa-pencil-square-o" aria-hidden="true"></i>
-            <h5 class="card-header card text-center">  Modification/Suppression Navette:</h5>
+            <h5 class="card-header card text-center d-inline"> <i class="far fa-edit"></i> Modification/Suppression Navette:</h5>
               <div class="card-body">
                 <div class="border border_secondary rounded-sm"> 
                   <form id="form" method="POST" class="container form-horizontal " enctype="multipart/form-data" ACTION="{{ url_for('edit_navette') }}">
@@ -100,19 +100,20 @@
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
-        <form  method="POST" id= "form2" ACTION="{{ url_for('chauffeur_statut_modifie') }}">
+        <form  method="POST" id= "form2" ACTION="{{ url_for('navette_modifiée') }}">
           <div class="modal-body">
             <div class="form-group">
-                <select name="modal_L_ens" class="custom-select" required>
+                {#<select name="modal_L_ens" class="custom-select" required>
                     <option value="" disabled selected> <B> Choisissez une Enseigne</B></option>
                       {% for ens in L_ens %}
-                          <option id="edit_statut" value="{{ens[0] }}" >  {{ ens[1] }} </option>
+                          <option id="edit_ens_id" value="{{ens[0] }}" >  {{ ens[1] }} </option>
                       {% endfor %}
-                  </select>
+                  </select>#}
               <input type="text" name="modal_info_tarif_id" value="" id="edit_info_tarif_id" hidden/><!-- pour récupérer le id tarification selectionné-->
-              <input type="text" name="modal_ens_id" id="edit_ens_id" hidden/>
+              <input type="text" class="form-control" name="modal_ens" id="edit_ens" disabled/>
+              <input type="text" class="form-control" name="modal_ens_id" id="edit_ens_id" hidden/>
               <label for="nom" class="col-form-label">Intitulé:</label>
-              <input type="text" class="form-control" id="edit_intitule"  name="modal_intitule" disabled>
+              <input type="text" class="form-control" id="edit_intitule"  name="modal_intitule" >
               <label for="prenom" class="col-form-label">Tarif:</label>
               <input type="text" class="form-control"  id="edit_tarif" name="modal_tarif">
               
@@ -137,9 +138,13 @@
     var row_selected = $("input:radio:checked", "#list_nvt").closest('tr');
     
     //var nom= row_selected.children("#table_nom").text();
+    $('#edit_ens').val(row_selected.children("#table_ens").text())
+    $('#edit_ens_id').val(row_selected.children("#table_ens_id").text())
+    $('#edit_info_tarif_id').val(row_selected.children("#table_tarif_id").text())
+    
     $('#edit_intitule').val(row_selected.children("#table_navette").text())
     $('#edit_tarif').val(row_selected.children("#table_tarif").text())
-    $('select[name="modal_L_ens"]').val(row_selected.children("#table_ens_id").text()).attr("selected", "selected")
+    //$('select[name="modal_L_ens"]').val(row_selected.children("#table_ens_id").text()).attr("selected", "selected")
     //$('#edit_statut').val(row_selected.children("#table_statut").text())
     
     

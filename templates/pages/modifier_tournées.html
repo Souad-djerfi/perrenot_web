@@ -154,9 +154,12 @@
                                         {% set ns.cap=camion[2]%}
                                       {% endfor %}
                                     </select>
-                                    <input  id="cap_cam_ajt_{{loop.index0}}" name="cap_cam_ajt" value="{{ ns.cap }}" type="text"  hidden> 
                                   </div>
                                   <div class="input-group mt-2 w-100">
+                                    <input   class="form-control" id="cap_cam_ajt_{{loop.index0}}" name="cap_cam_ajt" value="" type="text"  placeholder="Capacité"> 
+                                  </div>
+                                  <div class="input-group mt-2 w-100">
+                                      
                                     <select class="custom-select" name="nom_chauf_ajout">
                                       {% for chauf in L_chaufComplete: %}
                                         <option value="{{chauf[2]}}"> {{chauf[0]}}--{{chauf[1]}} </option>

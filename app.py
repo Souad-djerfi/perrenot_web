@@ -15,15 +15,20 @@ import plotly.express as px
 import plotly, json
 from flask import * 
 from werkzeug.security import generate_password_hash, check_password_hash
-import os
+import os,sys
 from pandas.tseries.holiday import USFederalHolidayCalendar
 from pandas.tseries.offsets import CustomBusinessDay
 import numpy as np
 import calendar
 from datetime import *
+from jours_feries_france import JoursFeries
 
 #Définition de la variable d'Application Flask
-app = Flask(__name__)
+if getattr(sys, 'frozen', False):
+    template_folder = os.path.join(sys._MEIPASS, 'templates')
+    app = Flask(__name__, template_folder=template_folder)
+else:
+    app = Flask(__name__)
 
 #variable de configuration
 app.config.update(SECRET_KEY  = 'ma cle secrete')
@@ -51,7 +56,9 @@ def jourOuvrable(date1,date2) :
         elif str(MJ[0])+'-'+str(MJ[1]) in ("1-1","4-13","5-1","5-8","5-21","6-1","7-14","8-15","11-1","11-11","12-25"):
             datediff=datediff-1
         tmp =tmp+ timedelta(days=1) #on incrémente d'un jour
-    return datediff       
+    return datediff    
+# L_date_trinome=con.execute(text("select distinct date,day(last_day(date)),MONTH(date), YEAR(date),DAYOFWEEK(date) from tarification join camion on camion.camion_id = tarification.camion_id and camion.camion_type='VL'where date between :date_deb and :date_fin order by date"), {'date_deb':date_deb[0], 'date_fin':date_fin[0]}).fetchall()
+                  
 #Fonction pour calculer nombre de jours ouvrables par mois de chaque date d une période; sans dimanche et jours fériés    
 def nbreJourOuvrable(L_date_trinome):
     jour_ouvrable=[]
@@ -61,17 +68,19 @@ def nbreJourOuvrable(L_date_trinome):
         nbre_jour_ouvrable=len(jourOuvr[np.where(jourOuvr[:,:-1] > 0)])
         if date[2]==1 and datetime.strptime(str(date[3])+"-01-01", "%Y-%m-%d").weekday()!=6:
             nbre_jour_ouvrable=nbre_jour_ouvrable-1
-        elif date[2]==4 and datetime.strptime(str(date[3])+"-04-13", "%Y-%m-%d").weekday()!=6:
+        elif date[2]==JoursFeries.lundi_paques(date[3]).month and JoursFeries.lundi_paques(date[3]).weekday()!=6:   
             nbre_jour_ouvrable=nbre_jour_ouvrable-1
+        elif date[2]==JoursFeries.ascension(date[3]).month and JoursFeries.ascension(date[3]).weekday()!=6:   
+            nbre_jour_ouvrable=nbre_jour_ouvrable-1
+        elif date[2]==JoursFeries.lundi_pentecote(date[3]).month and JoursFeries.lundi_pentecote(date[3]).weekday()!=6:   
+            nbre_jour_ouvrable=nbre_jour_ouvrable-1
+          
         elif date[2]==5:
             if datetime.strptime(str(date[3])+"-05-01", "%Y-%m-%d").weekday()!=6:
                 nbre_jour_ouvrable=nbre_jour_ouvrable-1
             if datetime.strptime(str(date[3])+"-05-08", "%Y-%m-%d").weekday()!=6:
                 nbre_jour_ouvrable=nbre_jour_ouvrable-1
-            if datetime.strptime(str(date[3])+"-05-21", "%Y-%m-%d").weekday()!=6:
-                nbre_jour_ouvrable=nbre_jour_ouvrable-1        
-        elif date[2]==6 and datetime.strptime(str(date[3])+"-06-01", "%Y-%m-%d").weekday()!=6:
-            nbre_jour_ouvrable=nbre_jour_ouvrable-1    
+                   
         elif date[2]==7 and datetime.strptime(str(date[3])+"-07-14", "%Y-%m-%d").weekday()!=6:
             nbre_jour_ouvrable=nbre_jour_ouvrable-1
         elif date[2]==8 and datetime.strptime(str(date[3])+"-08-15", "%Y-%m-%d").weekday()!=6:
@@ -84,6 +93,7 @@ def nbreJourOuvrable(L_date_trinome):
         elif date[2]==12 and datetime.strptime(str(date[3])+"-12-25", "%Y-%m-%d").weekday()!=6:
             nbre_jour_ouvrable=nbre_jour_ouvrable-1    
         jour_ouvrable.append((date[0],nbre_jour_ouvrable, datetime.strptime(str(date[0]), "%Y-%m-%d").strftime("%d-%m-%Y")))
+        
     return jour_ouvrable
 
 
@@ -287,7 +297,7 @@ def impression_facturation():
         pdf =pdfkit.from_string(rendered, False, configuration=config)
         response=make_response(pdf)
         response.headers['Content-Type']='application/pdf'
-        response.headers['Content-Disposition']='attachment; filename=Facturation_casino.pdf'
+        response.headers['Content-Disposition']='attachment; filename=Facturation_Recap_.pdf'
         return response
     return render_template('pages/formulaire_facturation_recap.html', **data)       
             
@@ -567,7 +577,19 @@ def navette_supprimée():
     con.execute(text("update info_tarification set tarification_actif=0 where info_tarification_id=:tarif_id"),{'tarif_id':info_tarif_id})
     flash('Cette Navette a été bien suppirmée pour cette Enseigne', 'success')
     return redirect(url_for('edit_navette'))
-
+ #************************************************************************************************************************VALIDER MODIFICATION NAVETTE********************************************************************************************************************************************
+@app.route('/navette_modifiee', methods=['GET','post'])
+def navette_modifiée():
+    if not session.get('connexion'):
+        flash("Accès refusé! Veuillez vous connecter pour accéder à cette page!",'danger')
+        return redirect(url_for('home'))
+    ens_id=request.form['modal_ens_id']
+    info_tarif_id=request.form['modal_info_tarif_id']
+    nvt_intitulé=request.form['modal_intitule']
+    nvt_tarif=request.form['modal_tarif']
+    con.execute(text("update info_tarification set intitule_tarif=:nv_intitule, tarif=:nv_tarif where info_tarification_id=:info_tarif_id and enseigne_id=:ens_id"),{'nv_tarif':nvt_tarif,'nv_intitule':nvt_intitulé,'info_tarif_id':info_tarif_id,'ens_id':ens_id})
+    flash('Cette Navette a été bien modifiée', 'success')
+    return redirect(url_for('edit_navette'))
 #*********************************************************************************************************************AJOUTER CAMION***************************************************************************
 @app.route('/Ajouter_Camion', methods=['GET','post'])
 def ajout_camion():
@@ -1154,8 +1176,7 @@ def tableau_recap_chauffeur():
         mois=[]
         day=[]
         L_date=[]
-        solde=[]
-        
+          
         for j in range(nbre_jour[0]):
             moisJour=con.execute(text("select month(:date),day(:date),year(:date)"),{'date':date}).fetchone()
             day.append((moisJour[1],date.weekday()))
@@ -1172,14 +1193,7 @@ def tableau_recap_chauffeur():
         day.append((jourD[1],datetime.strptime(date_fin,"%Y-%m-%d").weekday()))   
         L_date.append((datetime.strptime(date_fin,"%Y-%m-%d"),jourD[0],datetime.strptime(date_fin,"%Y-%m-%d").weekday()))
         L_jour_select.append((L_jour[datetime.strptime(date_fin,"%Y-%m-%d").weekday()],jourD[0]))
-        for ms in mois:
-            if ms[0]==1:
-                solde.append(con.execute(text("select chauf_id,solde_RC,solde_CP, mois, année from solde where mois=12 and année=:année"),{'année':ms[1]-1}).fetchall())
-            else:
-                solde.append(con.execute(text("select chauf_id,solde_RC,solde_CP, mois, année from solde where mois=:mois and année=:année"),{'mois':ms[0]-1,'année':ms[1]}).fetchall())
-        cp=-1
-        #for mois in range(mois):
-            
+                 
         cptJourMois=[]
         nbreCaseVide=2
         j=0
@@ -1212,10 +1226,7 @@ def tableau_recap_chauffeur():
           'nbre_mois':len(mois),
           'jour':day,
           'L_date':L_date,
-          'solde':solde,
-          'nbre_solde':len(solde)
-          
-        }      
+          }      
         path_wkhtmltopdf = r'C:\Program Files (x86)\wkhtmltopdf\bin\wkhtmltopdf.exe'
         config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
         rendered=render_template('pages/tableau_recap_chauf.html',**data)
@@ -1223,7 +1234,7 @@ def tableau_recap_chauffeur():
         pdf =pdfkit.from_string(rendered, False, configuration=config)
         response=make_response(pdf)
         response.headers['Content-Type']='application/pdf'
-        response.headers['Content-Disposition']='attachment; filename=plannig_chauffeur.pdf'
+        response.headers['Content-Disposition']='inline; filename=plannig_chauffeur.pdf'
         return response    
     data={'L_groupe':L_groupe} 
     return render_template('pages/formulaire_recap_chauf.html',**data)
@@ -1344,7 +1355,7 @@ def user_supprimé():
     return redirect(url_for('supprimer_user'))
     
 
-#*******************************************************************************************Ajouter un MAGASN**************************************************************************
+#*******************************************************************************************Ajouter un MAGASIN**************************************************************************
 @app.route('/ajout_magasin', methods=['GET','post'])
 def ajouter_magasin():
     if not session.get('connexion'):
